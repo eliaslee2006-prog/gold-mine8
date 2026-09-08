@@ -1,9 +1,39 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
-  <title>NEON OPS V8</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>NEON OPS V8 // AUTH TEST</title>
+  <style>
+    :root{color-scheme:dark;--bg:#080910;--panel:#11131b;--border:#252936;--cyan:#45e8ff;--text:#eef2f7;--muted:#9299a8;--good:#4df2a8;--bad:#ff5470}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 70% 0,#10212b 0,transparent 35%),var(--bg);color:var(--text);font-family:system-ui,sans-serif}main{width:min(760px,calc(100% - 24px));margin:10vh auto}.panel{border:1px solid var(--border);border-radius:12px;background:var(--panel);padding:24px}.eyebrow{font:11px ui-monospace,monospace;letter-spacing:.16em;color:var(--cyan)}h1{margin:8px 0 6px}.muted{color:var(--muted)}.row{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}button{padding:10px 14px;border:1px solid var(--border);background:#171a24;color:var(--text);border-radius:8px;cursor:pointer}button.primary{border-color:var(--cyan)}pre{min-height:180px;overflow:auto;border:1px solid var(--border);border-radius:8px;background:#090c12;padding:14px;color:#b9f5ff}.good{color:var(--good)}.bad{color:var(--bad)}</style>
 </head>
 <body>
-  <h1>NEON OPS V8 ONLINE</h1>
+<main><section class="panel">
+  <div class="eyebrow">NEON OPERATIONS CENTER // V8 PHASE 1</div>
+  <h1>Authentication Foundation</h1>
+  <p class="muted">Temporary diagnostic frontend. The working V7 HUD is preserved in <code>reference/working-v7-ui.html</code> and will be merged after the backend is stable.</p>
+  <div class="row">
+    <button id="health">HEALTH</button>
+    <button id="login" class="primary">CONNECT GOOGLE</button>
+    <button id="me">WHO AM I</button>
+    <button id="bootstrap">BOOTSTRAP</button>
+    <button id="logout">LOG OUT</button>
+  </div>
+  <div id="oauth"></div>
+  <pre id="out">Ready.</pre>
+</section></main>
+<script type="module">
+const API='https://api.eliaslhx.com';
+const out=document.querySelector('#out');
+const show=v=>out.textContent=typeof v==='string'?v:JSON.stringify(v,null,2);
+async function call(path,options={}){const r=await fetch(API+path,{credentials:'include',...options,headers:{'Content-Type':'application/json',...(options.headers||{})}});const t=await r.text();let d;try{d=t?JSON.parse(t):{}}catch{d={raw:t}}if(!r.ok)throw new Error(d.error||`HTTP ${r.status}`);return d}
+health.onclick=async()=>{try{show(await call('/health'))}catch(e){show(e.message)}};
+login.onclick=()=>{location.href=API+'/auth/google?returnTo='+encodeURIComponent(location.href.split('#')[0])};
+me.onclick=async()=>{try{show(await call('/api/v8/me'))}catch(e){show(e.message)}};
+bootstrap.onclick=async()=>{try{show(await call('/api/v8/bootstrap'))}catch(e){show(e.message)}};
+logout.onclick=async()=>{try{show(await call('/auth/logout',{method:'POST'}))}catch(e){show(e.message)}};
+const h=new URLSearchParams(location.hash.slice(1));if(h.get('neon_status')){oauth.innerHTML=`<p class="${h.get('neon_status')==='connected'?'good':'bad'}">GOOGLE // ${h.get('neon_status').toUpperCase()}${h.get('neon_error')?' // '+h.get('neon_error'):''}</p>`;history.replaceState(null,'',location.pathname+location.search)}
+</script>
 </body>
 </html>
