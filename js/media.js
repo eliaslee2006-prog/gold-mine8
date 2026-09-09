@@ -5,6 +5,7 @@ const $=s=>document.querySelector(s);
 let toast=()=>{},refreshTimer=null,progressTimer=null,lastPaintAt=0,seekBusy=false;
 let sdkPlayer=null,sdkDeviceId='',sdkReady=false,sdkLoading=null,sdkActivated=false,selectedOutputId='';
 let searchType='tracks',libraryTab='liked',likedOffset=0,likedLimit=30,playlistOffset=0,playlistLimit=24;
+let lastLyricsKey='',lyricsRequestSeq=0;
 const likedMap=new Map();
 
 const connected=()=>!!state.integrations?.spotify;
@@ -78,7 +79,40 @@ function render(){
   $('#spotifyPlayPause').textContent=p?.isPlaying?'❚❚':'▶';$('#spotifyShuffle').classList.toggle('active',!!p?.shuffleState);$('#spotifyRepeat').classList.toggle('active',(p?.repeatState||'off')!=='off');$('#spotifyRepeat').title=`Repeat // ${(p?.repeatState||'off').toUpperCase()}`;
   const liked=track?.uri?likedMap.get(track.uri):false;$('#spotifyNowLiked').textContent=liked?'♥':'♡';$('#spotifyNowLiked').classList.toggle('liked',!!liked);$('#spotifyNowLiked').disabled=!track?.uri;
   renderDevices(o.devices,p);renderQueue(o.queue);lastPaintAt=Date.now();paintProgress();$('#spotifyLastRefresh').textContent=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  refreshLyricsForTrack(track);
   if(libraryTab==='recent')renderLibrary();
+}
+
+
+function lyricsKey(track){
+  if(!track)return '';
+  return [track.id||track.uri||'',track.name||'',artistOf(track),track.album?.name||'',Math.round((Number(track.durationMs)||0)/1000)].join('|');
+}
+
+function setLyricsState(status,text,stateName=''){
+  const statusEl=$('#lyricsStatus'),body=$('#lyricsBody');
+  if(statusEl){statusEl.textContent=status||'LYRICS';statusEl.dataset.state=stateName||'';}
+  if(body){body.textContent=text||'';body.dataset.state=stateName||'';}
+}
+
+async function refreshLyricsForTrack(track){
+  if(!$('#lyricsBody'))return;
+  if(!track){lastLyricsKey='';lyricsRequestSeq++;setLyricsState('NO TRACK','Start Spotify playback to load lyrics.');return;}
+  const key=lyricsKey(track);if(key===lastLyricsKey)return;lastLyricsKey=key;const seq=++lyricsRequestSeq;
+  setLyricsState('LOOKUP','Loading lyrics…','warning');
+  const q=new URLSearchParams({track:track.name||'',artist:artistOf(track),album:track.album?.name||'',duration:String(Math.round((Number(track.durationMs)||0)/1000))});
+  try{
+    const d=await api('/api/v8/media/lyrics?'+q.toString());if(seq!==lyricsRequestSeq)return;
+    if(!d?.found){setLyricsState('NOT FOUND','No lyrics were returned for this track.','warning');return;}
+    if(d.instrumental){setLyricsState('INSTRUMENTAL','This track is marked instrumental.','success');return;}
+    const text=String(d.plainLyrics||'').trim();
+    if(!text){setLyricsState('UNAVAILABLE','Lyrics are unavailable for this track.','warning');return;}
+    setLyricsState(d.syncedAvailable?'LYRICS // TIMED SOURCE':'LYRICS // PLAIN',text,'success');
+  }catch(e){
+    if(seq!==lyricsRequestSeq)return;
+    const retry=e?.status===429?' Lyrics provider is rate limited; retry shortly.':'';
+    setLyricsState('LYRICS // ERROR',(e?.message||'Lyrics lookup failed.')+retry,'danger');
+  }
 }
 
 async function loadSpotifySdk(){
@@ -177,6 +211,6 @@ function paintProgress(forceValue=null){const p=state.media?.overview?.playback,
 function tickProgress(){if(seekBusy)return;if($('#pageMedia')?.classList.contains('active'))paintProgress();}
 
 async function action(actionName,extra={},doRefresh=true){if(!connected())return spotifyConnect();try{await api('/api/v8/spotify/player',{method:'POST',body:{action:actionName,...extra}});if(actionName==='pause'&&state.media?.overview?.playback)state.media.overview.playback.isPlaying=false;if(actionName==='play'&&state.media?.overview?.playback)state.media.overview.playback.isPlaying=true;if(doRefresh)setTimeout(()=>refreshMedia(false),400);return true;}catch(e){toast(e.message,true);throw e;}}
-function clearMedia(){['spotifyQueue','spotifyLibrary'].forEach(id=>{const e=$('#'+id);if(e)e.innerHTML='<div class="media-empty">CONNECT SPOTIFY TO LOAD DATA</div>';});$('#spotifySearchResults').innerHTML='<div class="media-empty">CONNECT SPOTIFY TO SEARCH</div>';$('#spotifyLibraryPager').classList.add('hidden');}
+function clearMedia(){['spotifyQueue','spotifyLibrary'].forEach(id=>{const e=$('#'+id);if(e)e.innerHTML='<div class="media-empty">CONNECT SPOTIFY TO LOAD DATA</div>';});$('#spotifySearchResults').innerHTML='<div class="media-empty">CONNECT SPOTIFY TO SEARCH</div>';$('#spotifyLibraryPager').classList.add('hidden');lastLyricsKey='';lyricsRequestSeq++;setLyricsState('NO TRACK','Connect Spotify and start playback to load lyrics.');}
 function renderError(msg){$('#spotifyStatus').textContent='DEGRADED';$('#spotifyStatus').dataset.state='danger';$('#spotifyPlaybackState').textContent='SPOTIFY // ERROR';$('#spotifyTrack').textContent=msg||'Spotify request failed';}
 async function disconnect(){if(!confirm('Disconnect Spotify from Neon Ops?'))return;try{sdkPlayer?.disconnect();sdkPlayer=null;sdkDeviceId='';sdkReady=false;sdkActivated=false;selectedOutputId='';await api('/api/v8/spotify',{method:'DELETE'});delete state.integrations.spotify;state.media={overview:null,loaded:true};likedMap.clear();renderShell();render();toast('SPOTIFY DISCONNECTED');}catch(e){toast(e.message,true);}}
