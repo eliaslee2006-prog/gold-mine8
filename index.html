@@ -93,7 +93,7 @@
     </section>
 
     <section class="panel brief-card">
-      <span class="kicker">PHASE 3A STATUS</span>
+      <span class="kicker">PHASE 3B STATUS</span>
       <div class="status-grid">
         <span>AUTH</span><b id="statusAuth">—</b>
         <span>D1 EVENTS</span><b id="statusEvents">0</b>
@@ -110,6 +110,7 @@
     <div class="panel-head fitness-head">
       <div><span class="kicker">FITNESS // 03</span><h2>Movement Intelligence</h2></div>
       <div class="actions">
+        <button id="fitnessExportBtn" class="ghost">EXPORT CSV</button>
         <button id="editMovementBtn" class="ghost">EDIT MOVEMENT</button>
         <button id="newMovementBtn" class="ghost">+ MOVEMENT</button>
         <button id="logSessionBtn" class="primary">+ LOG SESSION</button>
@@ -120,7 +121,7 @@
       <div class="fitness-identity"><b id="fitnessSymbol">—</b><span id="fitnessSchedule">SCHEDULE // NONE</span></div>
       <div class="chart-range" id="fitnessRanges">
         <button data-range="1">1M</button><button class="active" data-range="3">3M</button><button data-range="6">6M</button><button data-range="12">1Y</button><button data-range="ALL">ALL</button>
-        <button id="fitnessReset">LIVE</button>
+        <button id="fitnessMarkersToggle" aria-pressed="true">MARKERS</button><button id="fitnessReset">LIVE</button>
       </div>
     </div>
     <div id="fitnessEmpty" class="fitness-empty-state">
@@ -132,11 +133,18 @@
     <div id="fitnessBody" class="hidden">
       <div class="fitness-metrics">
         <div><span>MOVEMENT INDEX</span><b id="fitnessIndex">100.00</b></div>
+        <div><span>7D CHANGE</span><b id="fitness7dChange">+0.00%</b></div>
         <div><span>SESSIONS // 7D</span><b id="fitnessWeekSessions">0</b></div>
+        <div><span>TOTAL SESSIONS</span><b id="fitnessTotalSessions">0</b></div>
         <div><span>MISSED STREAK</span><b id="fitnessMissed">0</b></div>
         <div><span>BEST E1RM</span><b id="fitnessBestE1rm">—</b></div>
       </div>
       <div class="fitness-chart-shell">
+        <div class="fitness-readout" id="fitnessReadout">
+          <div class="readout-primary"><span id="fitnessReadoutDate">—</span><b id="fitnessReadoutState" data-state="closed">MARKET CLOSED</b></div>
+          <div class="ohlc"><span>O <b id="fitnessO">—</b></span><span>H <b id="fitnessH">—</b></span><span>L <b id="fitnessL">—</b></span><span>C <b id="fitnessC">—</b></span></div>
+          <div class="readout-meta" id="fitnessReadoutMeta">MOVE CROSSHAIR FOR SESSION DETAIL</div>
+        </div>
         <div id="fitnessChart" class="fitness-chart"></div>
         <div class="fitness-chart-note"><span>BULLISH // COMPLETED</span><span>BEARISH // MISSED</span><span>GAPS // MARKET CLOSED</span></div>
       </div>
@@ -334,6 +342,7 @@
   <div class="two"><label>Baseline Volume<input id="movementBaselineVolume" type="number" min="0" step="1" placeholder="Optional"></label><label>Baseline E1RM<input id="movementBaselineE1rm" type="number" min="0" step="0.1" placeholder="Optional"></label></div>
   <fieldset class="fitness-fieldset"><legend>Scheduled training days</legend><div id="movementDays" class="movement-days"><button type="button" data-day="1">M</button><button type="button" data-day="2">T</button><button type="button" data-day="3">W</button><button type="button" data-day="4">T</button><button type="button" data-day="5">F</button><button type="button" data-day="6">S</button><button type="button" data-day="7">S</button></div></fieldset>
   <fieldset class="fitness-fieldset"><legend>Missed-session decay</legend><div class="three"><label>Base %<input id="decayBase" type="number" min="0" max="20" step="0.05" value="0.50"></label><label>Acceleration %<input id="decayAcceleration" type="number" min="0" max="20" step="0.05" value="0.15"></label><label>Maximum %<input id="decayMax" type="number" min="0" max="50" step="0.1" value="2.00"></label></div></fieldset>
+  <fieldset class="fitness-fieldset"><legend>Persistent chart palette</legend><div class="two chart-color-fields"><label>Bullish / completed<input id="movementUpColor" type="color" value="#2fd69a"></label><label>Bearish / missed<input id="movementDownColor" type="color" value="#ff405c"></label></div><div class="palette-presets" aria-label="Chart palette presets"><button type="button" class="palette-preset" data-up="#2fd69a" data-down="#ff405c"><i style="--up:#2fd69a;--down:#ff405c"></i>TACTICAL</button><button type="button" class="palette-preset" data-up="#00d9ff" data-down="#ff3ea5"><i style="--up:#00d9ff;--down:#ff3ea5"></i>NEON</button><button type="button" class="palette-preset" data-up="#8b6cff" data-down="#ffba4a"><i style="--up:#8b6cff;--down:#ffba4a"></i>VIOLET</button><button type="button" class="palette-preset" data-up="#d7d8df" data-down="#7c7e88"><i style="--up:#d7d8df;--down:#7c7e88"></i>MONO</button></div></fieldset>
   <div class="modal-actions"><button type="button" id="deleteMovementBtn" class="danger hidden">DELETE</button><span></span><button type="button" class="ghost" data-close="movementDialog">CANCEL</button><button type="submit" class="primary">SAVE</button></div>
 </form>
 </dialog>
@@ -343,6 +352,8 @@
   <input type="hidden" id="sessionId">
   <div class="modal-head"><div><span class="kicker">COMPLETED TRAINING</span><h2 id="sessionModalTitle">Log Session</h2><div id="sessionMovementName" class="session-movement-name">—</div></div><button type="button" class="x" data-close="sessionDialog">×</button></div>
   <div class="two"><label>Performed at<input id="sessionPerformedAt" type="datetime-local" required></label><label>Body weight kg<input id="sessionBodyWeight" type="number" min="0" step="0.1" placeholder="Optional"></label></div>
+  <div id="sameDayNotice" class="fitness-notice hidden"></div>
+  <div class="session-quickbar"><span>SETS</span><button type="button" id="copyLastSessionBtn" class="ghost small">COPY PREVIOUS SETS</button></div>
   <div class="sets-head"><span>SETS</span><span>WEIGHT</span><span>REPS</span><span>RPE</span><span></span></div><div id="setRows" class="set-rows"></div><button type="button" id="addSetBtn" class="ghost add-set">+ ADD SET</button>
   <label>Notes<textarea id="sessionNotes" rows="3"></textarea></label>
   <div class="modal-actions"><button type="button" id="deleteSessionBtn" class="danger hidden">DELETE</button><span></span><button type="button" class="ghost" data-close="sessionDialog">CANCEL</button><button type="submit" class="primary">SAVE SESSION</button></div>
