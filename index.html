@@ -4,13 +4,13 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <meta name="theme-color" content="#09090d"/>
-  <title>NEON OPERATIONS CENTER // V8</title>
+  <title>NEON OPERATIONS CENTER // V9</title>
   <link rel="stylesheet" href="./css/app.css"/>
   <script src="https://unpkg.com/lightweight-charts@5.2.1/dist/lightweight-charts.standalone.production.js"></script>
   <script type="module" src="./js/app.js"></script>
 </head>
 <body>
-<div id="bootCover" class="boot-cover">INITIALIZING V8 // OPS CORE</div>
+<div id="bootCover" class="boot-cover">INITIALIZING V9 // PHASE 8B</div>
 
 <header class="topbar">
   <div>
@@ -34,6 +34,25 @@
 </nav>
 
 <main class="ops-grid page active" id="pageOps">
+  <section class="panel command-center" id="commandCenter">
+    <div class="panel-head command-center-head">
+      <div><span class="kicker">OPS // 8B COMMAND CENTER</span><h2>Today</h2><small id="ccDate" class="cc-date">—</small></div>
+      <div class="actions"><button id="ccMorningBtn" class="ghost small" type="button">MORNING BRIEF</button><button id="ccEveningBtn" class="ghost small" type="button">EVENING REVIEW</button><button id="ccFocusBtn" class="ghost small" type="button">FOCUS MODE</button><button id="ccRefreshBtn" class="ghost small" type="button">REFRESH</button></div>
+    </div>
+    <div class="cc-command-strip">
+      <div class="cc-readiness"><span>READINESS</span><b id="ccReadiness" data-band="good">100</b><small id="ccReadinessReason">—</small></div>
+      <div class="cc-nnl"><article><span>NOW</span><div id="ccNow"><b>—</b><span>—</span></div></article><article><span>NEXT</span><div id="ccNext"><b>—</b><span>—</span></div></article><article><span>LATER</span><div id="ccLater"><b>—</b><span>—</span></div></article></div>
+    </div>
+    <div class="cc-grid">
+      <section class="cc-card cc-timeline-card"><header><span>TODAY TIMELINE</span><b id="ccTimelineCount">0 ITEMS</b></header><div id="ccTimeline" class="cc-timeline"></div></section>
+      <section class="cc-card cc-priority-card"><header><span>PRIORITY STACK</span><b>DRAG TO RANK</b></header><div id="ccPriorities" class="cc-priorities"></div></section>
+      <section class="cc-card"><header><span>NEEDS ATTENTION</span><b id="ccActionCount">0 OPEN</b></header><div id="ccActions" class="cc-actions"></div></section>
+      <section class="cc-card"><header><span>FREE WINDOWS</span><b>06:00–23:00</b></header><div id="ccFreeWindows" class="cc-free-windows"></div></section>
+      <section class="cc-card cc-nexus-priority-card"><header><span>NEXUS PRIORITY</span><button id="ccAskPriority" class="ghost small" type="button">ASK NEXUS</button></header><div id="ccNexusPriority" class="cc-nexus-priority">NO CACHED PRIORITY YET</div></section>
+      <section class="cc-card cc-pulse-card"><header><span>DAILY PULSES</span><b>LIVE FROM RECORDS</b></header><div class="cc-pulses"><article><span>SPEND</span><b id="ccSpend">S$0.00</b><small id="ccCashNet">NET S$0.00</small></article><article><span>PORTFOLIO</span><b id="ccPortfolio">—</b><small id="ccPortfolioPnl">NO POSITIONS</small></article><article><span>FITNESS</span><b id="ccFitness">NO SESSION</b><small id="ccFitnessMeta">TODAY</small></article></div></section>
+      <section class="cc-card cc-capture-card"><header><span>QUICK CAPTURE</span><b>NEXUS REVIEW</b></header><form id="ccQuickForm"><input id="ccQuickInput" maxlength="1200" placeholder="Meeting Friday 1400, remind me 30m before…"><button type="submit" class="primary small">SEND TO NEXUS</button></form><small id="ccSinceLast" class="cc-since">—</small></section>
+    </div>
+  </section>
   <section class="panel calendar-panel">
     <div class="panel-head calendar-panel-head">
       <div>
@@ -449,7 +468,7 @@
   <section class="media-native-grid">
     <section class="panel media-player-panel">
       <div class="panel-head media-head">
-        <div><span class="kicker">MEDIA // 08A</span><h2>Native Spotify Player + Lyrics</h2></div>
+        <div><span class="kicker">MEDIA // 08B</span><h2>Native Spotify Player + Lyrics</h2></div>
         <div class="actions">
           <span id="spotifyStatus" class="media-status">NOT CONNECTED</span>
           <button id="spotifyRefreshBtn" class="ghost">REFRESH</button>
@@ -493,8 +512,11 @@
             <div><span class="kicker">LYRICS // LRCLIB</span><h3>Track Lyrics</h3></div>
             <span id="lyricsStatus" class="media-status">NO TRACK</span>
           </div>
-          <div id="lyricsBody" class="media-lyrics-body">PLAY A TRACK TO LOAD LYRICS</div>
-          <div class="media-lyrics-foot">Lyrics use a separate provider. Timed lines follow the current player position when available; highlight color inherits Customize.</div>
+          <div class="media-lyrics-stage">
+            <div id="lyricsBody" class="media-lyrics-body">PLAY A TRACK TO LOAD LYRICS</div>
+            <label class="lyric-scale-control" title="Lyric size"><span>A+</span><input id="lyricsScale" type="range" min="70" max="130" step="5" value="90" orient="vertical"><b id="lyricsScaleValue">90%</b><span>A−</span></label>
+          </div>
+          <div class="media-lyrics-foot">Lyric scrolling is contained inside this panel. Active-line color follows Customize; size is adjustable and saved locally.</div>
         </section>
       </div>
     </section>
@@ -512,10 +534,11 @@
     </section>
 
     <section class="panel media-library-panel">
-      <div class="panel-head compact"><div><span class="kicker">YOUR LIBRARY</span><h2>Spotify Library</h2></div><span id="spotifyLibraryMeta" class="media-status">—</span></div>
+      <div class="panel-head compact"><div><span class="kicker">YOUR LIBRARY</span><h2>Spotify Library</h2></div><div class="actions"><span id="spotifyLibraryMeta" class="media-status">—</span><button id="spotifyLibrarySync" type="button" class="ghost small">SYNC VIEW</button></div></div>
       <div class="media-subtabs" id="spotifyLibraryTabs">
         <button type="button" class="active" data-library-tab="liked">♥ LIKED SONGS</button><button type="button" data-library-tab="playlists">PLAYLISTS</button><button type="button" data-library-tab="recent">RECENT</button>
       </div>
+      <div id="spotifyLibraryCacheNote" class="media-cache-note">LIKED SONGS USE A MANUAL LOCAL CACHE TO CONSERVE DEVELOPMENT-MODE QUOTA.</div>
       <div id="spotifyLibrary" class="media-library-body"><div class="media-empty">CONNECT SPOTIFY TO LOAD YOUR LIBRARY</div></div>
       <div id="spotifyLibraryPager" class="media-library-pager hidden"><button id="spotifyLibraryPrev" class="ghost" type="button">← PREV</button><span id="spotifyLibraryPage">—</span><button id="spotifyLibraryNext" class="ghost" type="button">NEXT →</button></div>
     </section>
@@ -523,7 +546,9 @@
     <div class="media-side-stack">
       <section class="panel media-queue-panel">
         <div class="panel-head compact"><div><span class="kicker">UP NEXT</span><h2>Queue</h2></div><span id="spotifyQueueCount" class="media-status">0 ITEMS</span></div>
-        <div id="spotifyQueue" class="media-list"><div class="media-empty">CONNECT SPOTIFY TO LOAD QUEUE</div></div>
+        <div class="media-subtabs queue-tabs"><button type="button" data-queue-tab="neon" class="active">NEON QUEUE</button><button type="button" data-queue-tab="spotify">SPOTIFY QUEUE</button></div>
+        <div class="queue-toolbar"><button id="spotifyNeonQueueStart" type="button" class="primary small">▶ START NEON QUEUE</button><button id="spotifyNeonQueueClear" type="button" class="ghost small">CLEAR</button></div>
+        <div id="spotifyQueue" class="media-list"><div class="media-empty">ADD TRACKS TO THE NEON QUEUE</div></div>
       </section>
 
       <section class="panel media-profile-panel">
@@ -1087,6 +1112,13 @@
   <div class="modal-head"><div><span class="kicker">INTELLIGENCE ARCHIVE</span><h2>Report History</h2></div><button type="button" class="x" data-close="aiHistoryDialog">×</button></div>
   <div id="aiHistoryList" class="ai-history-list"></div>
   <div class="ai-history-footer"><button id="aiHistoryPrev" class="ghost">← PREV</button><span id="aiHistoryPager">0 / 0</span><button id="aiHistoryNext" class="ghost">NEXT →</button></div>
+</dialog>
+
+<dialog id="ccBriefDialog" class="modal cc-brief-dialog">
+  <div class="modal-head"><div><span class="kicker">OPS // DAILY SNAPSHOT</span><h2 id="ccBriefTitle">BRIEF</h2></div><button type="button" class="x" data-close="ccBriefDialog">×</button></div>
+  <div id="ccBriefBody" class="cc-brief-body"></div>
+  <section class="cc-brief-nexus"><span class="kicker">CACHED GEMINI CONTEXT</span><p id="ccBriefNexus">—</p></section>
+  <div class="modal-actions"><span></span><span></span><span></span><button type="button" class="primary" data-close="ccBriefDialog">CLOSE</button></div>
 </dialog>
 
 <div id="nexusCommandPalette" class="nxc-command-palette hidden" role="dialog" aria-modal="true" aria-label="NEXUS command palette">
