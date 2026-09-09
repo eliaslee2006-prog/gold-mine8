@@ -461,6 +461,68 @@
         <div class="modal-actions"><span></span><span></span><span></span><button type="submit" class="primary">SAVE AVATAR LOGIC</button></div>
       </form>
     </section>
+
+
+    <section class="panel appearance-panel">
+      <div class="panel-head compact">
+        <div><span class="kicker">HUD DESIGN SYSTEM</span><h2>Appearance Lab</h2></div>
+        <span class="appearance-status">LIVE PREVIEW</span>
+      </div>
+      <form id="appearanceForm" class="appearance-form">
+        <div class="appearance-preset-strip">
+          <span>PRESETS</span>
+          <button type="button" class="ghost small" data-appearance-preset="TACTICAL">TACTICAL</button>
+          <button type="button" class="ghost small" data-appearance-preset="EDITORIAL">EDITORIAL</button>
+          <button type="button" class="ghost small" data-appearance-preset="DENSE">DENSE</button>
+          <button type="button" class="ghost small" data-appearance-preset="MINIMAL">MINIMAL</button>
+        </div>
+        <div id="appearancePreview" class="appearance-preview">
+          <div><span class="kicker">PRIVATE INTELLIGENCE TERMINAL</span><strong class="appearance-preview-title">NEON OPERATIONS CENTER</strong></div>
+          <div class="appearance-preview-card"><span class="appearance-preview-meta">OPS // 01</span><b class="appearance-preview-value">S$ 12,840.42</b><small>PORTFOLIO EQUITY // LIVE</small></div>
+        </div>
+        <div class="appearance-controls-grid">
+          <label>HUD max width <span id="appearanceHudWidthValue" class="field-value">1900px</span><input id="appearanceHudWidth" type="range" min="1180" max="2400" step="20" value="1900"></label>
+          <label>Panel gap <span id="appearancePanelGapValue" class="field-value">14px</span><input id="appearancePanelGap" type="range" min="6" max="30" step="1" value="14"></label>
+          <label>Panel padding <span id="appearancePanelPaddingValue" class="field-value">16px</span><input id="appearancePanelPadding" type="range" min="10" max="30" step="1" value="16"></label>
+          <label>Corner radius <span id="appearanceRadiusValue" class="field-value">15px</span><input id="appearanceRadius" type="range" min="0" max="28" step="1" value="15"></label>
+          <label>Border intensity <span id="appearanceBorderValue" class="field-value">62%</span><input id="appearanceBorder" type="range" min="15" max="100" step="1" value="62"></label>
+          <label>Shadow intensity <span id="appearanceShadowValue" class="field-value">30%</span><input id="appearanceShadow" type="range" min="0" max="75" step="1" value="30"></label>
+          <label>Interface scale <span id="appearanceScaleValue" class="field-value">100%</span><input id="appearanceScale" type="range" min="70" max="140" step="1" value="100"></label>
+          <label>Heading scale <span id="appearanceHeadingScaleValue" class="field-value">100%</span><input id="appearanceHeadingScale" type="range" min="80" max="140" step="1" value="100"></label>
+          <label>Telemetry scale <span id="appearanceTelemetryScaleValue" class="field-value">100%</span><input id="appearanceTelemetryScale" type="range" min="75" max="135" step="1" value="100"></label>
+          <label>Desktop density<select id="appearanceDensity"><option>COMFORTABLE</option><option>COMPACT</option><option>DENSE</option></select></label>
+          <label>Mobile density<select id="appearanceMobileDensity"><option>COMFORTABLE</option><option selected>COMPACT</option><option>DENSE</option></select></label>
+        </div>
+        <div class="appearance-color-grid">
+          <label>Live cyan<input id="appearanceColorCyan" type="color" value="#00d9ff"></label>
+          <label>AI magenta<input id="appearanceColorMag" type="color" value="#ff3ea5"></label>
+          <label>Warning red<input id="appearanceColorRed" type="color" value="#ff405c"></label>
+          <label>Amber<input id="appearanceColorAmber" type="color" value="#ffba4a"></label>
+          <label>Positive green<input id="appearanceColorGreen" type="color" value="#6ee7a7"></label>
+          <label>Violet<input id="appearanceColorViolet" type="color" value="#8b6cff"></label>
+        </div>
+        <div class="modal-actions"><button type="button" id="resetAppearanceBtn" class="ghost">RESET APPEARANCE</button><span></span><span></span><button type="submit" class="primary">SAVE HUD APPEARANCE</button></div>
+      </form>
+    </section>
+
+    <section class="panel typography-panel">
+      <div class="panel-head compact">
+        <div><span class="kicker">R2 TYPOGRAPHY LIBRARY</span><h2>Custom Fonts</h2></div>
+        <button type="button" id="uploadFontBtn" class="primary small">+ UPLOAD FONT</button>
+      </div>
+      <input id="fontInput" type="file" accept=".woff2,.woff,.ttf,.otf,font/woff2,font/woff,font/ttf,font/otf" hidden>
+      <div class="typography-body">
+        <div class="font-preview-card">
+          <span id="fontPreviewName" class="kicker">SYSTEM DEFAULT</span>
+          <div id="fontPreviewSample" class="font-preview-sample">NEON OPERATIONS CENTER<br><small>OPS // FINANCE // FITNESS // 0123456789</small></div>
+        </div>
+        <div class="typography-grid">
+          <div><div class="effects-subhead">FONT LIBRARY</div><div id="fontLibrary" class="font-library"></div></div>
+          <div><div class="effects-subhead">SECTION ASSIGNMENTS</div><div id="fontAssignments" class="font-assignments"></div></div>
+        </div>
+        <div class="effect-format-note">SUPPORTED // WOFF2 / WOFF / TTF / OTF // MAX 8 MB EACH // WOFF2 RECOMMENDED</div>
+      </div>
+    </section>
   </section>
 </main>
 
