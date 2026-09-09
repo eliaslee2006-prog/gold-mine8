@@ -374,6 +374,13 @@
         <button type="button" id="uploadEffectBtn" class="primary small">+ UPLOAD EFFECT</button>
       </div>
       <input id="avatarEffectInput" type="file" accept=".lottie,.json,image/png,image/jpeg,image/webp,image/gif" hidden>
+      <div class="fx-profile-strip" aria-label="Effect profiles">
+        <span>FX PROFILE</span>
+        <button type="button" class="ghost small" data-fx-profile="CLEAN">CLEAN</button>
+        <button type="button" class="ghost small" data-fx-profile="SUBTLE">SUBTLE</button>
+        <button type="button" class="ghost small" data-fx-profile="ENERGY">ENERGY</button>
+        <button type="button" class="ghost small" data-fx-profile="CRITICAL">CRITICAL</button>
+      </div>
       <div class="effects-layout">
         <div>
           <div class="effects-subhead">ASSET LIBRARY</div>
@@ -383,13 +390,20 @@
           <div class="effects-subhead">ASSIGNED TO STATE</div>
           <div id="assignedEffects" class="assigned-effects"></div>
           <div id="effectControls" class="effect-controls hidden">
-            <label class="toggle-line"><input id="effectEnabled" type="checkbox" checked> ENABLE EFFECT</label>
+            <div class="two effect-toggles">
+              <label class="toggle-line"><input id="effectEnabled" type="checkbox" checked> ENABLE EFFECT</label>
+              <label class="toggle-line"><input id="effectLoop" type="checkbox" checked> LOOP LOTTIE</label>
+            </div>
             <div class="two">
               <label>Layer<select id="effectLayer"><option value="back">BEHIND AVATAR</option><option value="front" selected>IN FRONT</option></select></label>
               <label>Blend<select id="effectBlend"><option value="screen">SCREEN</option><option value="normal">NORMAL</option><option value="overlay">OVERLAY</option><option value="lighten">LIGHTEN</option><option value="multiply">MULTIPLY</option></select></label>
             </div>
             <label>Opacity <span id="effectOpacityValue" class="field-value">85%</span><input id="effectOpacity" type="range" min="0" max="100" step="1" value="85"></label>
             <label>Scale <span id="effectScaleValue" class="field-value">100%</span><input id="effectScale" type="range" min="25" max="300" step="5" value="100"></label>
+            <div class="two">
+              <label>Playback speed <span id="effectSpeedValue" class="field-value">100%</span><input id="effectSpeed" type="range" min="25" max="300" step="5" value="100"></label>
+              <label>Rotation <span id="effectRotationValue" class="field-value">0°</span><input id="effectRotation" type="range" min="-180" max="180" step="5" value="0"></label>
+            </div>
             <div class="two">
               <label>X offset <span id="effectXValue" class="field-value">0%</span><input id="effectX" type="range" min="-100" max="100" step="1" value="0"></label>
               <label>Y offset <span id="effectYValue" class="field-value">0%</span><input id="effectY" type="range" min="-100" max="100" step="1" value="0"></label>
@@ -399,6 +413,36 @@
         </div>
       </div>
       <div class="effect-format-note">SUPPORTED // .LOTTIE / LOTTIE JSON / PNG / JPG / WEBP / GIF // MAX 12 MB EACH</div>
+    </section>
+
+    <section class="panel avatar-system-panel">
+      <div class="panel-head compact">
+        <div><span class="kicker">NEXUS RUNTIME</span><h2>System State Lab</h2></div>
+        <span id="avatarSystemStatus" class="system-state-readout">LIVE // RELAXED</span>
+      </div>
+      <div class="avatar-system-body">
+        <div class="system-test-strip">
+          <label>LIVE HUD TEST
+            <select id="avatarSystemTestState">
+              <option>RELAXED</option><option>FOCUSED</option><option>ANXIOUS</option><option>PANIC</option><option>SUCCESS</option><option>OFFLINE</option><option>ANALYZING</option>
+            </select>
+          </label>
+          <button type="button" id="testAvatarStateBtn" class="primary">TEST 8 SEC</button>
+          <button type="button" id="clearAvatarStateTestBtn" class="ghost">CLEAR TEST</button>
+        </div>
+        <form id="avatarSystemForm" class="avatar-system-form">
+          <div class="logic-grid">
+            <label class="toggle-card"><input id="systemOfflineEnabled" type="checkbox" checked><span>OFFLINE STATE</span><small>Use OFFLINE automatically when the browser loses network access.</small></label>
+            <label class="toggle-card"><input id="systemAnalyzingEnabled" type="checkbox" checked><span>ANALYZING STATE</span><small>Allow AI modules to temporarily take control of NEXUS.</small></label>
+            <label>Master FX intensity <span id="systemFxIntensityValue" class="field-value">100%</span><input id="systemFxIntensity" type="range" min="0" max="150" step="5" value="100"></label>
+            <label>Motion policy<select id="systemMotionMode"><option value="system">FOLLOW DEVICE</option><option value="full">FULL MOTION</option><option value="reduced">REDUCED MOTION</option></select></label>
+            <label>Mood hold <span id="systemMoodHoldValue" class="field-value">1.5s</span><input id="systemMoodHold" type="range" min="0" max="10" step="0.5" value="1.5"></label>
+            <label>Visual transition <span id="systemTransitionValue" class="field-value">220 ms</span><input id="systemTransitionMs" type="range" min="0" max="1200" step="20" value="220"></label>
+          </div>
+          <div class="system-runtime-note">TRANSIENT PRIORITY // OFFLINE → SYSTEM TEST / ANALYZING → TASK ENGINE</div>
+          <div class="modal-actions"><span></span><span></span><span></span><button type="submit" class="primary">SAVE RUNTIME SETTINGS</button></div>
+        </form>
+      </div>
     </section>
 
     <section class="panel avatar-logic-panel">
