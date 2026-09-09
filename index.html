@@ -26,7 +26,7 @@
 
 <nav class="tabs" aria-label="Primary">
   <button class="tab active" data-page="pageOps">OPS</button>
-  <button class="tab" disabled>FINANCE</button>
+  <button class="tab" data-page="pageFinance">FINANCE</button>
   <button class="tab" disabled>MEDIA</button>
   <button class="tab" data-page="pageFitness">FITNESS</button>
   <button class="tab" disabled>CUSTOMIZE</button>
@@ -93,7 +93,7 @@
     </section>
 
     <section class="panel brief-card">
-      <span class="kicker">PHASE 3B STATUS</span>
+      <span class="kicker">PHASE 4A STATUS</span>
       <div class="status-grid">
         <span>AUTH</span><b id="statusAuth">—</b>
         <span>D1 EVENTS</span><b id="statusEvents">0</b>
@@ -154,6 +154,109 @@
       </div>
       <div class="tradingview-credit">TradingView Lightweight Charts™ — Copyright © 2025 TradingView, Inc. <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a>.</div>
     </div>
+  </section>
+</main>
+
+
+<main class="page finance-page" id="pageFinance">
+  <section class="finance-grid">
+    <section class="panel cash-panel">
+      <div class="panel-head finance-head">
+        <div><span class="kicker">FINANCE // 04B</span><h2>Personal Allowance</h2></div>
+        <div class="actions">
+          <button id="cashExportBtn" class="ghost">EXPORT CSV</button>
+          <button id="financeSettingsBtn" class="ghost">SETTINGS</button>
+          <button id="cashLiveBtn" class="ghost active-mode">LIVE</button>
+          <button id="cashReplayBtn" class="ghost">REPLAY</button>
+          <button id="newTransactionBtn" class="primary">+ TRANSACTION</button>
+        </div>
+      </div>
+      <div class="finance-metrics cash-metrics">
+        <div><span id="cashRemainingLabel">REMAINING</span><b id="cashRemaining">S$0.00</b></div>
+        <div><span id="cashStartingLabel">STARTING ALLOWANCE</span><b id="cashStarting">S$0.00</b></div>
+        <div><span id="cashInflowsLabel">INFLOWS</span><b id="cashInflows">S$0.00</b></div>
+        <div><span id="cashExpensesLabel">EXPENSES</span><b id="cashExpenses">S$0.00</b></div>
+        <div><span id="cashTransactionCountLabel">TRANSACTIONS</span><b id="cashTransactionCount">0</b></div>
+      </div>
+      <div id="cashReplayPanel" class="cash-replay-panel hidden" aria-label="Historical cashflow replay controls">
+        <div class="replay-topline">
+          <div>
+            <span class="kicker">HISTORICAL CASHFLOW // REPLAY</span>
+            <strong id="replayMonthLabel">—</strong>
+          </div>
+          <div class="replay-month-nav">
+            <button type="button" id="replayPrevMonth" class="hud-icon" aria-label="Previous replay month">←</button>
+            <select id="replayMonthSelect" aria-label="Replay month"></select>
+            <button type="button" id="replayNextMonth" class="hud-icon" aria-label="Next replay month">→</button>
+          </div>
+        </div>
+        <div class="replay-transport">
+          <button type="button" id="replayStepBack" class="ghost" title="Previous transaction">← TX</button>
+          <button type="button" id="replayPlay" class="primary">▶ PLAY</button>
+          <button type="button" id="replayPause" class="ghost">❚❚ PAUSE</button>
+          <button type="button" id="replayReset" class="ghost">■ RESET</button>
+          <button type="button" id="replayStepForward" class="ghost" title="Next transaction">TX →</button>
+        </div>
+        <div class="replay-speed" role="group" aria-label="Replay speed">
+          <span>SPEED</span>
+          <button type="button" data-replay-speed="0.25">0.25×</button>
+          <button type="button" data-replay-speed="0.5">0.5×</button>
+          <button type="button" data-replay-speed="1" class="active">1×</button>
+          <button type="button" data-replay-speed="2">2×</button>
+          <button type="button" data-replay-speed="4">4×</button>
+          <button type="button" data-replay-speed="8">8×</button>
+          <button type="button" data-replay-speed="16">16×</button>
+          <button type="button" data-replay-speed="max">MAX</button>
+        </div>
+        <div class="replay-progress-line">
+          <span id="replayTxStatus">TX 0 / 0</span>
+          <span id="replayRate">RATE // 2 TX/S</span>
+        </div>
+        <input id="replayScrubber" class="replay-scrubber" type="range" min="0" max="1" step="1" value="0" aria-label="Replay transaction position">
+        <div id="replayTicker" class="replay-ticker"><span>STANDBY</span><b>SELECT PLAY TO RECONSTRUCT CASHFLOW</b></div>
+      </div>
+      <div class="cash-chart-shell">
+        <div class="fitness-readout finance-readout">
+          <div class="readout-primary"><span id="cashReadoutSeq">NO TRANSACTIONS</span><b id="cashReadoutState" data-state="closed">AWAITING CASHFLOW</b></div>
+          <div class="ohlc"><span>O <b id="cashO">—</b></span><span>H <b id="cashH">—</b></span><span>L <b id="cashL">—</b></span><span>C <b id="cashC">—</b></span></div>
+          <div class="readout-meta" id="cashReadoutMeta">EACH TRANSACTION = ONE CANDLE</div>
+        </div>
+        <div id="cashChart" class="cash-chart"></div>
+        <div class="finance-chart-note"><span>GREEN // INFLOW</span><span>RED // EXPENSE</span><span>X AXIS // TRANSACTION SEQUENCE</span></div>
+      </div>
+      <div class="finance-ledger">
+        <div class="finance-section-head"><div><span class="kicker">CASHFLOW LEDGER</span><h3>Transactions</h3></div><div class="pager"><button id="cashPrevPage">←</button><span id="cashPager">0 / 0</span><button id="cashNextPage">→</button></div></div>
+        <div id="cashRecords"></div>
+      </div>
+      <div class="tradingview-credit">TradingView Lightweight Charts™ — Copyright © 2025 TradingView, Inc. <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a>.</div>
+    </section>
+
+    <section class="panel portfolio-panel">
+      <div class="panel-head finance-head">
+        <div><span class="kicker">PORTFOLIO // CORE</span><h2>Portfolio Intelligence</h2></div>
+        <div class="actions"><button id="newPositionBtn" class="primary">+ POSITION</button></div>
+      </div>
+      <div class="finance-metrics portfolio-metrics">
+        <div><span>TOTAL EQUITY</span><b id="portfolioEquity">S$0.00</b></div>
+        <div><span>CASH</span><b id="portfolioCash">S$0.00</b></div>
+        <div><span>MARKET VALUE</span><b id="portfolioMarket">S$0.00</b></div>
+        <div><span>UNREALIZED P&amp;L</span><b id="portfolioPnl">S$0.00</b></div>
+        <div><span>P&amp;L %</span><b id="portfolioPnlPct">+0.00%</b></div>
+        <div><span>GROSS EXPOSURE</span><b id="portfolioExposure">S$0.00</b></div>
+      </div>
+      <div class="position-table-head"><span>POSITION</span><span>QTY</span><span>ENTRY</span><span>CURRENT</span><span>VALUE</span><span>P&amp;L</span><span></span></div>
+      <div id="positionList" class="position-list"></div>
+      <div class="portfolio-disclaimer">PRICES ARE MANUAL IN PHASE 4A // LIVE TWELVE DATA MARKET FEEDS ARRIVE IN THE INTEGRATION PHASE.</div>
+    </section>
+
+    <section class="panel journal-panel">
+      <div class="panel-head compact">
+        <div><span class="kicker">FINANCE JOURNAL</span><h2>Decision Log</h2></div>
+        <button id="newJournalBtn" class="ghost">+ ENTRY</button>
+      </div>
+      <div id="journalList"></div>
+      <div class="finance-section-head journal-pager"><span></span><div class="pager"><button id="journalPrevPage">←</button><span id="journalPager">0 / 0</span><button id="journalNextPage">→</button></div></div>
+    </section>
   </section>
 </main>
 
@@ -357,6 +460,52 @@
   <div class="sets-head"><span>SETS</span><span>WEIGHT</span><span>REPS</span><span>RPE</span><span></span></div><div id="setRows" class="set-rows"></div><button type="button" id="addSetBtn" class="ghost add-set">+ ADD SET</button>
   <label>Notes<textarea id="sessionNotes" rows="3"></textarea></label>
   <div class="modal-actions"><button type="button" id="deleteSessionBtn" class="danger hidden">DELETE</button><span></span><button type="button" class="ghost" data-close="sessionDialog">CANCEL</button><button type="submit" class="primary">SAVE SESSION</button></div>
+</form>
+</dialog>
+
+
+<dialog id="transactionDialog" class="modal">
+<form id="transactionForm" method="dialog">
+  <input type="hidden" id="transactionId">
+  <div class="modal-head"><div><span class="kicker">CASHFLOW RECORD</span><h2 id="transactionModalTitle">New Transaction</h2></div><button type="button" class="x" data-close="transactionDialog">×</button></div>
+  <div class="two"><label>Occurred at<input id="transactionOccurredAt" type="datetime-local" required></label><label>Direction<select id="transactionDirection"><option value="expense">EXPENSE</option><option value="inflow">INFLOW</option></select></label></div>
+  <div class="two"><label>Amount<input id="transactionAmount" type="number" min="0.01" step="0.01" required></label><label>Category<select id="transactionCategory"><option>Food</option><option>Transport</option><option>Entertainment</option><option>Shopping</option><option>Subscriptions</option><option>Education</option><option>Fitness</option><option>Personal</option><option>Income</option><option>Other</option></select></label></div>
+  <label>Description<input id="transactionDescription" maxlength="240" placeholder="Lunch / Pay / Subscription"></label>
+  <label>Notes<textarea id="transactionNotes" rows="3"></textarea></label>
+  <div class="modal-actions"><button type="button" id="deleteTransactionBtn" class="danger hidden">DELETE</button><span></span><button type="button" class="ghost" data-close="transactionDialog">CANCEL</button><button type="submit" class="primary">SAVE</button></div>
+</form>
+</dialog>
+
+<dialog id="financeSettingsDialog" class="modal narrow">
+<form id="financeSettingsForm" method="dialog">
+  <div class="modal-head"><div><span class="kicker">FINANCE CONFIGURATION</span><h2>Allowance & Portfolio</h2></div><button type="button" class="x" data-close="financeSettingsDialog">×</button></div>
+  <label>Currency<select id="financeCurrency"><option value="SGD">SGD // SINGAPORE DOLLAR</option><option value="USD">USD // US DOLLAR</option></select></label>
+  <label>Starting allowance<input id="financeStartingBalance" type="number" step="0.01"></label>
+  <label>Portfolio cash<input id="financePortfolioCash" type="number" step="0.01"></label>
+  <fieldset class="fitness-fieldset"><legend>Cashflow chart palette</legend><div class="two chart-color-fields"><label>Inflow<input id="cashUpColor" type="color" value="#2fd69a"></label><label>Expense<input id="cashDownColor" type="color" value="#ff405c"></label></div></fieldset>
+  <div class="finance-settings-note">Changing the starting allowance recalculates every cashflow candle while preserving the transaction ledger.</div>
+  <div class="modal-actions"><span></span><span></span><button type="button" class="ghost" data-close="financeSettingsDialog">CANCEL</button><button type="submit" class="primary">APPLY</button></div>
+</form>
+</dialog>
+
+<dialog id="positionDialog" class="modal">
+<form id="positionForm" method="dialog">
+  <input type="hidden" id="positionId">
+  <div class="modal-head"><div><span class="kicker">PORTFOLIO POSITION</span><h2 id="positionModalTitle">New Position</h2></div><button type="button" class="x" data-close="positionDialog">×</button></div>
+  <div class="two"><label>Symbol<input id="positionSymbol" maxlength="24" required placeholder="AAPL"></label><label>Asset type<select id="positionAssetType"><option>EQUITY</option><option>ETF</option><option>COMMODITY</option><option>FX</option><option>CRYPTO</option><option>BOND</option><option>OTHER</option></select></label></div>
+  <div class="three"><label>Quantity<input id="positionQuantity" type="number" step="0.000001" required></label><label>Entry price<input id="positionEntryPrice" type="number" min="0" step="0.0001" required></label><label>Current price<input id="positionCurrentPrice" type="number" min="0" step="0.0001" placeholder="Manual"></label></div>
+  <label>Sector / Group<input id="positionSector" maxlength="120" placeholder="Technology"></label>
+  <label>Notes<textarea id="positionNotes" rows="3"></textarea></label>
+  <div class="modal-actions"><button type="button" id="deletePositionBtn" class="danger hidden">DELETE</button><span></span><button type="button" class="ghost" data-close="positionDialog">CANCEL</button><button type="submit" class="primary">SAVE</button></div>
+</form>
+</dialog>
+
+<dialog id="journalDialog" class="modal">
+<form id="journalForm" method="dialog">
+  <input type="hidden" id="journalId">
+  <div class="modal-head"><div><span class="kicker">DECISION RECORD</span><h2 id="journalModalTitle">New Journal Entry</h2></div><button type="button" class="x" data-close="journalDialog">×</button></div>
+  <label>Entry<textarea id="journalBody" rows="8" maxlength="12000" required placeholder="Rationale, observations, rules followed, lessons..."></textarea></label>
+  <div class="modal-actions"><button type="button" id="deleteJournalBtn" class="danger hidden">DELETE</button><span></span><button type="button" class="ghost" data-close="journalDialog">CANCEL</button><button type="submit" class="primary">SAVE</button></div>
 </form>
 </dialog>
 
