@@ -233,10 +233,11 @@
 
     <section class="panel portfolio-panel">
       <div class="panel-head finance-head">
-        <div><span class="kicker">PORTFOLIO // 04C</span><h2>Portfolio Intelligence</h2></div>
+        <div><span class="kicker">PORTFOLIO // 04D</span><h2>Portfolio Intelligence</h2></div>
         <div class="actions">
           <button id="portfolioRiskBtn" class="ghost">RISK</button>
           <button id="captureSnapshotBtn" class="ghost">CAPTURE</button>
+          <button id="snapshotManagerBtn" class="ghost">SNAPSHOTS</button>
           <button id="newTradeBtn" class="ghost">+ HISTORY</button>
           <button id="newPositionBtn" class="primary">+ POSITION</button>
         </div>
@@ -258,7 +259,7 @@
       <div id="portfolioRiskStrip" class="portfolio-risk-strip"></div>
       <div class="position-table-head"><span>POSITION</span><span>QTY</span><span>ENTRY</span><span>CURRENT</span><span>VALUE</span><span>P&amp;L</span><span></span></div>
       <div id="positionList" class="position-list"></div>
-      <div class="portfolio-disclaimer">CURRENT PRICES ARE MANUAL IN PHASE 4C // HISTORY RECORDS DRIVE REALIZED P&amp;L // LIVE TWELVE DATA PRICING ARRIVES IN THE INTEGRATION PHASE.</div>
+      <div class="portfolio-disclaimer">CURRENT PRICES ARE MANUAL IN PHASE 4D // HISTORY RECORDS DRIVE REALIZED P&amp;L // LIVE TWELVE DATA PRICING ARRIVES IN THE INTEGRATION PHASE.</div>
     </section>
 
     <section class="panel portfolio-analytics-panel">
@@ -581,6 +582,19 @@
   <label>Notes<textarea id="tradeNotes" rows="3"></textarea></label>
   <div class="modal-actions"><button type="button" id="deleteTradeBtn" class="danger hidden">DELETE</button><span></span><button type="button" class="ghost" data-close="tradeDialog">CANCEL</button><button type="submit" class="primary">SAVE</button></div>
 </form>
+</dialog>
+
+<dialog id="snapshotManagerDialog" class="modal snapshot-manager-modal">
+  <div class="modal-head"><div><span class="kicker">PORTFOLIO HISTORY CONTROL</span><h2>Snapshot Manager</h2></div><button type="button" class="x" data-close="snapshotManagerDialog">×</button></div>
+  <div class="snapshot-manager-toolbar">
+    <label>Delete captures before<input id="snapshotDeleteBefore" type="date"></label>
+    <button id="deleteSnapshotsBeforeBtn" type="button" class="ghost danger-outline">DELETE BEFORE DATE</button>
+    <button id="clearAllSnapshotsBtn" type="button" class="danger">CLEAR ALL</button>
+  </div>
+  <div class="snapshot-manager-note">Deleting a snapshot only removes historical chart points. Current positions, cash, transactions and trade history are not changed.</div>
+  <div class="snapshot-table-head"><span>CAPTURED</span><span>SOURCE</span><span>EQUITY</span><span>DRAW</span><span></span></div>
+  <div id="snapshotManagerList" class="snapshot-manager-list"></div>
+  <div class="finance-section-head"><span id="snapshotCountLabel" class="finance-microcopy">0 SNAPSHOTS</span><div class="pager"><button id="snapshotPrevPage" type="button">←</button><span id="snapshotPager">0 / 0</span><button id="snapshotNextPage" type="button">→</button></div></div>
 </dialog>
 
 <dialog id="journalDialog" class="modal">
