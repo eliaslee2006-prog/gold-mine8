@@ -22,7 +22,8 @@ function clamp(n,a,b){return Math.min(Math.max(n,a),b)}
 function snap(n,step=15){return Math.round(n/step)*step}
 function dayCode(d){return ['SU','MO','TU','WE','TH','FR','SA'][d.getDay()]}
 function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
-function categoryColor(cat){return({OPERATIONAL:'#00d9ff',DUTY:'#ff405c',FITNESS:'#6ee7a7',STUDY:'#4f8cff',FINANCE:'#ffba4a',PERSONAL:'#8b6cff',TRAVEL:'#ff3ea5',REST:'#64636d',MAINTENANCE:'#b3b0bd',GOOGLE:'#00d9ff'})[cat]||'#00d9ff'}
+function themeColor(name,fallback){const v=getComputedStyle(document.documentElement).getPropertyValue(name).trim();return v||fallback}
+function categoryColor(cat){const c={OPERATIONAL:themeColor('--accent-primary','#00d9ff'),DUTY:themeColor('--accent-danger','#ff405c'),FITNESS:themeColor('--accent-success','#6ee7a7'),STUDY:themeColor('--accent-secondary','#8b6cff'),FINANCE:themeColor('--accent-warning','#ffba4a'),PERSONAL:themeColor('--accent-secondary','#8b6cff'),TRAVEL:themeColor('--accent-selected','#ff3ea5'),REST:'#64636d',MAINTENANCE:'#b3b0bd',GOOGLE:themeColor('--accent-primary','#00d9ff')};return c[cat]||themeColor('--accent-primary','#00d9ff')}
 
 function parseReminder(value){
   if(!value)return{useDefault:false,overrides:[]};
