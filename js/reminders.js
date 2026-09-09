@@ -4,6 +4,7 @@ import { state } from './state.js';
 const $=s=>document.querySelector(s);
 const ALERT_KEY='neon_ops_reminder_browser_alerts';
 let toast=()=>{},pollTimer=null,refreshTimer=null,pollBusy=false;
+const REMINDER_PAGE_SIZE=4;let reminderPage=0;
 const pad=n=>String(n).padStart(2,'0');
 function localInput(value){const d=value?new Date(value):new Date(Date.now()+30*60000);return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;}
 function browserSupported(){return typeof Notification!=='undefined';}
@@ -26,22 +27,47 @@ export async function refreshReminders(showToast=false){
   if(!state.user)return;const from=new Date(Date.now()-86400000).toISOString(),to=new Date(Date.now()+30*86400000).toISOString();
   try{const d=await api(`/api/v8/reminders?limit=80&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);state.reminders=d.items||[];state.reminderSummary=d.summary||{};renderReminders();if(showToast)toast('REMINDERS REFRESHED');}catch(e){if(showToast)toast(e.message,true);}
 }
+function reminderPriority(iso){
+  const ms=new Date(iso).getTime()-Date.now();
+  if(!Number.isFinite(ms))return{band:'medium',label:'MEDIUM'};
+  if(ms<=6*3600000)return{band:'critical',label:ms<0?'OVERDUE':'CRITICAL'};
+  if(ms<=24*3600000)return{band:'high',label:'HIGH'};
+  if(ms<=72*3600000)return{band:'medium',label:'MEDIUM'};
+  if(ms<=7*86400000)return{band:'low',label:'LOW'};
+  return{band:'future',label:'FUTURE'};
+}
+function ensureReminderPager(){
+  const root=$('#reminderCenterList');if(!root)return null;let pager=$('#reminderPager');
+  if(!pager){pager=document.createElement('div');pager.id='reminderPager';pager.className='reminder-pager';root.insertAdjacentElement('afterend',pager);}
+  return pager;
+}
+function renderReminderPager(total){
+  const pager=ensureReminderPager();if(!pager)return;const pages=Math.max(1,Math.ceil(total/REMINDER_PAGE_SIZE));reminderPage=Math.min(Math.max(0,reminderPage),pages-1);
+  if(total<=REMINDER_PAGE_SIZE){pager.hidden=true;pager.replaceChildren();return;}pager.hidden=false;
+  const start=reminderPage*REMINDER_PAGE_SIZE+1,end=Math.min(total,start+REMINDER_PAGE_SIZE-1);
+  pager.innerHTML=`<button type="button" data-rem-page="prev" aria-label="Previous reminder page">‹</button><span>${start}–${end} OF ${total}</span><b>PAGE ${reminderPage+1} / ${pages}</b><button type="button" data-rem-page="next" aria-label="Next reminder page">›</button>`;
+  const prev=pager.querySelector('[data-rem-page="prev"]'),next=pager.querySelector('[data-rem-page="next"]');prev.disabled=reminderPage===0;next.disabled=reminderPage>=pages-1;
+  prev.onclick=()=>{if(reminderPage>0){reminderPage--;renderReminders();}};next.onclick=()=>{if(reminderPage<pages-1){reminderPage++;renderReminders();}};
+}
 function renderReminders(){
   const root=$('#reminderCenterList');if(!root)return;const items=[...(state.reminders||[])].filter(x=>['scheduled','snoozed'].includes(x.status)).sort((a,b)=>new Date(a.scheduledAt)-new Date(b.scheduledAt));
+  const pages=Math.max(1,Math.ceil(items.length/REMINDER_PAGE_SIZE));reminderPage=Math.min(reminderPage,pages-1);
   $('#reminderCenterCount').textContent=`${items.length} ACTIVE`;$('#reminderDueSoon').textContent=`${Number(state.reminderSummary?.dueSoon24h||0)} / 24H`;updatePermissionUi();root.replaceChildren();
-  if(!items.length){root.innerHTML='<div class="reminder-empty">NO ACTIVE REMINDERS // NEXUS CAN CREATE ONE</div>';return;}
-  for(const r of items.slice(0,8)){
-    const row=document.createElement('article');row.className=`reminder-center-item ${r.virtual?'virtual':''}`;
+  if(!items.length){root.innerHTML='<div class="reminder-empty">NO ACTIVE REMINDERS // NEXUS CAN CREATE ONE</div>';renderReminderPager(0);return;}
+  const pageItems=items.slice(reminderPage*REMINDER_PAGE_SIZE,(reminderPage+1)*REMINDER_PAGE_SIZE);
+  for(const r of pageItems){
+    const priority=reminderPriority(r.scheduledAt),row=document.createElement('article');row.className=`reminder-center-item priority-${priority.band} ${r.virtual?'virtual':''}`;row.dataset.priority=priority.band;
     const actions=r.virtual?`<span class="reminder-google-chip">GOOGLE</span><button type="button" data-rem-delete="${escapeHtml(r.id)}">DELETE</button>`:`<button type="button" data-rem-snooze="${escapeHtml(r.id)}">+10M</button><button type="button" data-rem-dismiss="${escapeHtml(r.id)}">DISMISS</button><button type="button" data-rem-delete="${escapeHtml(r.id)}">DELETE</button>`;
-    row.innerHTML=`<div class="reminder-timing"><b>${escapeHtml(r.timingUnknown?'DEFAULT':rel(r.scheduledAt))}</b><span>${escapeHtml(stamp(r.scheduledAt))}</span></div><div class="reminder-copy"><strong>${escapeHtml(r.title)}</strong><span>${escapeHtml(r.sourceLabel||'REMINDER')}${r.status==='snoozed'?' // SNOOZED':''}${r.googleSync?' // GOOGLE':''}</span></div><div class="reminder-actions">${actions}</div>`;
+    row.innerHTML=`<div class="reminder-timing"><b>${escapeHtml(r.timingUnknown?'DEFAULT':rel(r.scheduledAt))}</b><span>${escapeHtml(stamp(r.scheduledAt))}</span></div><div class="reminder-copy"><div class="reminder-copy-head"><strong>${escapeHtml(r.title)}</strong><em>${priority.label}</em></div><span>${escapeHtml(r.sourceLabel||'REMINDER')}${r.status==='snoozed'?' // SNOOZED':''}${r.googleSync?' // GOOGLE':''}</span></div><div class="reminder-actions">${actions}</div>`;
     root.append(row);
   }
+  renderReminderPager(items.length);
   root.querySelectorAll('[data-rem-snooze]').forEach(b=>b.onclick=()=>snooze(b.dataset.remSnooze,10));root.querySelectorAll('[data-rem-dismiss]').forEach(b=>b.onclick=()=>dismiss(b.dataset.remDismiss));root.querySelectorAll('[data-rem-delete]').forEach(b=>b.onclick=()=>removeReminder(b.dataset.remDelete));
 }
 function openReminder(){
   $('#reminderTitleInput').value='';$('#reminderTimeInput').value=localInput();$('#reminderNotesInput').value='';$('#reminderChannelInput').value='both';$('#reminderDialog').showModal();setTimeout(()=>$('#reminderTitleInput').focus(),50);
 }
-async function saveReminder(e){e.preventDefault();const title=$('#reminderTitleInput').value.trim(),when=$('#reminderTimeInput').value;if(!title||!when)return toast('Reminder title and time are required',true);try{await api('/api/v8/reminders',{method:'POST',body:{title,remindAt:new Date(when).toISOString(),notes:$('#reminderNotesInput').value.trim(),channel:$('#reminderChannelInput').value}});$('#reminderDialog').close();await refreshReminders(false);toast('REMINDER ARMED');}catch(err){toast(err.message,true);}}
+async function saveReminder(e){e.preventDefault();const title=$('#reminderTitleInput').value.trim(),when=$('#reminderTimeInput').value;if(!title||!when)return toast('Reminder title and time are required',true);try{await api('/api/v8/reminders',{method:'POST',body:{title,remindAt:new Date(when).toISOString(),notes:$('#reminderNotesInput').value.trim(),channel:$('#reminderChannelInput').value}});$('#reminderDialog').close();reminderPage=0;await refreshReminders(false);toast('REMINDER ARMED');}catch(err){toast(err.message,true);}}
 async function snooze(id,minutes){try{await api(`/api/v8/reminders/${encodeURIComponent(id)}/snooze`,{method:'POST',body:{minutes}});await refreshReminders(false);toast(`REMINDER SNOOZED // ${minutes}M`);}catch(e){toast(e.message,true);}}
 async function dismiss(id){try{await api(`/api/v8/reminders/${encodeURIComponent(id)}/dismiss`,{method:'POST'});await refreshReminders(false);toast('REMINDER DISMISSED');}catch(e){toast(e.message,true);}}
 function reminderById(id){return(state.reminders||[]).find(x=>String(x.id)===String(id))||null;}
