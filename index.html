@@ -1,823 +1,284 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <meta name="theme-color" content="#09090d"/>
-  <title>NEON OPERATIONS CENTER // V8</title>
-  <link rel="stylesheet" href="./css/app.css"/>
-  <script src="https://unpkg.com/lightweight-charts@5.2.1/dist/lightweight-charts.standalone.production.js"></script>
-  <script type="module" src="./js/app.js"></script>
-</head>
-<body>
-<div id="bootCover" class="boot-cover">INITIALIZING V8 // OPS CORE</div>
+:root{
+  --bg:#09090d;--panel:#111217;--panel2:#171820;--line:#292a33;--line-soft:#20212a;
+  --text:#f0eef5;--muted:#8f8d99;--faint:#64636d;--cyan:#00d9ff;--mag:#ff3ea5;
+  --red:#ff405c;--amber:#ffba4a;--green:#6ee7a7;--violet:#8b6cff;
+  --radius:15px;--shadow:0 18px 70px rgba(0,0,0,.30);
+  --body-font:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --editorial:"Times New Roman",Times,serif;
+  --telemetry:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --calendar-time-font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  --hour-height:64px;--event-opacity:.82;--event-radius:8px;--axis-width:62px;
+}
+*{box-sizing:border-box}html{background:var(--bg);color-scheme:dark}body{margin:0;background:radial-gradient(circle at 86% -12%,rgba(139,67,255,.085),transparent 34%),var(--bg);color:var(--text);font-family:var(--body-font);min-height:100vh}
+button,input,select,textarea{font:inherit}.hidden{display:none!important}button{cursor:pointer}
+.boot-cover{position:fixed;inset:0;z-index:999;background:#09090d;display:grid;place-items:center;font:12px var(--telemetry);letter-spacing:.2em;color:var(--cyan);transition:.25s opacity}.boot-cover.off{opacity:0;pointer-events:none}
+.topbar{min-height:88px;display:flex;justify-content:space-between;gap:24px;align-items:flex-end;padding:20px clamp(16px,3vw,42px) 15px;border-bottom:1px solid var(--line);background:rgba(9,9,13,.82);backdrop-filter:blur(14px);position:sticky;top:0;z-index:30}
+.eyebrow,.kicker{font:10px var(--telemetry);letter-spacing:.18em;color:var(--muted)}h1,h2{font-family:var(--editorial);font-weight:400;margin:0}h1{font-size:clamp(25px,3vw,39px);letter-spacing:.01em}h2{font-size:24px}
+.top-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}.pill,.telemetry{border:1px solid var(--line);padding:7px 9px;border-radius:999px;font:10px var(--telemetry);letter-spacing:.08em}.telemetry{border-color:transparent;color:var(--muted)}
+.tabs{display:flex;gap:4px;padding:9px clamp(16px,3vw,42px);border-bottom:1px solid var(--line);overflow:auto}.tab{background:transparent;color:var(--muted);border:0;padding:9px 14px;font:11px var(--telemetry);letter-spacing:.1em;border-bottom:2px solid transparent}.tab.active{color:var(--text);border-color:var(--mag)}.tab:disabled{opacity:.35}
+.ops-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:14px;padding:14px clamp(12px,2vw,28px) 28px;max-width:1900px;margin:auto}.right-rail{display:grid;gap:14px;align-content:start}
+.panel{background:linear-gradient(180deg,rgba(23,24,32,.86),rgba(17,18,23,.94));border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid var(--line)}.panel-head.compact{padding:14px}.panel-head .kicker{display:block;margin-bottom:4px}.actions{display:flex;gap:8px;flex-wrap:wrap}
+.primary,.ghost,.danger,.filter,.hud-icon,.calendar-view{min-height:38px;border-radius:9px;padding:0 12px;border:1px solid var(--line);font:11px var(--telemetry);letter-spacing:.08em}.primary{background:rgba(0,217,255,.09);border-color:rgba(0,217,255,.35);color:var(--cyan)}.ghost{background:#15161b;color:var(--text)}.danger{background:rgba(255,64,92,.1);border-color:rgba(255,64,92,.35);color:var(--red)}.small{min-height:34px;padding:0 9px}
+.calendar-panel{min-width:0}.calendar-commandbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border-bottom:1px solid var(--line-soft);background:rgba(8,9,13,.48)}.calendar-nav{display:flex;align-items:center;gap:7px;min-width:0}.hud-icon{width:38px;padding:0;background:#101116;color:#dcd9e4}.calendar-period{display:grid;gap:2px;margin-left:7px;min-width:0}.calendar-period strong{font-family:var(--editorial);font-weight:400;font-size:17px;white-space:nowrap}.calendar-view-switch{display:flex;border:1px solid var(--line);border-radius:10px;padding:3px;background:#0d0e12}.calendar-view{min-height:31px;border:0;background:transparent;color:var(--muted);padding:0 10px}.calendar-view.active{background:#191a20;color:#fff;box-shadow:inset 0 -1px 0 var(--mag)}
+.scheduler{min-height:690px;background:#0b0c10}.scheduler-scroll{height:min(72vh,860px);min-height:620px;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;background:#0b0c10;position:relative}.scheduler-scroll::-webkit-scrollbar{width:10px;height:10px}.scheduler-scroll::-webkit-scrollbar-track{background:#090a0e}.scheduler-scroll::-webkit-scrollbar-thumb{background:#2a2c36;border:2px solid #090a0e;border-radius:99px}
+.scheduler-header{display:grid;position:sticky;top:0;z-index:18;min-width:max-content;background:rgba(12,13,18,.96);backdrop-filter:blur(10px);border-bottom:1px solid #30313a}.scheduler-header .axis-head{position:sticky;left:0;z-index:22;background:#0c0d12}.day-header{height:54px;padding:9px 10px;display:flex;align-items:flex-end;justify-content:space-between;gap:8px;border-right:1px solid #252630;color:#a7a5b0}.day-header.today{color:var(--cyan);background:linear-gradient(180deg,rgba(0,217,255,.055),transparent)}.day-name{font:11px var(--telemetry);letter-spacing:.08em}.day-number{font:24px var(--editorial);line-height:.9}.axis-head{width:var(--axis-width);height:54px;border-right:1px solid #30313a;display:grid;place-items:end center;padding-bottom:9px;font:9px var(--telemetry);letter-spacing:.12em;color:var(--faint)}
+.scheduler-body{display:grid;position:relative;min-width:max-content}.time-axis{position:sticky;left:0;z-index:12;width:var(--axis-width);background:#0c0d12;border-right:1px solid #30313a;box-shadow:8px 0 16px rgba(0,0,0,.10)}.time-label{position:absolute;right:8px;transform:translateY(-50%);font-family:var(--calendar-time-font);font-size:11px;font-weight:500;font-variant-numeric:tabular-nums;color:#858590;white-space:nowrap;line-height:1}.time-label.minor{font-size:9px;color:#4f5059}
+.day-lane{position:relative;border-right:1px solid #252630;background-color:#0d0e13;background-image:linear-gradient(to bottom,rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(to bottom,rgba(255,255,255,.018) 1px,transparent 1px);background-size:100% var(--hour-height),100% calc(var(--hour-height)/2);touch-action:pan-y pinch-zoom}.day-lane.today{background-color:#0d1116}.day-lane::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(0,217,255,.016),transparent 45%)}
+.event-block{--event-color:#00d9ff;position:absolute;z-index:5;min-height:22px;border:1px solid color-mix(in srgb,var(--event-color) 48%,transparent);border-left:4px solid var(--event-color);border-radius:var(--event-radius);background:color-mix(in srgb,var(--event-color) calc(var(--event-opacity)*100%),#11141a);box-shadow:0 8px 25px rgba(0,0,0,.27),inset 0 0 0 1px rgba(255,255,255,.04);color:#fff;overflow:hidden;touch-action:none;user-select:none;transition:filter .13s,box-shadow .13s,transform .13s}.event-block:hover{filter:brightness(1.08);box-shadow:0 10px 30px rgba(0,0,0,.34),0 0 0 1px color-mix(in srgb,var(--event-color) 30%,transparent)}.event-block.dragging{opacity:.78;z-index:40;box-shadow:0 18px 50px rgba(0,0,0,.58),0 0 0 1px var(--event-color)}.event-content{height:100%;padding:6px 7px 8px;display:flex;flex-direction:column;gap:2px;overflow:hidden}.event-time{font-family:var(--calendar-time-font);font-size:9px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:.025em;color:rgba(255,255,255,.76);white-space:nowrap}.event-title{font-size:12px;font-weight:650;line-height:1.17;white-space:normal;overflow:hidden;text-shadow:0 1px 6px rgba(0,0,0,.25)}.event-type{margin-top:auto;font:8px var(--telemetry);letter-spacing:.10em;color:rgba(255,255,255,.60);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.event-resize{position:absolute;left:0;right:0;bottom:0;height:10px;cursor:ns-resize}.event-resize::after{content:"";position:absolute;left:38%;right:38%;bottom:2px;height:2px;border-radius:5px;background:rgba(255,255,255,.35)}
+.now-line{position:absolute;height:1px;background:var(--mag);left:0;right:0;z-index:9;box-shadow:0 0 8px rgba(255,62,165,.55);pointer-events:none}.now-dot{position:absolute;width:7px;height:7px;border-radius:50%;background:var(--mag);left:-3px;top:-3px;box-shadow:0 0 9px rgba(255,62,165,.75)}
+.all-day-strip{display:grid;min-width:max-content;background:#0c0d12;border-bottom:1px solid #30313a}.all-day-axis{position:sticky;left:0;z-index:14;width:var(--axis-width);padding:8px 5px;background:#0c0d12;border-right:1px solid #30313a;text-align:right;font:8px var(--telemetry);letter-spacing:.08em;color:var(--faint)}.all-day-cell{min-height:34px;padding:4px;border-right:1px solid #252630;display:flex;gap:4px;flex-wrap:wrap;align-items:flex-start}.all-day-event{border-radius:6px;padding:4px 6px;font-size:10px;border-left:3px solid var(--event-color);background:color-mix(in srgb,var(--event-color) 20%,#11141a);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.month-grid{display:grid;grid-template-columns:repeat(7,minmax(120px,1fr));min-width:840px;border-top:1px solid #272832}.month-head{padding:10px;border-right:1px solid #272832;border-bottom:1px solid #272832;color:#8f8e99;font:10px var(--telemetry);letter-spacing:.08em}.month-cell{min-height:130px;padding:8px;border-right:1px solid #272832;border-bottom:1px solid #272832;background:#0d0e13}.month-cell.outside{opacity:.38}.month-cell.today{box-shadow:inset 0 0 0 1px rgba(0,217,255,.24)}.month-date{font-family:var(--editorial);font-size:20px;margin-bottom:7px}.month-event{--event-color:#00d9ff;display:block;width:100%;border:0;border-left:3px solid var(--event-color);background:color-mix(in srgb,var(--event-color) 16%,#11141a);color:#eee;text-align:left;border-radius:5px;padding:5px 6px;margin:3px 0;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.agenda{padding:12px}.agenda-day{border-top:1px solid #262730;padding:12px 0}.agenda-day:first-child{border-top:0}.agenda-date{display:flex;align-items:baseline;gap:8px;margin-bottom:8px}.agenda-date strong{font-family:var(--editorial);font-size:21px;font-weight:400}.agenda-date span{font:9px var(--telemetry);letter-spacing:.1em;color:var(--muted)}.agenda-event{--event-color:#00d9ff;display:grid;grid-template-columns:82px 4px 1fr auto;gap:10px;align-items:center;padding:9px 8px;border-radius:8px;background:rgba(255,255,255,.018);margin:4px 0;cursor:pointer}.agenda-event:hover{background:rgba(255,255,255,.032)}.agenda-time{font-family:var(--calendar-time-font);font-size:11px;font-weight:600;font-variant-numeric:tabular-nums;color:#9d9ca6}.agenda-bar{height:28px;border-radius:99px;background:var(--event-color)}.agenda-title{font-size:12px}.agenda-type{font:8px var(--telemetry);letter-spacing:.1em;color:var(--muted)}
+.nexus-core{display:flex;align-items:center;gap:14px;padding:18px}.avatar-placeholder{width:78px;height:78px;border-radius:18px;display:grid;place-items:center;background:radial-gradient(circle,rgba(255,62,165,.2),rgba(0,217,255,.06));border:1px solid rgba(255,62,165,.3);font:22px var(--telemetry);color:var(--mag)}.nexus-core p{color:var(--muted);font-size:12px;margin:6px 0}.mood{font:10px var(--telemetry);color:var(--cyan);border:1px solid rgba(0,217,255,.3);padding:6px 8px;border-radius:999px}
+.task-filters{display:flex;padding:10px 12px;gap:6px}.filter{min-height:30px;background:transparent;color:var(--muted);padding:0 8px}.filter.active{color:var(--text);border-color:#555765}.task-list{padding:0 12px 12px;display:grid;gap:8px;max-height:500px;overflow:auto}.task{border:1px solid var(--line);background:#101116;border-radius:10px;padding:10px;display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start}.task.done{opacity:.55}.task-check{appearance:none;width:18px;height:18px;border:1px solid #555765;border-radius:5px;margin:2px 0;cursor:pointer}.task-check:checked{background:var(--green);border-color:var(--green);box-shadow:inset 0 0 0 4px #111217}.task-title{font-size:13px}.task-meta{margin-top:5px;display:flex;gap:6px;flex-wrap:wrap;color:var(--muted);font:9px var(--telemetry);letter-spacing:.05em}.task-open{border:0;background:transparent;color:var(--muted);font-size:18px}
+.status-grid{padding:15px;display:grid;grid-template-columns:1fr auto;gap:9px;font:10px var(--telemetry);color:var(--muted)}.status-grid b{color:var(--text);font-weight:500}.brief-card>.kicker{display:block;padding:14px 15px 0}
+.modal{width:min(660px,calc(100vw - 24px));border:1px solid #393a44;border-radius:16px;background:#111217;color:var(--text);padding:0;box-shadow:0 40px 120px rgba(0,0,0,.65)}.modal.narrow{width:min(460px,calc(100vw - 24px))}.modal::backdrop{background:rgba(0,0,0,.68);backdrop-filter:blur(3px)}.modal form{padding:16px}.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}.modal .x{border:0;background:transparent;color:var(--muted);font-size:26px}.modal label{display:grid;gap:6px;margin:10px 0;color:var(--muted);font:10px var(--telemetry);letter-spacing:.07em;text-transform:uppercase}.modal input,.modal select,.modal textarea{width:100%;background:#0d0e13;border:1px solid #30313a;border-radius:9px;color:var(--text);padding:10px;outline:none}.modal input:focus,.modal select:focus,.modal textarea:focus{border-color:rgba(0,217,255,.5);box-shadow:0 0 0 2px rgba(0,217,255,.07)}.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.modal-actions{display:grid;grid-template-columns:auto 1fr auto auto;gap:8px;margin-top:14px}.color-control{display:flex;align-items:center;gap:8px}.color-control>input{width:54px;height:41px;padding:4px}.color-presets{display:flex;gap:5px;flex-wrap:wrap}.color-presets button{width:24px;height:24px;border-radius:50%;background:var(--swatch);border:2px solid #111217;box-shadow:0 0 0 1px #3a3b44}
+.repeat-box{border:1px solid #2b2c35;border-radius:11px;padding:10px 11px;margin-top:12px}.repeat-box legend{padding:0 6px;font:10px var(--telemetry);letter-spacing:.1em;color:#a09eaa;text-transform:uppercase}.repeat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.inline-field{display:grid;grid-template-columns:70px 1fr;gap:6px}.repeat-days{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.repeat-days button{width:35px;height:35px;border-radius:8px;border:1px solid #373842;background:#0d0e13;color:#8e8d98;font:10px var(--telemetry)}.repeat-days button.active{border-color:rgba(0,217,255,.55);background:rgba(0,217,255,.09);color:var(--cyan)}.repeat-ends{display:grid;grid-template-columns:1fr 1fr;gap:10px}.repeat-summary{margin-top:9px;padding:8px 9px;border-left:2px solid var(--cyan);background:rgba(0,217,255,.035);font:9px var(--telemetry);letter-spacing:.06em;color:#aaa9b3}
+.field-value{float:right;color:var(--cyan)}input[type=range]{padding:0!important;accent-color:var(--cyan)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,18px);z-index:120;background:#111217;border:1px solid #373943;border-radius:10px;padding:10px 13px;opacity:0;pointer-events:none;transition:.18s;color:#eee;font:10px var(--telemetry);letter-spacing:.06em;box-shadow:0 15px 50px rgba(0,0,0,.45)}.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:1100px){.ops-grid{grid-template-columns:1fr}.right-rail{grid-template-columns:1fr 1fr}.brief-card{grid-column:1/-1}}
+@media(max-width:700px){
+  .topbar{align-items:flex-start;flex-direction:column}.top-meta{justify-content:flex-start}.ops-grid{padding:10px}.right-rail{grid-template-columns:1fr}
+  .panel-head{padding:13px}.calendar-panel-head{display:block}.calendar-panel-head .actions{display:grid;grid-template-columns:1fr 1fr;margin-top:11px}
+  .calendar-commandbar{align-items:stretch;flex-direction:column;padding:9px}.calendar-nav{width:100%}.calendar-period{flex:1}.calendar-period strong{font-size:15px}
+  .calendar-view-switch{display:grid;grid-template-columns:repeat(4,1fr);width:100%}.calendar-view{padding:0 4px;font-size:9px}
+  :root{--axis-width:56px}.scheduler-scroll{height:70vh;min-height:560px}.day-header{height:48px;padding:7px}.day-number{font-size:20px}.day-name{font-size:9px}
+  .time-label{right:6px;font-size:10px}.event-title{font-size:11px}.event-time{font-size:8px}.event-type{font-size:7px}
+  .two,.repeat-grid,.repeat-ends{grid-template-columns:1fr}.modal-actions{grid-template-columns:1fr 1fr}.modal-actions span{display:none}.modal-actions .danger{grid-column:1/-1}
+}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 
-<header class="topbar">
-  <div>
-    <div class="eyebrow">PRIVATE TACTICAL OPERATIONS / FINANCIAL INTELLIGENCE</div>
-    <h1>NEON OPERATIONS CENTER</h1>
-  </div>
-  <div class="top-meta">
-    <span class="pill" id="apiStatus">API // CHECKING</span>
-    <span class="pill" id="authStatus">AUTH // CHECKING</span>
-    <span class="telemetry" id="clock">--:--:-- SGT</span>
-  </div>
-</header>
+/* Phase 2D // Google reminder controls */
+.reminder-box{border:1px solid #2b2c35;border-radius:11px;padding:10px 11px;margin-top:12px}.reminder-box legend{padding:0 6px;font:10px var(--telemetry);letter-spacing:.1em;color:#a09eaa;text-transform:uppercase}.reminder-top{display:grid;grid-template-columns:minmax(180px,240px) 1fr;gap:12px;align-items:end}.reminder-help{font:9px var(--telemetry);line-height:1.5;letter-spacing:.035em;color:#777782;padding-bottom:8px}.reminder-list{display:grid;gap:7px;margin:10px 0}.reminder-row{display:grid;grid-template-columns:minmax(130px,1.05fr) 80px minmax(145px,1fr) 34px;gap:7px;align-items:center}.reminder-row select,.reminder-row input{min-width:0}.reminder-remove{height:34px;border:1px solid rgba(255,64,92,.28);border-radius:8px;background:rgba(255,64,92,.045);color:#ff7184;font-size:17px;cursor:pointer}.reminder-remove:hover{background:rgba(255,64,92,.1)}.reminder-limit{margin-top:7px;font:8px var(--telemetry);letter-spacing:.09em;color:#5f5e68}.event-alert{display:block;margin-top:2px;color:rgba(255,255,255,.82);letter-spacing:.07em}.agenda-type{line-height:1.45}
+@media(max-width:700px){.reminder-top{grid-template-columns:1fr}.reminder-row{grid-template-columns:1fr 70px 1fr 34px}.reminder-help{padding-bottom:0}}
+@media(max-width:480px){.reminder-row{grid-template-columns:1fr 1fr}.reminder-remove{grid-column:2;grid-row:2}.reminder-unit{grid-column:1}}
 
-<nav class="tabs" aria-label="Primary">
-  <button class="tab active" data-page="pageOps">OPS</button>
-  <button class="tab" data-page="pageFinance">FINANCE</button>
-  <button class="tab" disabled>MEDIA</button>
-  <button class="tab" data-page="pageFitness">FITNESS</button>
-  <button class="tab" data-page="pageCustomize">CUSTOMIZE</button>
-</nav>
+/* =========================================================
+   PHASE 3A // FITNESS INTELLIGENCE
+   ========================================================= */
+.page{display:none}.page.active.ops-grid{display:grid}.page.active.fitness-page{display:block}
+.fitness-page{padding:14px;max-width:1800px;margin:0 auto}.fitness-command-panel{overflow:hidden}.fitness-head{align-items:center}.fitness-toolbar{display:grid;grid-template-columns:minmax(220px,340px) 1fr auto;gap:14px;align-items:end;padding:12px 15px;border-top:1px solid #22232b;border-bottom:1px solid #2a2b34;background:linear-gradient(90deg,rgba(0,217,255,.025),transparent 36%,rgba(255,62,165,.018))}.movement-picker{display:grid;gap:5px}.movement-picker span{font:8px var(--telemetry);letter-spacing:.11em;color:var(--muted)}.movement-picker select{background:#0d0e13;color:var(--text);border:1px solid #30313a;border-radius:8px;padding:9px}.fitness-identity{display:flex;gap:12px;align-items:baseline;min-width:0}.fitness-identity b{font-family:var(--editorial);font-size:26px;font-weight:400}.fitness-identity span{font:8px var(--telemetry);letter-spacing:.08em;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.chart-range{display:flex;gap:5px;justify-content:flex-end;flex-wrap:wrap}.chart-range button,.pager button{height:30px;min-width:38px;border:1px solid #30313a;background:#0d0e13;color:#858590;border-radius:7px;font:8px var(--telemetry);letter-spacing:.06em}.chart-range button.active{color:var(--cyan);border-color:rgba(0,217,255,.35);background:rgba(0,217,255,.055)}
+.fitness-empty-state{padding:70px 22px;text-align:center}.fitness-empty-state h3{font-family:var(--editorial);font-size:30px;font-weight:400;margin:8px 0}.fitness-empty-state p{max-width:620px;margin:0 auto 18px;color:var(--muted);font-size:13px;line-height:1.6}.fitness-metrics{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid #282933}.fitness-metrics>div{padding:13px 15px;border-right:1px solid #282933;background:rgba(255,255,255,.012)}.fitness-metrics>div:last-child{border-right:0}.fitness-metrics span{display:block;font:8px var(--telemetry);letter-spacing:.1em;color:var(--muted)}.fitness-metrics b{display:block;margin-top:5px;font:500 24px var(--calendar-time-font);font-variant-numeric:tabular-nums}.fitness-chart-shell{position:relative;padding:8px 10px 0;background:radial-gradient(circle at 30% 10%,rgba(0,217,255,.022),transparent 32%),#0b0c10}.fitness-chart{height:460px;width:100%}.fitness-chart-note{display:flex;gap:14px;flex-wrap:wrap;padding:7px 6px 10px;color:#666773;font:7px var(--telemetry);letter-spacing:.1em}.fitness-chart-note span:nth-child(1){color:#68d8b0}.fitness-chart-note span:nth-child(2){color:#dd7382}.fitness-records-panel{border-top:1px solid #2a2b34}.fitness-records-head{display:flex;align-items:center;justify-content:space-between;padding:13px 15px}.fitness-records-head h3{font-family:var(--editorial);font-size:21px;font-weight:400;margin:2px 0 0}.pager{display:flex;align-items:center;gap:7px}.pager span{font:8px var(--telemetry);color:var(--muted);letter-spacing:.08em}.fitness-record{width:100%;display:grid;grid-template-columns:1.25fr .75fr 1fr 1fr 20px;gap:12px;align-items:center;border:0;border-top:1px solid #24252d;background:#0e0f14;color:#d9d9df;text-align:left;padding:10px 15px;cursor:pointer}.fitness-record:hover{background:#121319}.fitness-record>span:first-child{display:flex;align-items:baseline;gap:10px}.fitness-record b{font-family:var(--calendar-time-font);font-size:11px}.fitness-record small,.fitness-record>span:not(:first-child){font:8px var(--telemetry);color:var(--muted);letter-spacing:.05em}.fitness-record i{font-style:normal;font-size:20px;color:#555763}.fitness-empty{padding:24px;color:#70717c;text-align:center;font:8px var(--telemetry);letter-spacing:.08em}.tradingview-credit{padding:8px 15px 12px;border-top:1px solid #22232a;color:#555661;font:7px var(--telemetry);letter-spacing:.04em}.tradingview-credit a{color:#777986}.fitness-fieldset{border:1px solid #2b2c35;border-radius:11px;padding:10px 11px;margin-top:12px}.fitness-fieldset legend{padding:0 6px;font:9px var(--telemetry);letter-spacing:.1em;color:#9b9ca7;text-transform:uppercase}.movement-days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.movement-days button{height:36px;border-radius:8px;border:1px solid #373842;background:#0d0e13;color:#858691;font:9px var(--telemetry)}.movement-days button.active{border-color:rgba(0,217,255,.5);background:rgba(0,217,255,.08);color:var(--cyan)}.three{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.session-movement-name{margin-top:4px;color:var(--cyan);font:8px var(--telemetry);letter-spacing:.08em}.sets-head,.set-row{display:grid;grid-template-columns:38px 1fr 1fr 1fr 34px;gap:7px;align-items:center}.sets-head{padding:4px 0;color:#666773;font:7px var(--telemetry);letter-spacing:.08em}.set-row{margin:6px 0}.set-row input{margin:0!important}.set-no{font:9px var(--telemetry);color:#777985;text-align:center}.set-remove{height:36px;border:1px solid rgba(255,64,92,.25);background:rgba(255,64,92,.04);color:#ff7184;border-radius:8px}.add-set{width:100%;margin:6px 0 2px}.hidden{display:none!important}
+@media(max-width:900px){.fitness-toolbar{grid-template-columns:1fr 1fr}.chart-range{grid-column:1/-1;justify-content:flex-start}.fitness-metrics{grid-template-columns:1fr 1fr}.fitness-metrics>div:nth-child(2){border-right:0}.fitness-record{grid-template-columns:1.2fr .7fr .9fr 18px}.fitness-record>span:nth-child(4){display:none}}
+@media(max-width:600px){.fitness-page{padding:10px}.fitness-head{display:block}.fitness-head .actions{display:grid;grid-template-columns:1fr 1fr;margin-top:10px}.fitness-head .actions .primary{grid-column:1/-1}.fitness-toolbar{grid-template-columns:1fr}.fitness-identity,.chart-range{grid-column:auto}.fitness-chart{height:58vh;min-height:390px}.fitness-metrics b{font-size:20px}.fitness-record{grid-template-columns:1fr .6fr 18px}.fitness-record>span:nth-child(3),.fitness-record>span:nth-child(4){display:none}.three{grid-template-columns:1fr}.sets-head,.set-row{grid-template-columns:30px 1fr 1fr 1fr 32px}.movement-days{gap:4px}.movement-days button{height:34px}}
 
-<main class="ops-grid page active" id="pageOps">
-  <section class="panel calendar-panel">
-    <div class="panel-head calendar-panel-head">
-      <div>
-        <span class="kicker">OPS // 01</span>
-        <h2>Operational Calendar</h2>
-      </div>
-      <div class="actions">
-        <button id="syncGoogleBtn" class="ghost">SYNC NOW</button>
-        <button id="calendarDisplayBtn" class="ghost">DISPLAY</button>
-        <button id="todayBtn" class="ghost">TODAY</button>
-        <button id="newEventBtn" class="primary">+ EVENT</button>
-      </div>
-    </div>
+/* =========================================================
+   PHASE 3B // FITNESS HARDENING & COMFORT
+   ========================================================= */
+.fitness-head .actions{align-items:center}.fitness-metrics{grid-template-columns:repeat(6,1fr)}.fitness-metrics b.positive{color:var(--green)}.fitness-metrics b.negative{color:var(--red)}
+#fitnessMarkersToggle.active{color:var(--amber);border-color:rgba(255,186,74,.38);background:rgba(255,186,74,.055)}
+.fitness-readout{display:grid;grid-template-columns:minmax(170px,.75fr) auto minmax(260px,1.5fr);gap:18px;align-items:center;min-height:48px;padding:7px 10px 8px;border-bottom:1px solid #22242d;background:linear-gradient(90deg,rgba(255,255,255,.014),rgba(0,217,255,.015),transparent);font-variant-numeric:tabular-nums}.readout-primary{display:flex;align-items:center;gap:10px;min-width:0}.readout-primary>span{font:10px var(--calendar-time-font);color:#8d8e98;white-space:nowrap}.readout-primary>b{font:8px var(--telemetry);letter-spacing:.09em;font-weight:500;color:#94959f;white-space:nowrap}.readout-primary>b[data-state="session"]{color:var(--green)}.readout-primary>b[data-state="missed"]{color:var(--red)}.readout-primary>b[data-state="closed"]{color:#777985}.ohlc{display:flex;gap:13px;white-space:nowrap}.ohlc span{font:8px var(--telemetry);letter-spacing:.08em;color:#656772}.ohlc b{margin-left:4px;color:#c6c7cf;font-weight:500}.readout-meta{min-width:0;text-align:right;font:7px var(--telemetry);letter-spacing:.075em;color:#656772;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fitness-records-head .pager button:disabled{opacity:.28;cursor:default}.fitness-record:focus-visible{outline:1px solid var(--cyan);outline-offset:-1px}.fitness-record:active{background:#151720}
+.chart-color-fields input[type="color"]{height:42px;padding:3px;border-radius:8px}.palette-presets{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:9px}.palette-preset{min-height:36px;border:1px solid #343640;border-radius:8px;background:#0d0e13;color:#8a8b95;font:8px var(--telemetry);letter-spacing:.07em;display:flex;align-items:center;justify-content:center;gap:7px}.palette-preset:hover{border-color:#4b4d58;color:#d7d8df}.palette-preset i{width:20px;height:10px;border-radius:3px;background:linear-gradient(90deg,var(--up) 0 50%,var(--down) 50%);box-shadow:0 0 12px rgba(255,255,255,.04)}
+.fitness-notice{margin:9px 0 2px;padding:9px 10px;border:1px solid rgba(255,186,74,.28);border-radius:8px;background:rgba(255,186,74,.045);color:#c6a663;font:8px var(--telemetry);letter-spacing:.06em;line-height:1.45}.session-quickbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}.session-quickbar>span{font:7px var(--telemetry);letter-spacing:.08em;color:#666773}.session-quickbar .ghost:disabled{opacity:.32;cursor:default}
+@media(max-width:1180px){.fitness-metrics{grid-template-columns:repeat(3,1fr)}.fitness-metrics>div:nth-child(3){border-right:0}.fitness-readout{grid-template-columns:1fr auto}.readout-meta{grid-column:1/-1;text-align:left}}
+@media(max-width:720px){.fitness-metrics{grid-template-columns:repeat(2,1fr)}.fitness-metrics>div:nth-child(2n){border-right:0}.fitness-readout{grid-template-columns:1fr;gap:6px;padding:9px}.ohlc{justify-content:space-between;gap:6px}.readout-meta{text-align:left}.palette-presets{grid-template-columns:1fr 1fr}.fitness-head .actions{display:grid;grid-template-columns:1fr 1fr}.fitness-head .actions #fitnessExportBtn{grid-column:1/-1}.fitness-head .actions .primary{grid-column:1/-1}}
 
-    <div class="calendar-commandbar">
-      <div class="calendar-nav">
-        <button id="calPrev" class="hud-icon" aria-label="Previous period">←</button>
-        <button id="calNext" class="hud-icon" aria-label="Next period">→</button>
-        <div class="calendar-period">
-          <span class="kicker">WINDOW</span>
-          <strong id="calendarPeriod">—</strong>
-        </div>
-      </div>
-      <div class="calendar-view-switch" role="group" aria-label="Calendar view">
-        <button class="calendar-view active" data-view="week">WEEK</button>
-        <button class="calendar-view" data-view="day">DAY</button>
-        <button class="calendar-view" data-view="month">MONTH</button>
-        <button class="calendar-view" data-view="agenda">AGENDA</button>
-      </div>
-    </div>
+/* =========================================================
+   PHASE 4A // FINANCE CORE
+   ========================================================= */
+.page.active.finance-page{display:block}
+.page.active.customize-page{display:block}.finance-page{padding:14px;max-width:1900px;margin:0 auto}.finance-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(420px,.9fr);gap:14px;align-items:start}.cash-panel{grid-row:span 2}.journal-panel{min-width:0}.finance-head{align-items:center}.finance-metrics{display:grid;border-bottom:1px solid #282933}.cash-metrics{grid-template-columns:repeat(5,1fr)}.portfolio-metrics{grid-template-columns:repeat(3,1fr)}.finance-metrics>div{padding:13px 15px;border-right:1px solid #282933;border-bottom:1px solid #282933;background:rgba(255,255,255,.012)}.finance-metrics>div:last-child{border-right:0}.finance-metrics span{display:block;font:8px var(--telemetry);letter-spacing:.1em;color:var(--muted)}.finance-metrics b{display:block;margin-top:5px;font:500 clamp(18px,2vw,25px) var(--calendar-time-font);font-variant-numeric:tabular-nums}.positive{color:var(--green)!important}.negative{color:var(--red)!important}
+.cash-chart-shell{padding:8px 10px 0;background:radial-gradient(circle at 24% 7%,rgba(255,62,165,.022),transparent 28%),#0b0c10}.cash-chart{height:420px;width:100%}.finance-readout{margin:0 -2px}.finance-chart-note{display:flex;gap:14px;flex-wrap:wrap;padding:7px 6px 10px;color:#666773;font:7px var(--telemetry);letter-spacing:.1em}.finance-chart-note span:nth-child(1){color:#68d8b0}.finance-chart-note span:nth-child(2){color:#dd7382}.finance-ledger{border-top:1px solid #2a2b34}.finance-section-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:13px 15px}.finance-section-head h3{font-family:var(--editorial);font-size:21px;font-weight:400;margin:2px 0 0}.cash-record{width:100%;display:grid;grid-template-columns:minmax(220px,1.5fr) .7fr .7fr 18px;gap:12px;align-items:center;border:0;border-top:1px solid #24252d;background:#0e0f14;color:#d9d9df;text-align:left;padding:10px 15px}.cash-record:hover,.position-row:hover,.journal-row:hover{background:#121319}.cash-record>span:first-child{display:grid;gap:2px}.cash-record b{font-size:12px}.cash-record small,.cash-record>span:nth-child(2){font:8px var(--telemetry);color:var(--muted);letter-spacing:.05em}.cash-record strong{font:500 12px var(--calendar-time-font);text-align:right}.cash-record i,.position-row i,.journal-row i{font-style:normal;font-size:20px;color:#555763}.finance-empty{padding:24px;color:#70717c;text-align:center;font:8px var(--telemetry);letter-spacing:.08em}
+.position-table-head,.position-row{display:grid;grid-template-columns:minmax(120px,1.4fr) .65fr .8fr .8fr .9fr 1.25fr 18px;gap:10px;align-items:center}.position-table-head{padding:9px 14px;background:#0c0d11;border-bottom:1px solid #252630;color:#656772;font:7px var(--telemetry);letter-spacing:.08em}.position-row{width:100%;border:0;border-bottom:1px solid #24252d;background:#0e0f14;color:#d9d9df;text-align:left;padding:11px 14px}.position-row>span{display:grid;gap:2px;min-width:0}.position-row small{font:7px var(--telemetry);color:#696b75;letter-spacing:.06em}.position-row b{font:500 11px var(--calendar-time-font);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.position-symbol b{font-family:var(--editorial);font-size:18px;font-weight:400}.position-symbol small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.portfolio-disclaimer{padding:10px 14px;color:#60616b;font:7px var(--telemetry);letter-spacing:.075em;border-top:1px solid #23242c}.journal-row{width:100%;display:grid;grid-template-columns:115px 1fr 18px;gap:12px;align-items:start;border:0;border-bottom:1px solid #24252d;background:#0e0f14;color:#d7d8df;text-align:left;padding:11px 14px}.journal-row>span{font:8px var(--telemetry);color:#73747e;line-height:1.5}.journal-row p{margin:0;font-size:12px;line-height:1.5;color:#bfc0c8;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.journal-pager{border-top:1px solid #24252d}.finance-settings-note{margin-top:10px;padding:9px 10px;border:1px solid #2d2f38;border-radius:8px;color:#767781;background:#0e0f14;font:8px var(--telemetry);letter-spacing:.05em;line-height:1.5}
+@media(max-width:1250px){.finance-grid{grid-template-columns:1fr}.cash-panel{grid-row:auto}.cash-metrics{grid-template-columns:repeat(3,1fr)}.portfolio-metrics{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:800px){.finance-page{padding:10px}.finance-head{display:block}.finance-head .actions{margin-top:10px;display:grid;grid-template-columns:1fr 1fr}.finance-head .actions .primary{grid-column:1/-1}.cash-metrics,.portfolio-metrics{grid-template-columns:1fr 1fr}.finance-metrics>div:nth-child(2n){border-right:0}.cash-chart{height:55vh;min-height:390px}.cash-record{grid-template-columns:1fr .8fr 18px}.cash-record>span:nth-child(2){display:none}.position-table-head{display:none}.position-row{grid-template-columns:1fr 1fr 18px;padding:12px}.position-row>span:nth-child(4),.position-row>span:nth-child(5){display:none}.position-row>span:nth-child(6){text-align:right}.journal-row{grid-template-columns:1fr 18px}.journal-row>span{grid-column:1}.journal-row p{grid-column:1}.journal-row i{grid-column:2;grid-row:1/3}}
+@media(max-width:520px){.cash-metrics,.portfolio-metrics{grid-template-columns:1fr 1fr}.finance-metrics b{font-size:18px}.cash-record{grid-template-columns:1fr 18px}.cash-record strong{grid-column:1}.cash-record i{grid-column:2;grid-row:1/3}.position-row{grid-template-columns:1fr 18px}.position-row>span:nth-child(n+2):not(:nth-child(6)){display:none}.position-row>span:nth-child(6){grid-column:1}.position-row i{grid-column:2;grid-row:1/3}}
 
-    <div id="calendar" class="scheduler" aria-label="Operational calendar"></div>
-  </section>
+/* =========================================================
+   PHASE 4B // CASHFLOW REPLAY
+   ========================================================= */
+.active-mode{border-color:rgba(0,217,255,.42)!important;color:#dffbff!important;background:rgba(0,217,255,.07)!important}
+.cash-replay-panel{border-top:1px solid #2a2b34;border-bottom:1px solid #2a2b34;background:linear-gradient(180deg,rgba(0,217,255,.018),rgba(255,62,165,.012)),#0d0e13;padding:12px 14px;display:grid;gap:10px}
+.cash-replay-panel.hidden{display:none}
+.replay-topline{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0}
+.replay-topline>div:first-child{display:grid;gap:3px;min-width:0}.replay-topline strong{font-family:var(--editorial);font-size:21px;font-weight:400;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.replay-month-nav{display:flex;align-items:center;gap:6px}.replay-month-nav select{min-width:150px;background:#0b0c10;color:#d8d9df;border:1px solid #31323c;border-radius:7px;padding:8px 10px;font:9px var(--telemetry);letter-spacing:.06em}
+.replay-transport{display:flex;flex-wrap:wrap;gap:7px}.replay-transport button{min-height:36px}
+.replay-speed{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.replay-speed>span{font:7px var(--telemetry);letter-spacing:.11em;color:#696b76;margin-right:3px}.replay-speed button{min-width:48px;min-height:32px;padding:5px 8px;border:1px solid #30313a;border-radius:6px;background:#0b0c10;color:#8d8f9b;font:8px var(--telemetry);letter-spacing:.04em}.replay-speed button:hover{color:#d8d9df;border-color:#434550}.replay-speed button.active{color:#e4fbff;border-color:rgba(0,217,255,.48);background:rgba(0,217,255,.08)}
+.replay-progress-line{display:flex;justify-content:space-between;gap:12px;color:#747681;font:8px var(--telemetry);letter-spacing:.07em}.replay-progress-line span:first-child{color:#bfc1c9}
+.replay-scrubber{width:100%;accent-color:var(--cyan);cursor:pointer}.replay-scrubber:disabled{opacity:.35;cursor:not-allowed}
+.replay-ticker{display:grid;grid-template-columns:110px minmax(0,1fr);gap:10px;align-items:center;border:1px solid #292a33;border-radius:7px;padding:8px 10px;background:#0a0b0f;min-width:0}.replay-ticker span{font:7px var(--telemetry);letter-spacing:.09em;color:#666873}.replay-ticker b{font:500 10px var(--calendar-time-font);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#c8c9d1}.replay-ticker[data-direction="inflow"] b{color:#74d9b5}.replay-ticker[data-direction="expense"] b{color:#e17b89}
+.cash-panel.replay-active .cash-chart-shell{background:radial-gradient(circle at 24% 7%,rgba(0,217,255,.035),transparent 30%),#0b0c10}.cash-panel.replay-active .finance-chart-note:before{content:"REPLAY MODE // ";color:#8ad9e5}
+@media(max-width:800px){.replay-topline{align-items:flex-start;flex-direction:column}.replay-month-nav{width:100%}.replay-month-nav select{flex:1;min-width:0}.replay-transport{display:grid;grid-template-columns:1fr 1fr 1fr}.replay-transport #replayPlay{grid-column:span 2}.replay-speed{gap:5px}.replay-speed button{flex:1 1 54px}.replay-ticker{grid-template-columns:1fr}.replay-progress-line{font-size:7px}}
+@media(max-width:520px){.replay-transport{grid-template-columns:1fr 1fr}.replay-transport #replayPlay{grid-column:1/-1}.replay-ticker b{white-space:normal}.replay-progress-line{display:grid;grid-template-columns:1fr 1fr}}
 
-  <aside class="right-rail">
-    <section class="panel nexus-card">
-      <div class="panel-head compact">
-        <div><span class="kicker">NEXUS</span><h2>Workload State</h2></div>
-        <span id="nexusMood" class="mood">RELAXED</span>
-      </div>
-      <div class="nexus-core">
-        <div class="nexus-stage" id="nexusStage" aria-label="NEXUS avatar state">
-          <div class="avatar-effects avatar-effects-back"></div>
-          <img class="avatar-base-image hidden" alt="NEXUS avatar">
-          <div class="avatar-fallback">N8</div>
-          <div class="avatar-effects avatar-effects-front"></div>
-          <span class="avatar-state-badge">RELAXED</span>
-        </div>
-        <div><strong id="taskPressure">0 ACTIVE</strong><p id="pressureText">No urgent objectives detected.</p></div>
-      </div>
-    </section>
-
-    <section class="panel tasks-panel">
-      <div class="panel-head compact">
-        <div><span class="kicker">OBJECTIVES</span><h2>Tasks</h2></div>
-        <button id="newTaskBtn" class="primary small">+ TASK</button>
-      </div>
-      <div class="task-filters">
-        <button data-filter="active" class="filter active">ACTIVE</button>
-        <button data-filter="completed" class="filter">DONE</button>
-        <button data-filter="all" class="filter">ALL</button>
-      </div>
-      <div id="taskList" class="task-list"></div>
-    </section>
-
-    <section class="panel brief-card">
-      <span class="kicker">PHASE 5A STATUS</span>
-      <div class="status-grid">
-        <span>AUTH</span><b id="statusAuth">—</b>
-        <span>D1 EVENTS</span><b id="statusEvents">0</b>
-        <span>D1 TASKS</span><b id="statusTasks">0</b>
-        <span>GOOGLE</span><b id="statusGoogle">—</b>
-        <span>LAST SYNC</span><b id="statusSync">NOT YET</b>
-      </div>
-    </section>
-  </aside>
-</main>
-
-<main class="page fitness-page" id="pageFitness">
-  <section class="panel fitness-command-panel">
-    <div class="panel-head fitness-head">
-      <div><span class="kicker">FITNESS // 03</span><h2>Movement Intelligence</h2></div>
-      <div class="actions">
-        <button id="fitnessExportBtn" class="ghost">EXPORT CSV</button>
-        <button id="editMovementBtn" class="ghost">EDIT MOVEMENT</button>
-        <button id="newMovementBtn" class="ghost">+ MOVEMENT</button>
-        <button id="logSessionBtn" class="primary">+ LOG SESSION</button>
-      </div>
-    </div>
-    <div class="fitness-toolbar">
-      <label class="movement-picker"><span>MOVEMENT</span><select id="movementSelect"></select></label>
-      <div class="fitness-identity"><b id="fitnessSymbol">—</b><span id="fitnessSchedule">SCHEDULE // NONE</span></div>
-      <div class="chart-range" id="fitnessRanges">
-        <button data-range="1">1M</button><button class="active" data-range="3">3M</button><button data-range="6">6M</button><button data-range="12">1Y</button><button data-range="ALL">ALL</button>
-        <button id="fitnessMarkersToggle" aria-pressed="true">MARKERS</button><button id="fitnessReset">LIVE</button>
-      </div>
-    </div>
-    <div id="fitnessEmpty" class="fitness-empty-state">
-      <span class="kicker">NO MOVEMENT DATA</span>
-      <h3>Create your first tracked movement.</h3>
-      <p>Each movement becomes its own performance market with completed-session candles, missed-session decay and closed rest days.</p>
-      <button class="primary" onclick="document.getElementById('newMovementBtn').click()">CREATE MOVEMENT</button>
-    </div>
-    <div id="fitnessBody" class="hidden">
-      <div class="fitness-metrics">
-        <div><span>MOVEMENT INDEX</span><b id="fitnessIndex">100.00</b></div>
-        <div><span>7D CHANGE</span><b id="fitness7dChange">+0.00%</b></div>
-        <div><span>SESSIONS // 7D</span><b id="fitnessWeekSessions">0</b></div>
-        <div><span>TOTAL SESSIONS</span><b id="fitnessTotalSessions">0</b></div>
-        <div><span>MISSED STREAK</span><b id="fitnessMissed">0</b></div>
-        <div><span>BEST E1RM</span><b id="fitnessBestE1rm">—</b></div>
-      </div>
-      <div class="fitness-chart-shell">
-        <div class="fitness-readout" id="fitnessReadout">
-          <div class="readout-primary"><span id="fitnessReadoutDate">—</span><b id="fitnessReadoutState" data-state="closed">MARKET CLOSED</b></div>
-          <div class="ohlc"><span>O <b id="fitnessO">—</b></span><span>H <b id="fitnessH">—</b></span><span>L <b id="fitnessL">—</b></span><span>C <b id="fitnessC">—</b></span></div>
-          <div class="readout-meta" id="fitnessReadoutMeta">MOVE CROSSHAIR FOR SESSION DETAIL</div>
-        </div>
-        <div id="fitnessChart" class="fitness-chart"></div>
-        <div class="fitness-chart-note"><span>BULLISH // COMPLETED</span><span>BEARISH // MISSED</span><span>GAPS // MARKET CLOSED</span></div>
-      </div>
-      <div class="fitness-records-panel">
-        <div class="fitness-records-head"><div><span class="kicker">TRAINING LEDGER</span><h3>Completed Sessions</h3></div><div class="pager"><button id="fitnessPrevPage">←</button><span id="fitnessPager">0 / 0</span><button id="fitnessNextPage">→</button></div></div>
-        <div id="fitnessRecords"></div>
-      </div>
-      <div class="tradingview-credit">TradingView Lightweight Charts™ — Copyright © 2025 TradingView, Inc. <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a>.</div>
-    </div>
-  </section>
-</main>
+/* ===== PHASE 4C // PORTFOLIO INTELLIGENCE ===== */
+.portfolio-panel{min-width:0}.portfolio-analytics-panel{grid-column:1/-1;min-width:0}.trade-history-panel{min-width:0}.portfolio-metrics-extended{grid-template-columns:repeat(4,1fr)}
+.portfolio-risk-strip{display:flex;gap:7px;flex-wrap:wrap;padding:9px 13px;border-bottom:1px solid #292a33;background:#0d0e13}.risk-chip{display:inline-flex;align-items:center;min-height:26px;padding:0 8px;border:1px solid #2b2d36;border-radius:999px;font:7px var(--telemetry);letter-spacing:.08em}.risk-chip.ok{color:#6ed4ad;border-color:rgba(47,214,154,.24);background:rgba(47,214,154,.045)}.risk-chip.breach{color:#ff8a9a;border-color:rgba(255,64,92,.38);background:rgba(255,64,92,.065)}
+.portfolio-analytics-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#252630;border-top:1px solid #252630;border-bottom:1px solid #252630}.portfolio-chart-card{min-width:0;background:#0b0c10}.portfolio-chart-head{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:9px 12px;border-bottom:1px solid #24252d}.portfolio-chart-head span,.portfolio-chart-head b{font:7px var(--telemetry);letter-spacing:.09em;color:#6f717c}.portfolio-chart-head b{color:#91939e}.portfolio-chart{height:250px;width:100%}.drawdown-chart{background:linear-gradient(180deg,rgba(255,64,92,.018),transparent 35%)}
+.portfolio-intel-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#252630}.allocation-card,.risk-card{background:#0e0f14;min-width:0}.allocation-list,.risk-monitor{padding:0 13px 13px;display:grid;gap:8px}.allocation-row,.risk-row{display:grid;grid-template-columns:minmax(140px,1.2fr) minmax(120px,2fr) 58px;gap:10px;align-items:center}.allocation-row>div:first-child,.risk-row>div:first-child{display:grid;gap:2px}.allocation-row b,.risk-row b{font-size:10px;font-weight:600}.allocation-row span,.risk-row span{font:7px var(--telemetry);color:#70727d}.allocation-row strong,.risk-row strong{font:8px var(--telemetry);text-align:right;color:#9b9da8}.allocation-track,.risk-track{height:6px;border:1px solid #2a2c34;background:#0b0c10;overflow:hidden}.allocation-track i,.risk-track i{display:block;height:100%;background:linear-gradient(90deg,rgba(69,232,255,.4),rgba(255,62,165,.5))}.risk-row.breach strong{color:var(--red)}.risk-row.breach .risk-track i{background:var(--red)}.risk-policy{display:flex;justify-content:space-between;padding-top:7px;border-top:1px solid #24252d;color:#777984;font:7px var(--telemetry);letter-spacing:.08em}.risk-policy b{color:#b7b9c1;font:500 10px var(--calendar-time-font)}
+.trade-table-head,.trade-row{display:grid;grid-template-columns:150px .7fr .7fr 1.15fr .9fr 18px;gap:10px;align-items:center}.trade-table-head{padding:9px 14px;background:#0c0d11;border-bottom:1px solid #252630;color:#656772;font:7px var(--telemetry);letter-spacing:.08em}.trade-row{width:100%;border:0;border-bottom:1px solid #24252d;background:#0e0f14;color:#d9d9df;text-align:left;padding:11px 14px}.trade-row:hover{background:#121319}.trade-row>span:first-child{font:8px var(--telemetry);color:#757781}.trade-row b{font:8px var(--telemetry);letter-spacing:.08em;color:#b6b8c0}.trade-row strong{font-family:var(--editorial);font-size:16px;font-weight:400}.trade-row>span:nth-child(4),.trade-row>span:nth-child(5){font:500 10px var(--calendar-time-font);font-variant-numeric:tabular-nums}.trade-row i{font-style:normal;font-size:20px;color:#555763}.finance-microcopy{font:7px var(--telemetry);letter-spacing:.07em;color:#5f616b}
+.risk-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.risk-form-grid label{min-width:0}.risk-form-grid input[type="range"]{width:100%}
+#portfolioRanges{padding-right:4px}
+@media(max-width:1250px){.portfolio-metrics-extended{grid-template-columns:repeat(3,1fr)}.portfolio-intel-grid{grid-template-columns:1fr}.trade-history-panel{grid-column:1/-1}}
+@media(max-width:900px){.portfolio-analytics-grid{grid-template-columns:1fr}.portfolio-chart{height:230px}.portfolio-metrics-extended{grid-template-columns:repeat(2,1fr)}.risk-form-grid{grid-template-columns:1fr}.trade-table-head{display:none}.trade-row{grid-template-columns:1fr 1fr 18px}.trade-row>span:first-child{grid-column:1}.trade-row>span:nth-child(4){grid-column:1}.trade-row>span:nth-child(5){grid-column:2;grid-row:2;text-align:right}.trade-row i{grid-column:3;grid-row:1/3}}
+@media(max-width:600px){.portfolio-metrics-extended{grid-template-columns:1fr 1fr}.portfolio-chart{height:210px}.allocation-row,.risk-row{grid-template-columns:1fr 56px}.allocation-track,.risk-track{grid-column:1/-1;grid-row:2}.trade-row{grid-template-columns:1fr 18px}.trade-row b,.trade-row strong,.trade-row>span:nth-child(4),.trade-row>span:nth-child(5){grid-column:1}.trade-row>span:nth-child(5){grid-row:auto;text-align:left}.trade-row i{grid-column:2;grid-row:1/5}}
+.allocation-subhead{padding:7px 0 2px;color:#5f616b;font:7px var(--telemetry);letter-spacing:.1em}.allocation-subhead:not(:first-child){margin-top:6px;border-top:1px solid #24252d;padding-top:11px}.target-row strong{color:#7f818c}
 
 
-<main class="page finance-page" id="pageFinance">
-  <section class="finance-grid">
-    <section class="panel cash-panel">
-      <div class="panel-head finance-head">
-        <div><span class="kicker">FINANCE // 04C</span><h2>Personal Allowance</h2></div>
-        <div class="actions">
-          <button id="cashExportBtn" class="ghost">EXPORT CSV</button>
-          <button id="financeSettingsBtn" class="ghost">SETTINGS</button>
-          <button id="cashLiveBtn" class="ghost active-mode">LIVE</button>
-          <button id="cashReplayBtn" class="ghost">REPLAY</button>
-          <button id="newTransactionBtn" class="primary">+ TRANSACTION</button>
-        </div>
-      </div>
-      <div class="finance-metrics cash-metrics">
-        <div><span id="cashRemainingLabel">REMAINING</span><b id="cashRemaining">S$0.00</b></div>
-        <div><span id="cashStartingLabel">STARTING ALLOWANCE</span><b id="cashStarting">S$0.00</b></div>
-        <div><span id="cashInflowsLabel">INFLOWS</span><b id="cashInflows">S$0.00</b></div>
-        <div><span id="cashExpensesLabel">EXPENSES</span><b id="cashExpenses">S$0.00</b></div>
-        <div><span id="cashTransactionCountLabel">TRANSACTIONS</span><b id="cashTransactionCount">0</b></div>
-      </div>
-      <div id="cashReplayPanel" class="cash-replay-panel hidden" aria-label="Historical cashflow replay controls">
-        <div class="replay-topline">
-          <div>
-            <span class="kicker">HISTORICAL CASHFLOW // REPLAY</span>
-            <strong id="replayMonthLabel">—</strong>
-          </div>
-          <div class="replay-month-nav">
-            <button type="button" id="replayPrevMonth" class="hud-icon" aria-label="Previous replay month">←</button>
-            <select id="replayMonthSelect" aria-label="Replay month"></select>
-            <button type="button" id="replayNextMonth" class="hud-icon" aria-label="Next replay month">→</button>
-          </div>
-        </div>
-        <div class="replay-transport">
-          <button type="button" id="replayStepBack" class="ghost" title="Previous transaction">← TX</button>
-          <button type="button" id="replayPlay" class="primary">▶ PLAY</button>
-          <button type="button" id="replayPause" class="ghost">❚❚ PAUSE</button>
-          <button type="button" id="replayReset" class="ghost">■ RESET</button>
-          <button type="button" id="replayStepForward" class="ghost" title="Next transaction">TX →</button>
-        </div>
-        <div class="replay-speed" role="group" aria-label="Replay speed">
-          <span>SPEED</span>
-          <button type="button" data-replay-speed="0.25">0.25×</button>
-          <button type="button" data-replay-speed="0.5">0.5×</button>
-          <button type="button" data-replay-speed="1" class="active">1×</button>
-          <button type="button" data-replay-speed="2">2×</button>
-          <button type="button" data-replay-speed="4">4×</button>
-          <button type="button" data-replay-speed="8">8×</button>
-          <button type="button" data-replay-speed="16">16×</button>
-          <button type="button" data-replay-speed="max">MAX</button>
-        </div>
-        <div class="replay-progress-line">
-          <span id="replayTxStatus">TX 0 / 0</span>
-          <span id="replayRate">RATE // 2 TX/S</span>
-        </div>
-        <input id="replayScrubber" class="replay-scrubber" type="range" min="0" max="1" step="1" value="0" aria-label="Replay transaction position">
-        <div id="replayTicker" class="replay-ticker"><span>STANDBY</span><b>SELECT PLAY TO RECONSTRUCT CASHFLOW</b></div>
-      </div>
-      <div class="cash-chart-shell">
-        <div class="fitness-readout finance-readout">
-          <div class="readout-primary"><span id="cashReadoutSeq">NO TRANSACTIONS</span><b id="cashReadoutState" data-state="closed">AWAITING CASHFLOW</b></div>
-          <div class="ohlc"><span>O <b id="cashO">—</b></span><span>H <b id="cashH">—</b></span><span>L <b id="cashL">—</b></span><span>C <b id="cashC">—</b></span></div>
-          <div class="readout-meta" id="cashReadoutMeta">EACH TRANSACTION = ONE CANDLE</div>
-        </div>
-        <div id="cashChart" class="cash-chart"></div>
-        <div class="finance-chart-note"><span>GREEN // INFLOW</span><span>RED // EXPENSE</span><span>X AXIS // TRANSACTION SEQUENCE</span></div>
-      </div>
-      <div class="finance-ledger">
-        <div class="finance-section-head"><div><span class="kicker">CASHFLOW LEDGER</span><h3>Transactions</h3></div><div class="pager"><button id="cashPrevPage">←</button><span id="cashPager">0 / 0</span><button id="cashNextPage">→</button></div></div>
-        <div id="cashRecords"></div>
-      </div>
-      <div class="tradingview-credit">TradingView Lightweight Charts™ — Copyright © 2025 TradingView, Inc. <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a>.</div>
-    </section>
+/* PHASE 4D // snapshot history controls */
+.snapshot-manager-modal{width:min(900px,calc(100vw - 28px))}
+.snapshot-manager-toolbar{display:grid;grid-template-columns:minmax(220px,1fr) auto auto;gap:10px;align-items:end;margin:2px 0 12px}
+.snapshot-manager-toolbar label{margin:0}
+.snapshot-manager-note{padding:10px 12px;margin-bottom:12px;border:1px solid var(--border,#282a33);border-radius:8px;background:rgba(255,255,255,.018);font-size:12px;color:var(--muted,#8d929f)}
+.snapshot-table-head,.snapshot-row{display:grid;grid-template-columns:1.35fr 1.2fr 1.4fr .75fr auto;gap:10px;align-items:center;min-width:0}
+.snapshot-table-head{padding:7px 10px;color:var(--muted,#8d929f);font-size:10px;letter-spacing:.08em;border-bottom:1px solid var(--border,#282a33)}
+.snapshot-row{padding:10px;border-bottom:1px solid rgba(255,255,255,.055)}
+.snapshot-row>span{min-width:0}.snapshot-row span b,.snapshot-row span small{display:block}.snapshot-row small{margin-top:3px;color:var(--muted,#8d929f);font-size:10px}
+.snapshot-source{display:inline-flex;padding:4px 7px;border:1px solid var(--border,#282a33);border-radius:999px;font-style:normal;font-size:9px;letter-spacing:.06em;color:var(--muted,#8d929f);white-space:nowrap}
+.snapshot-source[data-source="manual"]{color:var(--cyan,#45e8ff);border-color:color-mix(in srgb,var(--cyan,#45e8ff) 38%,transparent)}
+.snapshot-source[data-source^="auto"]{color:var(--pink,#ff3ea5);border-color:color-mix(in srgb,var(--pink,#ff3ea5) 32%,transparent)}
+.snapshot-delete{min-height:34px;padding:0 10px;border:1px solid rgba(255,64,92,.35);border-radius:7px;background:rgba(255,64,92,.06);color:var(--red,#ff405c);font-size:10px;letter-spacing:.06em}
+.snapshot-delete:hover{background:rgba(255,64,92,.12)}
+.danger-outline{border-color:rgba(255,64,92,.35)!important;color:var(--red,#ff405c)!important}
+@media(max-width:720px){.snapshot-manager-toolbar{grid-template-columns:1fr 1fr}.snapshot-manager-toolbar label{grid-column:1/-1}.snapshot-table-head{display:none}.snapshot-row{grid-template-columns:1fr auto;gap:8px;padding:12px}.snapshot-row>span:nth-child(2),.snapshot-row>span:nth-child(3),.snapshot-row>span:nth-child(4){grid-column:1}.snapshot-delete{grid-column:2;grid-row:1/5;align-self:stretch;min-width:68px}}
 
-    <section class="panel portfolio-panel">
-      <div class="panel-head finance-head">
-        <div><span class="kicker">PORTFOLIO // 04D</span><h2>Portfolio Intelligence</h2></div>
-        <div class="actions">
-          <button id="portfolioRiskBtn" class="ghost">RISK</button>
-          <button id="captureSnapshotBtn" class="ghost">CAPTURE</button>
-          <button id="snapshotManagerBtn" class="ghost">SNAPSHOTS</button>
-          <button id="newTradeBtn" class="ghost">+ HISTORY</button>
-          <button id="newPositionBtn" class="primary">+ POSITION</button>
-        </div>
-      </div>
-      <div class="finance-metrics portfolio-metrics portfolio-metrics-extended">
-        <div><span>TOTAL EQUITY</span><b id="portfolioEquity">S$0.00</b></div>
-        <div><span>CASH</span><b id="portfolioCash">S$0.00</b></div>
-        <div><span>MARKET VALUE</span><b id="portfolioMarket">S$0.00</b></div>
-        <div><span>TOTAL P&amp;L</span><b id="portfolioTotalPnl">S$0.00</b></div>
-        <div><span>UNREALIZED P&amp;L</span><b id="portfolioPnl">S$0.00</b></div>
-        <div><span>REALIZED P&amp;L</span><b id="portfolioRealizedPnl">S$0.00</b></div>
-        <div><span>DAILY P&amp;L</span><b id="portfolioDailyPnl">—</b></div>
-        <div><span>WEEKLY P&amp;L</span><b id="portfolioWeeklyPnl">—</b></div>
-        <div><span>MONTHLY P&amp;L</span><b id="portfolioMonthlyPnl">—</b></div>
-        <div><span>GROSS EXPOSURE</span><b id="portfolioExposure">S$0.00</b></div>
-        <div><span>CASH %</span><b id="portfolioCashPct">0.00%</b></div>
-        <div><span>CURRENT DRAWDOWN</span><b id="portfolioDrawdown">0.00%</b></div>
-      </div>
-      <div id="portfolioRiskStrip" class="portfolio-risk-strip"></div>
-      <div class="position-table-head"><span>POSITION</span><span>QTY</span><span>ENTRY</span><span>CURRENT</span><span>VALUE</span><span>P&amp;L</span><span></span></div>
-      <div id="positionList" class="position-list"></div>
-      <div class="portfolio-disclaimer">CURRENT PRICES ARE MANUAL IN PHASE 4D // HISTORY RECORDS DRIVE REALIZED P&amp;L // LIVE TWELVE DATA PRICING ARRIVES IN THE INTEGRATION PHASE.</div>
-    </section>
+/* ===== PHASE 5A // NEXUS AVATAR STATES + R2 EFFECTS ===== */
+.nexus-core{align-items:stretch}.nexus-core>div:last-child{align-self:center;min-width:0}.nexus-stage{position:relative;isolation:isolate;overflow:hidden;background:radial-gradient(circle at 50% 42%,rgba(255,62,165,.11),rgba(0,217,255,.035) 44%,rgba(8,9,13,.96) 75%);border:1px solid #30313b;border-radius:18px;flex:0 0 112px;width:112px;height:128px;display:grid;place-items:center}.nexus-stage::before{content:"";position:absolute;inset:0;z-index:0;background:linear-gradient(180deg,rgba(255,255,255,.025),transparent 35%,rgba(0,0,0,.2));pointer-events:none}.nexus-stage[data-state="PANIC"]{border-color:rgba(255,64,92,.5);background:radial-gradient(circle at 50% 42%,rgba(255,64,92,.18),rgba(18,8,12,.96) 72%)}.nexus-stage[data-state="SUCCESS"]{border-color:rgba(110,231,167,.42);background:radial-gradient(circle at 50% 42%,rgba(110,231,167,.12),rgba(8,13,11,.96) 72%)}.nexus-stage[data-state="ANXIOUS"]{border-color:rgba(255,186,74,.36)}.nexus-stage[data-state="ANALYZING"]{border-color:rgba(139,108,255,.48)}.nexus-stage[data-state="OFFLINE"]{filter:saturate(.45);opacity:.82}.avatar-base-image{position:absolute;z-index:2;inset:0;width:100%;height:100%;transform-origin:center;pointer-events:none}.avatar-fallback{z-index:2;font:24px var(--telemetry);letter-spacing:.08em;color:#d9d8df;text-shadow:0 0 24px rgba(255,62,165,.4)}.avatar-state-badge{position:absolute;z-index:8;left:8px;bottom:7px;padding:4px 6px;border:1px solid rgba(255,255,255,.12);border-radius:999px;background:rgba(5,6,9,.72);backdrop-filter:blur(6px);font:7px var(--telemetry);letter-spacing:.1em;color:#b9bbc4}.avatar-effects{position:absolute;inset:0;pointer-events:none}.avatar-effects-back{z-index:1}.avatar-effects-front{z-index:5}.avatar-effect-item{position:absolute;left:50%;top:50%;width:100%;height:100%;transform-origin:center center}.avatar-effect-image,.avatar-effect-canvas{display:block;width:100%;height:100%;object-fit:contain}.effect-fallback{display:grid;place-items:center;border:1px dashed rgba(255,255,255,.15);color:#70727c;font:8px var(--telemetry)}
 
-    <section class="panel portfolio-analytics-panel">
-      <div class="panel-head finance-head">
-        <div><span class="kicker">PORTFOLIO HISTORY</span><h2>Equity & Drawdown</h2></div>
-        <div class="chart-range" id="portfolioRanges">
-          <button data-portfolio-range="1">1M</button><button class="active" data-portfolio-range="3">3M</button><button data-portfolio-range="6">6M</button><button data-portfolio-range="YTD">YTD</button><button data-portfolio-range="ALL">ALL</button>
-          <button id="portfolioLiveBtn">LIVE</button>
-        </div>
-      </div>
-      <div class="portfolio-analytics-grid">
-        <div class="portfolio-chart-card">
-          <div class="portfolio-chart-head"><span>EQUITY CURVE</span><b id="portfolioChartStatus">NO SNAPSHOTS</b></div>
-          <div id="portfolioEquityChart" class="portfolio-chart"></div>
-        </div>
-        <div class="portfolio-chart-card">
-          <div class="portfolio-chart-head"><span>DRAWDOWN</span><b id="portfolioMaxDrawdown">MAX // 0.00%</b></div>
-          <div id="portfolioDrawdownChart" class="portfolio-chart drawdown-chart"></div>
-        </div>
-      </div>
-      <div class="portfolio-intel-grid">
-        <div class="allocation-card">
-          <div class="finance-section-head"><div><span class="kicker">ALLOCATION</span><h3>Sector Exposure</h3></div></div>
-          <div id="sectorAllocation" class="allocation-list"></div>
-        </div>
-        <div class="risk-card">
-          <div class="finance-section-head"><div><span class="kicker">RISK MONITOR</span><h3>Limit Utilisation</h3></div></div>
-          <div id="riskMonitor" class="risk-monitor"></div>
-        </div>
-      </div>
-      <div class="tradingview-credit">TradingView Lightweight Charts™ — Copyright © 2025 TradingView, Inc. <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a>.</div>
-    </section>
+.customize-page{padding:14px clamp(12px,2vw,28px) 34px;max-width:1900px;margin:auto}.customize-grid{display:grid;grid-template-columns:minmax(300px,.9fr) minmax(380px,1.35fr);gap:14px;align-items:start}.avatar-library-panel,.avatar-preview-panel,.effects-panel,.avatar-logic-panel{min-width:0}.effects-panel,.avatar-logic-panel{grid-column:1/-1}.avatar-library-body,.avatar-preview-body,.avatar-logic-form{padding:16px}.customize-copy{margin:0 0 14px;color:var(--muted);font-size:12px;line-height:1.55}.avatar-state-list{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px}.avatar-state-button{min-width:0;display:grid;grid-template-columns:1fr auto;gap:3px 8px;text-align:left;padding:10px;border:1px solid #2c2e37;border-radius:9px;background:#0d0e13;color:#c8c8d0}.avatar-state-button:hover{border-color:#3b3e49}.avatar-state-button.active{border-color:rgba(255,62,165,.5);background:linear-gradient(90deg,rgba(255,62,165,.075),rgba(0,217,255,.025))}.avatar-state-button span{font:9px var(--telemetry);letter-spacing:.08em}.avatar-state-button b,.avatar-state-button i{font:7px var(--telemetry);font-style:normal;font-weight:500;color:#666974}.avatar-state-button i{grid-column:2;grid-row:2;text-align:right;color:#858793}.avatar-selected-file{display:grid;gap:4px;padding:10px 11px;margin-bottom:11px;border:1px solid #292b34;border-radius:8px;background:#0c0d11}.avatar-selected-file span{font:7px var(--telemetry);letter-spacing:.1em;color:#62646e}.avatar-selected-file b{font-size:11px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.preview-state-picker{display:flex;align-items:center;gap:7px;font:7px var(--telemetry);letter-spacing:.08em;color:#6d6f79}.preview-state-picker select{background:#0c0d11;border:1px solid #30313a;color:#d0d1d8;border-radius:7px;padding:7px 9px;font:8px var(--telemetry)}.avatar-preview-body{display:grid;grid-template-columns:minmax(230px,1fr) minmax(260px,.9fr);gap:16px;align-items:center}.avatar-preview-stage{width:100%;height:420px;max-width:520px;justify-self:center;border-radius:16px}.avatar-preview-stage .avatar-fallback{font-size:42px}.avatar-preview-stage .avatar-state-badge{font-size:8px;left:11px;bottom:10px}.avatar-transform-grid{display:grid;gap:13px}.avatar-transform-grid label,.effect-controls label,.logic-grid label{display:grid;gap:6px;color:#8d8f98;font-size:11px}.avatar-transform-grid input[type="range"],.effect-controls input[type="range"]{width:100%;accent-color:var(--cyan)}.avatar-save{grid-column:2;justify-self:stretch}.effects-layout{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#252630}.effects-layout>div{background:#0e0f14;padding:14px;min-width:0}.effects-subhead{margin-bottom:9px;color:#666873;font:7px var(--telemetry);letter-spacing:.11em}.effect-library,.assigned-effects{display:grid;gap:7px}.effect-library-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:7px;align-items:center;padding:9px;border:1px solid #292b34;border-radius:8px;background:#0b0c10}.effect-library-row>div{min-width:0;display:grid;gap:3px}.effect-library-row b{font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.effect-library-row span{font:7px var(--telemetry);color:#63656f}.avatar-asset-delete{width:34px;height:34px;border:1px solid rgba(255,64,92,.28);border-radius:7px;background:rgba(255,64,92,.04);color:#c76d7b;font-size:18px}.assigned-effect{display:grid;gap:3px;text-align:left;padding:9px;border:1px solid #292b34;border-radius:8px;background:#0b0c10;color:#c7c8cf}.assigned-effect.active{border-color:rgba(0,217,255,.4);background:rgba(0,217,255,.045)}.assigned-effect span{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.assigned-effect b{font:7px var(--telemetry);font-weight:500;color:#666873}.effect-controls{display:grid;gap:11px;margin-top:11px;padding:11px;border:1px solid #2c2e37;border-radius:9px;background:#0a0b0f}.toggle-line{display:flex!important;grid-template-columns:auto 1fr!important;align-items:center;gap:8px!important;font:8px var(--telemetry)!important;letter-spacing:.08em}.toggle-line input{width:17px;height:17px;accent-color:var(--cyan)}.effect-format-note{padding:10px 14px;border-top:1px solid #252630;color:#5f616b;font:7px var(--telemetry);letter-spacing:.08em}.avatar-empty{padding:16px;border:1px dashed #2d2f38;border-radius:8px;color:#62646d;text-align:center;font:8px var(--telemetry);letter-spacing:.08em;line-height:1.6}.avatar-logic-preview{padding:10px 12px;margin-bottom:13px;border:1px solid rgba(0,217,255,.2);border-radius:8px;background:rgba(0,217,255,.035);color:#9edfea;font:8px var(--telemetry);letter-spacing:.07em}.logic-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}.logic-grid input{background:#0b0c10;border:1px solid #30313a;border-radius:7px;color:#d8d9df;padding:9px}.logic-order{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:12px;padding:9px 11px;border:1px solid #292b34;border-radius:8px;background:#0c0d11}.logic-order span{font:7px var(--telemetry);letter-spacing:.09em;color:#5f616b}.logic-order b{font:8px var(--telemetry);font-weight:500;color:#a7a9b2}.field-value{float:right;color:#b8bac3;font:8px var(--telemetry)}
+@media(max-width:1050px){.customize-grid{grid-template-columns:1fr}.effects-panel,.avatar-logic-panel{grid-column:auto}.avatar-preview-body{grid-template-columns:1fr}.avatar-preview-stage{height:360px}.avatar-save{grid-column:1}.logic-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:720px){.nexus-core{display:grid}.nexus-stage{width:100%;height:180px;flex-basis:auto}.avatar-state-list{grid-template-columns:1fr}.avatar-preview-stage{height:340px}.effects-layout{grid-template-columns:1fr}.logic-grid{grid-template-columns:1fr}.logic-order{align-items:flex-start;flex-direction:column}.customize-page{padding-left:10px;padding-right:10px}.avatar-preview-body,.avatar-library-body,.avatar-logic-form{padding:13px}}
 
-    <section class="panel trade-history-panel">
-      <div class="panel-head compact">
-        <div><span class="kicker">PORTFOLIO HISTORY</span><h2>Trade / Action Log</h2></div>
-        <button id="newTradeBtnSecondary" class="ghost">+ ENTRY</button>
-      </div>
-      <div class="trade-table-head"><span>TIME</span><span>ACTION</span><span>SYMBOL</span><span>QTY / PRICE</span><span>REALIZED P&amp;L</span><span></span></div>
-      <div id="tradeHistoryList"></div>
-      <div class="finance-section-head"><span class="finance-microcopy">HISTORY DOES NOT AUTO-MUTATE CURRENT POSITIONS.</span><div class="pager"><button id="tradePrevPage">←</button><span id="tradePager">0 / 0</span><button id="tradeNextPage">→</button></div></div>
-    </section>
+/* =========================================================
+   PHASE 5B // NEXUS POLISH + ADVANCED EFFECTS
+   ========================================================= */
+.nexus-stage{--avatar-transition-ms:220ms}
+.nexus-stage .avatar-base-image,.nexus-stage .avatar-effect-item,.nexus-stage .avatar-fallback{transition:opacity var(--avatar-transition-ms) ease,transform var(--avatar-transition-ms) ease,filter var(--avatar-transition-ms) ease}
+.nexus-stage[data-state="PANIC"]{box-shadow:inset 0 0 0 1px rgba(255,64,92,.22)}
+.nexus-stage[data-state="SUCCESS"]{box-shadow:inset 0 0 0 1px rgba(110,231,167,.18)}
+.nexus-stage[data-state="ANALYZING"] .avatar-state-badge{color:var(--pink)}
+.nexus-stage[data-state="OFFLINE"] .avatar-base-image{filter:saturate(.45) brightness(.72)}
+.nexus-stage[data-motion="reduced"] .avatar-base-image,.nexus-stage[data-motion="reduced"] .avatar-effect-item,.nexus-stage[data-motion="reduced"] .avatar-fallback{transition:none!important}
+.fx-profile-strip{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:10px 0 2px;margin-bottom:8px;border-bottom:1px solid rgba(255,255,255,.055)}
+.fx-profile-strip>span{font:10px var(--mono);letter-spacing:.12em;color:var(--muted);margin-right:5px}
+.assigned-effect-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;align-items:center;border-radius:8px}
+.assigned-effect-row.active{background:rgba(255,42,165,.035)}
+.assigned-effect-row .assigned-effect{min-width:0}
+.effect-order-tools{display:flex;gap:4px}
+.hud-icon.tiny{width:30px;height:30px;min-width:30px;padding:0;font-size:12px}
+.hud-icon.tiny:disabled{opacity:.25;cursor:not-allowed}
+.effect-toggles{align-items:center}
+.avatar-system-panel{grid-column:1/-1}
+.avatar-system-body{padding:16px}
+.system-state-readout{font:10px var(--mono);letter-spacing:.08em;color:var(--cyan);text-align:right}
+.system-test-strip{display:grid;grid-template-columns:minmax(180px,1fr) auto auto;gap:9px;align-items:end;padding:12px;border:1px solid rgba(69,232,255,.12);background:rgba(69,232,255,.025);border-radius:10px;margin-bottom:14px}
+.system-test-strip label{font:10px var(--mono);letter-spacing:.08em;color:var(--muted)}
+.system-test-strip select{margin-top:6px;width:100%}
+.avatar-system-form .logic-grid{margin-top:0}
+.toggle-card{display:grid!important;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:10px;align-items:center;padding:11px!important;border:1px solid #292832;border-radius:9px;background:rgba(255,255,255,.014)}
+.toggle-card input{grid-row:1/3;width:18px;height:18px;accent-color:var(--cyan)}
+.toggle-card span{font:700 11px var(--mono);letter-spacing:.06em;color:var(--text)}
+.toggle-card small{font:10px/1.45 var(--mono);color:var(--muted);letter-spacing:0}
+.system-runtime-note{margin-top:12px;padding:9px 10px;border-left:2px solid var(--pink);background:rgba(255,42,165,.035);font:10px var(--mono);letter-spacing:.07em;color:var(--muted)}
+@media(max-width:760px){
+  .system-test-strip{grid-template-columns:1fr 1fr}.system-test-strip label{grid-column:1/-1}
+  .system-test-strip button{min-height:44px}
+  .effects-layout{grid-template-columns:1fr!important}
+  .assigned-effect-row{grid-template-columns:minmax(0,1fr)}
+  .effect-order-tools{justify-content:flex-end}
+  .avatar-preview-stage{min-height:300px}
+  .avatar-transform-grid,.avatar-system-form .logic-grid{grid-template-columns:1fr!important}
+  .fx-profile-strip button{min-height:40px}
+}
 
-    <section class="panel journal-panel">
-      <div class="panel-head compact">
-        <div><span class="kicker">FINANCE JOURNAL</span><h2>Decision Log</h2></div>
-        <button id="newJournalBtn" class="ghost">+ ENTRY</button>
-      </div>
-      <div id="journalList"></div>
-      <div class="finance-section-head journal-pager"><span></span><div class="pager"><button id="journalPrevPage">←</button><span id="journalPager">0 / 0</span><button id="journalNextPage">→</button></div></div>
-    </section>
-  </section>
-</main>
+/* =========================================================
+   PHASE 6A // GLOBAL APPEARANCE + CUSTOM TYPOGRAPHY
+   ========================================================= */
+:root{
+  --hud-max-width:1900px;--panel-gap-effective:14px;--panel-padding-effective:16px;
+  --panel-gap-mobile:11px;--panel-padding-mobile:13px;--interface-scale:1;--heading-scale:1;--telemetry-scale:1;
+  --font-brand:"Times New Roman",Times,serif;--font-panel:"Times New Roman",Times,serif;
+  --font-calendar:var(--body-font);--font-fitness:var(--body-font);--font-finance:var(--body-font);--font-customize:var(--body-font);--font-media:var(--body-font);
+  --pink:var(--mag);
+}
+body{font-size:calc(14px * var(--interface-scale))}
+h1{font-family:var(--font-brand);font-size:clamp(calc(25px * var(--heading-scale)),calc(3vw * var(--heading-scale)),calc(39px * var(--heading-scale)))}
+h2,h3,.fitness-records-head h3{font-family:var(--font-panel);font-size:calc(24px * var(--heading-scale))}
+.eyebrow,.kicker{font-size:calc(10px * var(--telemetry-scale))}
+.pill,.telemetry,.tab,.primary,.ghost,.danger,.filter,.hud-icon,.calendar-view{font-size:calc(10px * var(--interface-scale))}
+.ops-grid,.fitness-page,.finance-page,.customize-page{max-width:var(--hud-max-width)}
+.ops-grid,.right-rail,.finance-grid,.customize-grid{gap:var(--panel-gap-effective)}
+.panel-head{padding:var(--panel-padding-effective)}
+.panel{border-radius:var(--radius)}
+.calendar-panel,.scheduler,.calendar-commandbar,.month-grid,.agenda{font-family:var(--font-calendar)}
+.fitness-page{font-family:var(--font-fitness)}.finance-page{font-family:var(--font-finance)}.customize-page{font-family:var(--font-customize)}
 
+.appearance-panel,.typography-panel{grid-column:1/-1;min-width:0}.appearance-form,.typography-body{padding:16px}.appearance-status{font:calc(9px * var(--telemetry-scale)) var(--telemetry);letter-spacing:.10em;color:var(--cyan)}
+.appearance-preset-strip{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding-bottom:12px;margin-bottom:14px;border-bottom:1px solid var(--line-soft)}.appearance-preset-strip>span{font:9px var(--telemetry);letter-spacing:.12em;color:var(--muted);margin-right:4px}
+.appearance-preview{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,.36fr);gap:12px;align-items:stretch;margin-bottom:14px;padding:16px;border:1px solid var(--line);border-radius:calc(var(--radius) - 2px);background:radial-gradient(circle at 12% 0%,rgba(0,217,255,.055),transparent 35%),linear-gradient(135deg,#0c0d12,#11131a)}
+.appearance-preview>div:first-child{display:flex;flex-direction:column;justify-content:center;min-height:94px}.appearance-preview-title{display:block;margin-top:8px;font-family:var(--font-brand);font-size:calc(29px * var(--heading-scale));font-weight:400;line-height:1;color:var(--text)}
+.appearance-preview-card{display:grid;align-content:center;gap:5px;padding:13px;border:1px solid var(--line);border-left:3px solid var(--cyan);border-radius:calc(var(--radius) - 5px);background:rgba(255,255,255,.018)}.appearance-preview-meta,.appearance-preview-card small{font:8px var(--telemetry);letter-spacing:.09em;color:var(--muted)}.appearance-preview-value{font:500 calc(23px * var(--interface-scale)) var(--calendar-time-font);font-variant-numeric:tabular-nums;color:var(--cyan)}
+.appearance-controls-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.appearance-controls-grid label{display:grid;gap:7px;color:#9697a0;font-size:11px}.appearance-controls-grid input[type="range"]{width:100%;accent-color:var(--cyan)}.appearance-controls-grid select{width:100%;background:#0b0c10;border:1px solid var(--line);border-radius:8px;color:var(--text);padding:9px}
+.appearance-color-grid{display:grid;grid-template-columns:repeat(6,minmax(90px,1fr));gap:9px;margin-top:14px}.appearance-color-grid label{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;padding:9px 10px;border:1px solid var(--line-soft);border-radius:8px;background:#0b0c10;font:8px var(--telemetry);letter-spacing:.06em;color:#8d8f98}.appearance-color-grid input[type="color"]{width:34px;height:28px;padding:2px;border:1px solid var(--line);border-radius:6px;background:#090a0e}
 
-<main class="page customize-page" id="pageCustomize">
-  <section class="customize-grid">
-    <section class="panel avatar-library-panel">
-      <div class="panel-head compact">
-        <div><span class="kicker">CUSTOMIZE // NEXUS</span><h2>Avatar State Library</h2></div>
-        <span class="mood" id="selectedAvatarState">RELAXED</span>
-      </div>
-      <div class="avatar-library-body">
-        <p class="customize-copy">Each state can use its own image and independent effect stack. Files are stored privately in your R2 bucket.</p>
-        <div id="avatarStateList" class="avatar-state-list"></div>
-        <div class="avatar-selected-file"><span>STATE IMAGE</span><b id="selectedAvatarImage">NO IMAGE ASSIGNED</b></div>
-        <div class="actions">
-          <button type="button" id="uploadAvatarImageBtn" class="primary">UPLOAD / REPLACE IMAGE</button>
-          <button type="button" id="removeAvatarImageBtn" class="ghost">REMOVE IMAGE</button>
-          <button type="button" id="resetAvatarStateBtn" class="danger">RESET STATE</button>
-        </div>
-        <input id="avatarImageInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
-      </div>
-    </section>
+.typography-body{padding-top:14px}.font-preview-card{display:grid;gap:7px;padding:15px;margin-bottom:14px;border:1px solid var(--line);border-radius:calc(var(--radius) - 3px);background:linear-gradient(120deg,rgba(255,62,165,.035),rgba(0,217,255,.025))}.font-preview-sample{font-size:28px;line-height:1.05;overflow-wrap:anywhere}.font-preview-sample small{display:block;margin-top:7px;font-size:12px;letter-spacing:.08em;color:var(--muted)}
+.typography-grid{display:grid;grid-template-columns:minmax(280px,.8fr) minmax(420px,1.2fr);gap:1px;background:var(--line-soft);border:1px solid var(--line-soft);border-radius:10px;overflow:hidden}.typography-grid>div{padding:13px;background:#0e0f14;min-width:0}
+.font-library,.font-assignments{display:grid;gap:7px}.font-library-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:7px;align-items:center;padding:9px;border:1px solid var(--line-soft);border-radius:8px;background:#0b0c10}.font-library-row>div{display:grid;gap:3px;min-width:0}.font-library-row b{font-size:11px;font-weight:550;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.font-library-row span{font:7px var(--telemetry);letter-spacing:.07em;color:var(--muted)}
+.font-assignment-row{display:grid;grid-template-columns:minmax(160px,.8fr) minmax(150px,1fr) auto;gap:8px;align-items:center;padding:9px;border:1px solid var(--line-soft);border-radius:8px;background:#0b0c10}.font-assignment-row>div{display:grid;gap:3px;min-width:0}.font-assignment-row b{font-size:11px}.font-assignment-row span{font:7px/1.35 var(--telemetry);color:var(--muted)}.font-assignment-row select{min-width:0;background:#0d0e13;color:var(--text);border:1px solid var(--line);border-radius:7px;padding:8px;font-size:11px}.appearance-empty{padding:18px;border:1px dashed var(--line);border-radius:8px;text-align:center;font:8px var(--telemetry);letter-spacing:.08em;color:var(--muted)}
 
-    <section class="panel avatar-preview-panel">
-      <div class="panel-head compact">
-        <div><span class="kicker">LIVE PREVIEW</span><h2>NEXUS Visual Stack</h2></div>
-        <label class="preview-state-picker">PREVIEW
-          <select id="avatarPreviewState">
-            <option>RELAXED</option><option>FOCUSED</option><option>ANXIOUS</option><option>PANIC</option><option>SUCCESS</option><option>OFFLINE</option><option>ANALYZING</option>
-          </select>
-        </label>
-      </div>
-      <div class="avatar-preview-body">
-        <div class="avatar-preview-stage nexus-stage" id="avatarPreviewStage">
-          <div class="avatar-effects avatar-effects-back"></div>
-          <img class="avatar-base-image hidden" alt="NEXUS state preview">
-          <div class="avatar-fallback">RE</div>
-          <div class="avatar-effects avatar-effects-front"></div>
-          <span class="avatar-state-badge">RELAXED</span>
-        </div>
-        <div class="avatar-transform-grid">
-          <label>Image fit<select id="avatarFit"><option value="contain">CONTAIN</option><option value="cover">COVER</option></select></label>
-          <label>Scale <span id="avatarScaleValue" class="field-value">100%</span><input id="avatarScale" type="range" min="0.5" max="2" step="0.05" value="1"></label>
-          <label>Horizontal <span id="avatarPositionXValue" class="field-value">50%</span><input id="avatarPositionX" type="range" min="0" max="100" step="1" value="50"></label>
-          <label>Vertical <span id="avatarPositionYValue" class="field-value">50%</span><input id="avatarPositionY" type="range" min="0" max="100" step="1" value="50"></label>
-        </div>
-        <button type="button" id="saveAvatarStateBtn" class="primary avatar-save">SAVE STATE CONFIGURATION</button>
-      </div>
-    </section>
+@media(max-width:1050px){.appearance-controls-grid{grid-template-columns:1fr 1fr}.appearance-color-grid{grid-template-columns:repeat(3,1fr)}.typography-grid{grid-template-columns:1fr}}
+@media(max-width:720px){
+  .ops-grid,.right-rail,.finance-grid,.customize-grid{gap:var(--panel-gap-mobile)}.panel-head{padding:var(--panel-padding-mobile)}
+  .appearance-form,.typography-body{padding:13px}.appearance-preview{grid-template-columns:1fr}.appearance-controls-grid{grid-template-columns:1fr}.appearance-color-grid{grid-template-columns:1fr 1fr}.font-assignment-row{grid-template-columns:1fr}.font-assignment-row button{min-height:44px}.font-library-row{grid-template-columns:minmax(0,1fr) auto}.font-library-row .danger{grid-column:1/-1}.appearance-preset-strip button{min-height:40px}
+}
 
-    <section class="panel effects-panel">
-      <div class="panel-head compact">
-        <div><span class="kicker">VISUAL EFFECTS</span><h2>Effect Library</h2></div>
-        <button type="button" id="uploadEffectBtn" class="primary small">+ UPLOAD EFFECT</button>
-      </div>
-      <input id="avatarEffectInput" type="file" accept=".lottie,.json,image/png,image/jpeg,image/webp,image/gif" hidden>
-      <div class="fx-profile-strip" aria-label="Effect profiles">
-        <span>FX PROFILE</span>
-        <button type="button" class="ghost small" data-fx-profile="CLEAN">CLEAN</button>
-        <button type="button" class="ghost small" data-fx-profile="SUBTLE">SUBTLE</button>
-        <button type="button" class="ghost small" data-fx-profile="ENERGY">ENERGY</button>
-        <button type="button" class="ghost small" data-fx-profile="CRITICAL">CRITICAL</button>
-      </div>
-      <div class="effects-layout">
-        <div>
-          <div class="effects-subhead">ASSET LIBRARY</div>
-          <div id="effectLibrary" class="effect-library"></div>
-        </div>
-        <div>
-          <div class="effects-subhead">ASSIGNED TO STATE</div>
-          <div id="assignedEffects" class="assigned-effects"></div>
-          <div id="effectControls" class="effect-controls hidden">
-            <div class="two effect-toggles">
-              <label class="toggle-line"><input id="effectEnabled" type="checkbox" checked> ENABLE EFFECT</label>
-              <label class="toggle-line"><input id="effectLoop" type="checkbox" checked> LOOP LOTTIE</label>
-            </div>
-            <div class="two">
-              <label>Layer<select id="effectLayer"><option value="back">BEHIND AVATAR</option><option value="front" selected>IN FRONT</option></select></label>
-              <label>Blend<select id="effectBlend"><option value="screen">SCREEN</option><option value="normal">NORMAL</option><option value="overlay">OVERLAY</option><option value="lighten">LIGHTEN</option><option value="multiply">MULTIPLY</option></select></label>
-            </div>
-            <label>Opacity <span id="effectOpacityValue" class="field-value">85%</span><input id="effectOpacity" type="range" min="0" max="100" step="1" value="85"></label>
-            <label>Scale <span id="effectScaleValue" class="field-value">100%</span><input id="effectScale" type="range" min="25" max="300" step="5" value="100"></label>
-            <div class="two">
-              <label>Playback speed <span id="effectSpeedValue" class="field-value">100%</span><input id="effectSpeed" type="range" min="25" max="300" step="5" value="100"></label>
-              <label>Rotation <span id="effectRotationValue" class="field-value">0°</span><input id="effectRotation" type="range" min="-180" max="180" step="5" value="0"></label>
-            </div>
-            <div class="two">
-              <label>X offset <span id="effectXValue" class="field-value">0%</span><input id="effectX" type="range" min="-100" max="100" step="1" value="0"></label>
-              <label>Y offset <span id="effectYValue" class="field-value">0%</span><input id="effectY" type="range" min="-100" max="100" step="1" value="0"></label>
-            </div>
-            <button type="button" id="removeEffectAssignmentBtn" class="danger">REMOVE FROM STATE</button>
-          </div>
-        </div>
-      </div>
-      <div class="effect-format-note">SUPPORTED // .LOTTIE / LOTTIE JSON / PNG / JPG / WEBP / GIF // MAX 12 MB EACH</div>
-    </section>
-
-    <section class="panel avatar-system-panel">
-      <div class="panel-head compact">
-        <div><span class="kicker">NEXUS RUNTIME</span><h2>System State Lab</h2></div>
-        <span id="avatarSystemStatus" class="system-state-readout">LIVE // RELAXED</span>
-      </div>
-      <div class="avatar-system-body">
-        <div class="system-test-strip">
-          <label>LIVE HUD TEST
-            <select id="avatarSystemTestState">
-              <option>RELAXED</option><option>FOCUSED</option><option>ANXIOUS</option><option>PANIC</option><option>SUCCESS</option><option>OFFLINE</option><option>ANALYZING</option>
-            </select>
-          </label>
-          <button type="button" id="testAvatarStateBtn" class="primary">TEST 8 SEC</button>
-          <button type="button" id="clearAvatarStateTestBtn" class="ghost">CLEAR TEST</button>
-        </div>
-        <form id="avatarSystemForm" class="avatar-system-form">
-          <div class="logic-grid">
-            <label class="toggle-card"><input id="systemOfflineEnabled" type="checkbox" checked><span>OFFLINE STATE</span><small>Use OFFLINE automatically when the browser loses network access.</small></label>
-            <label class="toggle-card"><input id="systemAnalyzingEnabled" type="checkbox" checked><span>ANALYZING STATE</span><small>Allow AI modules to temporarily take control of NEXUS.</small></label>
-            <label>Master FX intensity <span id="systemFxIntensityValue" class="field-value">100%</span><input id="systemFxIntensity" type="range" min="0" max="150" step="5" value="100"></label>
-            <label>Motion policy<select id="systemMotionMode"><option value="system">FOLLOW DEVICE</option><option value="full">FULL MOTION</option><option value="reduced">REDUCED MOTION</option></select></label>
-            <label>Mood hold <span id="systemMoodHoldValue" class="field-value">1.5s</span><input id="systemMoodHold" type="range" min="0" max="10" step="0.5" value="1.5"></label>
-            <label>Visual transition <span id="systemTransitionValue" class="field-value">220 ms</span><input id="systemTransitionMs" type="range" min="0" max="1200" step="20" value="220"></label>
-          </div>
-          <div class="system-runtime-note">TRANSIENT PRIORITY // OFFLINE → SYSTEM TEST / ANALYZING → TASK ENGINE</div>
-          <div class="modal-actions"><span></span><span></span><span></span><button type="submit" class="primary">SAVE RUNTIME SETTINGS</button></div>
-        </form>
-      </div>
-    </section>
-
-    <section class="panel avatar-logic-panel">
-      <div class="panel-head compact"><div><span class="kicker">DETERMINISTIC STATE ENGINE</span><h2>Avatar Logic</h2></div></div>
-      <form id="avatarLogicForm" class="avatar-logic-form">
-        <div id="avatarLogicPreview" class="avatar-logic-preview">CURRENT // RELAXED</div>
-        <div class="logic-grid">
-          <label>Due-soon window (hours)<input id="logicDueSoonHours" type="number" min="1" max="168" value="24"></label>
-          <label>ANXIOUS // active tasks<input id="logicAnxiousActive" type="number" min="1" max="99" value="6"></label>
-          <label>ANXIOUS // due soon<input id="logicAnxiousDueSoon" type="number" min="1" max="99" value="2"></label>
-          <label>PANIC // overdue tasks<input id="logicPanicOverdue" type="number" min="1" max="99" value="4"></label>
-          <label>PANIC // high overdue<input id="logicPanicHighOverdue" type="number" min="1" max="99" value="2"></label>
-          <label>SUCCESS // completed today<input id="logicSuccessCompleted" type="number" min="1" max="99" value="3"></label>
-        </div>
-        <div class="logic-order"><span>STATE PRIORITY</span><b>PANIC → SUCCESS → ANXIOUS → FOCUSED → RELAXED</b></div>
-        <div class="modal-actions"><span></span><span></span><span></span><button type="submit" class="primary">SAVE AVATAR LOGIC</button></div>
-      </form>
-    </section>
-
-
-    <section class="panel appearance-panel">
-      <div class="panel-head compact">
-        <div><span class="kicker">HUD DESIGN SYSTEM</span><h2>Appearance Lab</h2></div>
-        <span class="appearance-status">LIVE PREVIEW</span>
-      </div>
-      <form id="appearanceForm" class="appearance-form">
-        <div class="appearance-preset-strip">
-          <span>PRESETS</span>
-          <button type="button" class="ghost small" data-appearance-preset="TACTICAL">TACTICAL</button>
-          <button type="button" class="ghost small" data-appearance-preset="EDITORIAL">EDITORIAL</button>
-          <button type="button" class="ghost small" data-appearance-preset="DENSE">DENSE</button>
-          <button type="button" class="ghost small" data-appearance-preset="MINIMAL">MINIMAL</button>
-        </div>
-        <div id="appearancePreview" class="appearance-preview">
-          <div><span class="kicker">PRIVATE INTELLIGENCE TERMINAL</span><strong class="appearance-preview-title">NEON OPERATIONS CENTER</strong></div>
-          <div class="appearance-preview-card"><span class="appearance-preview-meta">OPS // 01</span><b class="appearance-preview-value">S$ 12,840.42</b><small>PORTFOLIO EQUITY // LIVE</small></div>
-        </div>
-        <div class="appearance-controls-grid">
-          <label>HUD max width <span id="appearanceHudWidthValue" class="field-value">1900px</span><input id="appearanceHudWidth" type="range" min="1180" max="2400" step="20" value="1900"></label>
-          <label>Panel gap <span id="appearancePanelGapValue" class="field-value">14px</span><input id="appearancePanelGap" type="range" min="6" max="30" step="1" value="14"></label>
-          <label>Panel padding <span id="appearancePanelPaddingValue" class="field-value">16px</span><input id="appearancePanelPadding" type="range" min="10" max="30" step="1" value="16"></label>
-          <label>Corner radius <span id="appearanceRadiusValue" class="field-value">15px</span><input id="appearanceRadius" type="range" min="0" max="28" step="1" value="15"></label>
-          <label>Border intensity <span id="appearanceBorderValue" class="field-value">62%</span><input id="appearanceBorder" type="range" min="15" max="100" step="1" value="62"></label>
-          <label>Shadow intensity <span id="appearanceShadowValue" class="field-value">30%</span><input id="appearanceShadow" type="range" min="0" max="75" step="1" value="30"></label>
-          <label>Interface scale <span id="appearanceScaleValue" class="field-value">100%</span><input id="appearanceScale" type="range" min="70" max="140" step="1" value="100"></label>
-          <label>Heading scale <span id="appearanceHeadingScaleValue" class="field-value">100%</span><input id="appearanceHeadingScale" type="range" min="80" max="140" step="1" value="100"></label>
-          <label>Telemetry scale <span id="appearanceTelemetryScaleValue" class="field-value">100%</span><input id="appearanceTelemetryScale" type="range" min="75" max="135" step="1" value="100"></label>
-          <label>Desktop density<select id="appearanceDensity"><option>COMFORTABLE</option><option>COMPACT</option><option>DENSE</option></select></label>
-          <label>Mobile density<select id="appearanceMobileDensity"><option>COMFORTABLE</option><option selected>COMPACT</option><option>DENSE</option></select></label>
-        </div>
-        <div class="appearance-color-grid">
-          <label>Live cyan<input id="appearanceColorCyan" type="color" value="#00d9ff"></label>
-          <label>AI magenta<input id="appearanceColorMag" type="color" value="#ff3ea5"></label>
-          <label>Warning red<input id="appearanceColorRed" type="color" value="#ff405c"></label>
-          <label>Amber<input id="appearanceColorAmber" type="color" value="#ffba4a"></label>
-          <label>Positive green<input id="appearanceColorGreen" type="color" value="#6ee7a7"></label>
-          <label>Violet<input id="appearanceColorViolet" type="color" value="#8b6cff"></label>
-        </div>
-        <div class="modal-actions"><button type="button" id="resetAppearanceBtn" class="ghost">RESET APPEARANCE</button><span></span><span></span><button type="submit" class="primary">SAVE HUD APPEARANCE</button></div>
-      </form>
-    </section>
-
-    <section class="panel typography-panel">
-      <div class="panel-head compact">
-        <div><span class="kicker">R2 TYPOGRAPHY LIBRARY</span><h2>Custom Fonts</h2></div>
-        <button type="button" id="uploadFontBtn" class="primary small">+ UPLOAD FONT</button>
-      </div>
-      <input id="fontInput" type="file" accept=".woff2,.woff,.ttf,.otf,font/woff2,font/woff,font/ttf,font/otf" hidden>
-      <div class="typography-body">
-        <div class="font-preview-card">
-          <span id="fontPreviewName" class="kicker">SYSTEM DEFAULT</span>
-          <div id="fontPreviewSample" class="font-preview-sample">NEON OPERATIONS CENTER<br><small>OPS // FINANCE // FITNESS // 0123456789</small></div>
-        </div>
-        <div class="typography-grid">
-          <div><div class="effects-subhead">FONT LIBRARY</div><div id="fontLibrary" class="font-library"></div></div>
-          <div><div class="effects-subhead">SECTION ASSIGNMENTS</div><div id="fontAssignments" class="font-assignments"></div></div>
-        </div>
-        <div class="effect-format-note">SUPPORTED // WOFF2 / WOFF / TTF / OTF // MAX 8 MB EACH // WOFF2 RECOMMENDED</div>
-      </div>
-    </section>
-  </section>
-</main>
-
-<dialog id="eventDialog" class="modal">
-<form id="eventForm" method="dialog">
-  <input type="hidden" id="eventId">
-  <div class="modal-head">
-    <div><span class="kicker">CALENDAR RECORD</span><h2 id="eventModalTitle">New Event</h2></div>
-    <button type="button" class="x" data-close="eventDialog">×</button>
-  </div>
-
-  <label>Title<input id="eventTitle" maxlength="240" required></label>
-
-  <div class="two">
-    <label>Start<input id="eventStart" type="datetime-local" required></label>
-    <label>End<input id="eventEnd" type="datetime-local" required></label>
-  </div>
-
-  <div class="two">
-    <label>Type
-      <select id="eventCategory">
-        <option value="OPERATIONAL">OPERATIONAL</option>
-        <option value="DUTY">DUTY</option>
-        <option value="FITNESS">FITNESS</option>
-        <option value="STUDY">STUDY</option>
-        <option value="FINANCE">FINANCE</option>
-        <option value="PERSONAL">PERSONAL</option>
-        <option value="TRAVEL">TRAVEL</option>
-        <option value="REST">REST</option>
-        <option value="MAINTENANCE">MAINTENANCE</option>
-        <option value="GOOGLE">GOOGLE</option>
-      </select>
-    </label>
-    <label>Event Color
-      <div class="color-control">
-        <input id="eventColor" type="color" value="#00d9ff">
-        <div class="color-presets" id="eventColorPresets" aria-label="Color presets">
-          <button type="button" data-color="#00d9ff" style="--swatch:#00d9ff" aria-label="Cyan"></button>
-          <button type="button" data-color="#ff3ea5" style="--swatch:#ff3ea5" aria-label="Magenta"></button>
-          <button type="button" data-color="#ff405c" style="--swatch:#ff405c" aria-label="Red"></button>
-          <button type="button" data-color="#6ee7a7" style="--swatch:#6ee7a7" aria-label="Green"></button>
-          <button type="button" data-color="#ffba4a" style="--swatch:#ffba4a" aria-label="Amber"></button>
-          <button type="button" data-color="#8b6cff" style="--swatch:#8b6cff" aria-label="Violet"></button>
-        </div>
-      </div>
-    </label>
-  </div>
-
-  <fieldset class="repeat-box">
-    <legend>Repeat</legend>
-    <div class="repeat-grid">
-      <label>Frequency
-        <select id="eventRepeat">
-          <option value="none">DOES NOT REPEAT</option>
-          <option value="daily">DAILY</option>
-          <option value="weekdays">WEEKDAYS</option>
-          <option value="weekly">WEEKLY</option>
-          <option value="biweekly">EVERY 2 WEEKS</option>
-          <option value="monthly">MONTHLY</option>
-          <option value="custom">CUSTOM</option>
-        </select>
-      </label>
-      <label id="repeatIntervalWrap" class="repeat-custom hidden">Every
-        <div class="inline-field"><input id="repeatInterval" type="number" min="1" max="52" value="1"><select id="repeatUnit"><option value="DAILY">DAYS</option><option value="WEEKLY">WEEKS</option><option value="MONTHLY">MONTHS</option></select></div>
-      </label>
-    </div>
-    <div id="repeatDaysWrap" class="repeat-days hidden" aria-label="Repeat on days">
-      <button type="button" data-day="MO">M</button><button type="button" data-day="TU">T</button><button type="button" data-day="WE">W</button><button type="button" data-day="TH">T</button><button type="button" data-day="FR">F</button><button type="button" data-day="SA">S</button><button type="button" data-day="SU">S</button>
-    </div>
-    <div id="repeatEndsWrap" class="repeat-ends hidden">
-      <label>Ends
-        <select id="repeatEndMode">
-          <option value="never">NEVER</option>
-          <option value="date">ON DATE</option>
-          <option value="count">AFTER OCCURRENCES</option>
-        </select>
-      </label>
-      <label id="repeatEndDateWrap" class="hidden">End date<input id="repeatEndDate" type="date"></label>
-      <label id="repeatCountWrap" class="hidden">Occurrences<input id="repeatCount" type="number" min="1" max="999" value="10"></label>
-    </div>
-    <div id="repeatSummary" class="repeat-summary">ONE-TIME EVENT</div>
-  </fieldset>
-
-  <fieldset class="reminder-box">
-    <legend>Google Calendar Reminder</legend>
-    <div class="reminder-top">
-      <label>Mode
-        <select id="reminderMode">
-          <option value="none">NONE</option>
-          <option value="default">GOOGLE DEFAULT</option>
-          <option value="custom">CUSTOM</option>
-        </select>
-      </label>
-      <div class="reminder-help">POPUP reminders can surface through Google Calendar on mobile when calendar sync and phone notifications are enabled.</div>
-    </div>
-    <div id="reminderCustom" class="hidden">
-      <div id="reminderList" class="reminder-list"></div>
-      <button type="button" id="addReminderBtn" class="ghost small">+ ADD REMINDER</button>
-      <div class="reminder-limit">MAX 5 // UP TO 4 WEEKS BEFORE EVENT</div>
-    </div>
-    <div id="reminderSummary" class="repeat-summary">NO REMINDER</div>
-  </fieldset>
-
-  <label>Location<input id="eventLocation" maxlength="300"></label>
-  <label>Notes<textarea id="eventNotes" rows="4"></textarea></label>
-
-  <div class="modal-actions">
-    <button type="button" id="deleteEventBtn" class="danger hidden">DELETE</button>
-    <span></span>
-    <button type="button" class="ghost" data-close="eventDialog">CANCEL</button>
-    <button type="submit" class="primary">SAVE</button>
-  </div>
-</form>
-</dialog>
-
-<dialog id="calendarDisplayDialog" class="modal narrow">
-<form id="calendarDisplayForm" method="dialog">
-  <div class="modal-head">
-    <div><span class="kicker">CALENDAR DISPLAY</span><h2>Comfort & Density</h2></div>
-    <button type="button" class="x" data-close="calendarDisplayDialog">×</button>
-  </div>
-
-  <label>Hour height <span id="hourHeightValue" class="field-value">64 px</span>
-    <input id="hourHeight" type="range" min="44" max="96" step="2" value="64">
-  </label>
-  <label>Visible day starts
-    <select id="dayStartHour">
-      <option value="0">00:00</option><option value="4">04:00</option><option value="5">05:00</option>
-      <option value="6" selected>06:00</option><option value="7">07:00</option><option value="8">08:00</option>
-    </select>
-  </label>
-  <label>Visible day ends
-    <select id="dayEndHour">
-      <option value="18">18:00</option><option value="20">20:00</option><option value="22">22:00</option>
-      <option value="24" selected>24:00</option>
-    </select>
-  </label>
-  <label>Time format
-    <select id="timeFormat"><option value="24" selected>24-HOUR</option><option value="12">12-HOUR</option></select>
-  </label>
-  <label>Event opacity <span id="eventOpacityValue" class="field-value">82%</span>
-    <input id="eventOpacity" type="range" min="55" max="100" step="1" value="82">
-  </label>
-  <label>Corner radius <span id="eventRadiusValue" class="field-value">8 px</span>
-    <input id="eventRadius" type="range" min="0" max="18" step="1" value="8">
-  </label>
-
-  <div class="modal-actions">
-    <button type="button" id="resetCalendarDisplay" class="ghost">RESET</button>
-    <span></span><span></span>
-    <button type="submit" class="primary">APPLY</button>
-  </div>
-</form>
-</dialog>
-
-<dialog id="taskDialog" class="modal">
-<form id="taskForm" method="dialog">
-  <input type="hidden" id="taskId">
-  <div class="modal-head">
-    <div><span class="kicker">OBJECTIVE RECORD</span><h2 id="taskModalTitle">New Task</h2></div>
-    <button type="button" class="x" data-close="taskDialog">×</button>
-  </div>
-  <label>Title<input id="taskTitle" maxlength="240" required></label>
-  <div class="two">
-    <label>Priority<select id="taskPriority"><option value="low">LOW</option><option value="medium" selected>MEDIUM</option><option value="high">HIGH</option><option value="critical">CRITICAL</option></select></label>
-    <label>Due<input id="taskDue" type="datetime-local"></label>
-  </div>
-  <label>Category<select id="taskCategory"><option>DAILY</option><option>OPERATIONAL</option><option>MAINTENANCE</option><option>PERSONAL</option><option>FOLLOW-UP</option><option>GOOGLE</option></select></label>
-  <label>Notes<textarea id="taskNotes" rows="4"></textarea></label>
-  <div class="modal-actions">
-    <button type="button" id="deleteTaskBtn" class="danger hidden">DELETE</button>
-    <span></span>
-    <button type="button" class="ghost" data-close="taskDialog">CANCEL</button>
-    <button type="submit" class="primary">SAVE</button>
-  </div>
-</form>
-</dialog>
-
-
-
-<dialog id="movementDialog" class="modal">
-<form id="movementForm" method="dialog">
-  <input type="hidden" id="movementId">
-  <div class="modal-head"><div><span class="kicker">FITNESS MARKET</span><h2 id="movementModalTitle">New Movement</h2></div><button type="button" class="x" data-close="movementDialog">×</button></div>
-  <div class="two"><label>Name<input id="movementName" maxlength="160" required placeholder="Bench Press"></label><label>Symbol<input id="movementSymbol" maxlength="12" placeholder="BENCH"></label></div>
-  <div class="two"><label>Baseline Volume<input id="movementBaselineVolume" type="number" min="0" step="1" placeholder="Optional"></label><label>Baseline E1RM<input id="movementBaselineE1rm" type="number" min="0" step="0.1" placeholder="Optional"></label></div>
-  <fieldset class="fitness-fieldset"><legend>Scheduled training days</legend><div id="movementDays" class="movement-days"><button type="button" data-day="1">M</button><button type="button" data-day="2">T</button><button type="button" data-day="3">W</button><button type="button" data-day="4">T</button><button type="button" data-day="5">F</button><button type="button" data-day="6">S</button><button type="button" data-day="7">S</button></div></fieldset>
-  <fieldset class="fitness-fieldset"><legend>Missed-session decay</legend><div class="three"><label>Base %<input id="decayBase" type="number" min="0" max="20" step="0.05" value="0.50"></label><label>Acceleration %<input id="decayAcceleration" type="number" min="0" max="20" step="0.05" value="0.15"></label><label>Maximum %<input id="decayMax" type="number" min="0" max="50" step="0.1" value="2.00"></label></div></fieldset>
-  <fieldset class="fitness-fieldset"><legend>Persistent chart palette</legend><div class="two chart-color-fields"><label>Bullish / completed<input id="movementUpColor" type="color" value="#2fd69a"></label><label>Bearish / missed<input id="movementDownColor" type="color" value="#ff405c"></label></div><div class="palette-presets" aria-label="Chart palette presets"><button type="button" class="palette-preset" data-up="#2fd69a" data-down="#ff405c"><i style="--up:#2fd69a;--down:#ff405c"></i>TACTICAL</button><button type="button" class="palette-preset" data-up="#00d9ff" data-down="#ff3ea5"><i style="--up:#00d9ff;--down:#ff3ea5"></i>NEON</button><button type="button" class="palette-preset" data-up="#8b6cff" data-down="#ffba4a"><i style="--up:#8b6cff;--down:#ffba4a"></i>VIOLET</button><button type="button" class="palette-preset" data-up="#d7d8df" data-down="#7c7e88"><i style="--up:#d7d8df;--down:#7c7e88"></i>MONO</button></div></fieldset>
-  <div class="modal-actions"><button type="button" id="deleteMovementBtn" class="danger hidden">DELETE</button><span></span><button type="button" class="ghost" data-close="movementDialog">CANCEL</button><button type="submit" class="primary">SAVE</button></div>
-</form>
-</dialog>
-
-<dialog id="sessionDialog" class="modal">
-<form id="sessionForm" method="dialog">
-  <input type="hidden" id="sessionId">
-  <div class="modal-head"><div><span class="kicker">COMPLETED TRAINING</span><h2 id="sessionModalTitle">Log Session</h2><div id="sessionMovementName" class="session-movement-name">—</div></div><button type="button" class="x" data-close="sessionDialog">×</button></div>
-  <div class="two"><label>Performed at<input id="sessionPerformedAt" type="datetime-local" required></label><label>Body weight kg<input id="sessionBodyWeight" type="number" min="0" step="0.1" placeholder="Optional"></label></div>
-  <div id="sameDayNotice" class="fitness-notice hidden"></div>
-  <div class="session-quickbar"><span>SETS</span><button type="button" id="copyLastSessionBtn" class="ghost small">COPY PREVIOUS SETS</button></div>
-  <div class="sets-head"><span>SETS</span><span>WEIGHT</span><span>REPS</span><span>RPE</span><span></span></div><div id="setRows" class="set-rows"></div><button type="button" id="addSetBtn" class="ghost add-set">+ ADD SET</button>
-  <label>Notes<textarea id="sessionNotes" rows="3"></textarea></label>
-  <div class="modal-actions"><button type="button" id="deleteSessionBtn" class="danger hidden">DELETE</button><span></span><button type="button" class="ghost" data-close="sessionDialog">CANCEL</button><button type="submit" class="primary">SAVE SESSION</button></div>
-</form>
-</dialog>
-
-
-<dialog id="transactionDialog" class="modal">
-<form id="transactionForm" method="dialog">
-  <input type="hidden" id="transactionId">
-  <div class="modal-head"><div><span class="kicker">CASHFLOW RECORD</span><h2 id="transactionModalTitle">New Transaction</h2></div><button type="button" class="x" data-close="transactionDialog">×</button></div>
-  <div class="two"><label>Occurred at<input id="transactionOccurredAt" type="datetime-local" required></label><label>Direction<select id="transactionDirection"><option value="expense">EXPENSE</option><option value="inflow">INFLOW</option></select></label></div>
-  <div class="two"><label>Amount<input id="transactionAmount" type="number" min="0.01" step="0.01" required></label><label>Category<select id="transactionCategory"><option>Food</option><option>Transport</option><option>Entertainment</option><option>Shopping</option><option>Subscriptions</option><option>Education</option><option>Fitness</option><option>Personal</option><option>Income</option><option>Other</option></select></label></div>
-  <label>Description<input id="transactionDescription" maxlength="240" placeholder="Lunch / Pay / Subscription"></label>
-  <label>Notes<textarea id="transactionNotes" rows="3"></textarea></label>
-  <div class="modal-actions"><button type="button" id="deleteTransactionBtn" class="danger hidden">DELETE</button><span></span><button type="button" class="ghost" data-close="transactionDialog">CANCEL</button><button type="submit" class="primary">SAVE</button></div>
-</form>
-</dialog>
-
-<dialog id="financeSettingsDialog" class="modal narrow">
-<form id="financeSettingsForm" method="dialog">
-  <div class="modal-head"><div><span class="kicker">FINANCE CONFIGURATION</span><h2>Allowance & Portfolio</h2></div><button type="button" class="x" data-close="financeSettingsDialog">×</button></div>
-  <label>Currency<select id="financeCurrency"><option value="SGD">SGD // SINGAPORE DOLLAR</option><option value="USD">USD // US DOLLAR</option></select></label>
-  <label>Starting allowance<input id="financeStartingBalance" type="number" step="0.01"></label>
-  <label>Portfolio cash<input id="financePortfolioCash" type="number" step="0.01"></label>
-  <fieldset class="fitness-fieldset"><legend>Cashflow chart palette</legend><div class="two chart-color-fields"><label>Inflow<input id="cashUpColor" type="color" value="#2fd69a"></label><label>Expense<input id="cashDownColor" type="color" value="#ff405c"></label></div></fieldset>
-  <div class="finance-settings-note">Changing the starting allowance recalculates every cashflow candle while preserving the transaction ledger.</div>
-  <div class="modal-actions"><span></span><span></span><button type="button" class="ghost" data-close="financeSettingsDialog">CANCEL</button><button type="submit" class="primary">APPLY</button></div>
-</form>
-</dialog>
-
-<dialog id="positionDialog" class="modal">
-<form id="positionForm" method="dialog">
-  <input type="hidden" id="positionId">
-  <div class="modal-head"><div><span class="kicker">PORTFOLIO POSITION</span><h2 id="positionModalTitle">New Position</h2></div><button type="button" class="x" data-close="positionDialog">×</button></div>
-  <div class="two"><label>Symbol<input id="positionSymbol" maxlength="24" required placeholder="AAPL"></label><label>Asset type<select id="positionAssetType"><option>EQUITY</option><option>ETF</option><option>COMMODITY</option><option>FX</option><option>CRYPTO</option><option>BOND</option><option>OTHER</option></select></label></div>
-  <div class="three"><label>Quantity<input id="positionQuantity" type="number" step="0.000001" required></label><label>Entry price<input id="positionEntryPrice" type="number" min="0" step="0.0001" required></label><label>Current price<input id="positionCurrentPrice" type="number" min="0" step="0.0001" placeholder="Manual"></label></div>
-  <label>Sector / Group<input id="positionSector" maxlength="120" placeholder="Technology"></label>
-  <label>Notes<textarea id="positionNotes" rows="3"></textarea></label>
-  <div class="modal-actions"><button type="button" id="deletePositionBtn" class="danger hidden">DELETE</button><span></span><button type="button" class="ghost" data-close="positionDialog">CANCEL</button><button type="submit" class="primary">SAVE</button></div>
-</form>
-</dialog>
-
-<dialog id="portfolioRiskDialog" class="modal">
-<form id="portfolioRiskForm" method="dialog">
-  <div class="modal-head"><div><span class="kicker">PORTFOLIO RISK CONTROL</span><h2>Risk Parameters</h2></div><button type="button" class="x" data-close="portfolioRiskDialog">×</button></div>
-  <div class="risk-form-grid">
-    <label>Max position size <span id="riskMaxPositionValue" class="field-value">20%</span><input id="riskMaxPosition" type="range" min="1" max="100" step="1"></label>
-    <label>Max sector exposure <span id="riskMaxSectorValue" class="field-value">35%</span><input id="riskMaxSector" type="range" min="1" max="100" step="1"></label>
-    <label>Max daily loss <span id="riskDailyLossValue" class="field-value">3%</span><input id="riskDailyLoss" type="range" min="0.5" max="25" step="0.5"></label>
-    <label>Risk per trade <span id="riskPerTradeValue" class="field-value">1%</span><input id="riskPerTrade" type="range" min="0.25" max="10" step="0.25"></label>
-    <label>Max drawdown <span id="riskMaxDrawdownValue" class="field-value">12%</span><input id="riskMaxDrawdown" type="range" min="1" max="50" step="1"></label>
-  </div>
-  <fieldset class="fitness-fieldset"><legend>Target allocation</legend><div class="two"><label>Cash %<input id="riskTargetCash" type="number" min="0" max="100" step="1"></label><label>Equity %<input id="riskTargetEquity" type="number" min="0" max="100" step="1"></label><label>Commodity %<input id="riskTargetCommodity" type="number" min="0" max="100" step="1"></label><label>Other %<input id="riskTargetOther" type="number" min="0" max="100" step="1"></label></div></fieldset>
-  <fieldset class="fitness-fieldset"><legend>Portfolio chart palette</legend><div class="two chart-color-fields"><label>Equity curve<input id="portfolioEquityColor" type="color" value="#45e8ff"></label><label>Drawdown<input id="portfolioDrawdownColor" type="color" value="#ff405c"></label></div></fieldset>
-  <div class="finance-settings-note">Targets are advisory; risk limits generate warnings but do not block position edits.</div>
-  <div class="modal-actions"><span></span><span></span><button type="button" class="ghost" data-close="portfolioRiskDialog">CANCEL</button><button type="submit" class="primary">APPLY</button></div>
-</form>
-</dialog>
-
-<dialog id="tradeDialog" class="modal">
-<form id="tradeForm" method="dialog">
-  <input type="hidden" id="tradeId">
-  <div class="modal-head"><div><span class="kicker">PORTFOLIO HISTORY RECORD</span><h2 id="tradeModalTitle">New History Entry</h2></div><button type="button" class="x" data-close="tradeDialog">×</button></div>
-  <div class="two"><label>Occurred at<input id="tradeOccurredAt" type="datetime-local" required></label><label>Action<select id="tradeAction"><option>BUY</option><option>SELL</option><option>DIVIDEND</option><option>FEE</option><option>DEPOSIT</option><option>WITHDRAWAL</option><option>ADJUSTMENT</option></select></label></div>
-  <div class="three"><label>Symbol<input id="tradeSymbol" maxlength="24" placeholder="AAPL"></label><label>Quantity<input id="tradeQuantity" type="number" step="0.000001"></label><label>Price<input id="tradePrice" type="number" min="0" step="0.0001"></label></div>
-  <label>Realized P&amp;L<input id="tradeRealizedPnl" type="number" step="0.01" value="0"></label>
-  <label>Rationale<textarea id="tradeRationale" rows="3" placeholder="Why this action was taken..."></textarea></label>
-  <label>Notes<textarea id="tradeNotes" rows="3"></textarea></label>
-  <div class="modal-actions"><button type="button" id="deleteTradeBtn" class="danger hidden">DELETE</button><span></span><button type="button" class="ghost" data-close="tradeDialog">CANCEL</button><button type="submit" class="primary">SAVE</button></div>
-</form>
-</dialog>
-
-<dialog id="snapshotManagerDialog" class="modal snapshot-manager-modal">
-  <div class="modal-head"><div><span class="kicker">PORTFOLIO HISTORY CONTROL</span><h2>Snapshot Manager</h2></div><button type="button" class="x" data-close="snapshotManagerDialog">×</button></div>
-  <div class="snapshot-manager-toolbar">
-    <label>Delete captures before<input id="snapshotDeleteBefore" type="date"></label>
-    <button id="deleteSnapshotsBeforeBtn" type="button" class="ghost danger-outline">DELETE BEFORE DATE</button>
-    <button id="clearAllSnapshotsBtn" type="button" class="danger">CLEAR ALL</button>
-  </div>
-  <div class="snapshot-manager-note">Deleting a snapshot only removes historical chart points. Current positions, cash, transactions and trade history are not changed.</div>
-  <div class="snapshot-table-head"><span>CAPTURED</span><span>SOURCE</span><span>EQUITY</span><span>DRAW</span><span></span></div>
-  <div id="snapshotManagerList" class="snapshot-manager-list"></div>
-  <div class="finance-section-head"><span id="snapshotCountLabel" class="finance-microcopy">0 SNAPSHOTS</span><div class="pager"><button id="snapshotPrevPage" type="button">←</button><span id="snapshotPager">0 / 0</span><button id="snapshotNextPage" type="button">→</button></div></div>
-</dialog>
-
-<dialog id="journalDialog" class="modal">
-<form id="journalForm" method="dialog">
-  <input type="hidden" id="journalId">
-  <div class="modal-head"><div><span class="kicker">DECISION RECORD</span><h2 id="journalModalTitle">New Journal Entry</h2></div><button type="button" class="x" data-close="journalDialog">×</button></div>
-  <label>Entry<textarea id="journalBody" rows="8" maxlength="12000" required placeholder="Rationale, observations, rules followed, lessons..."></textarea></label>
-  <div class="modal-actions"><button type="button" id="deleteJournalBtn" class="danger hidden">DELETE</button><span></span><button type="button" class="ghost" data-close="journalDialog">CANCEL</button><button type="submit" class="primary">SAVE</button></div>
-</form>
-</dialog>
-
-<div id="toast" class="toast" role="status" aria-live="polite"></div>
-</body>
-</html>
+/* =========================================================
+   PHASE 6B // SEMANTIC COLOR SYSTEM
+   Color is now role-driven, not decorative.
+   ========================================================= */
+:root{
+  --accent-primary:var(--cyan);
+  --accent-selected:var(--mag);
+  --accent-danger:var(--red);
+  --accent-warning:var(--amber);
+  --accent-success:var(--green);
+  --accent-secondary:var(--violet);
+}
+body{background:radial-gradient(circle at 86% -12%,color-mix(in srgb,var(--accent-secondary) 8%,transparent),transparent 34%),var(--bg)}
+.panel{background:linear-gradient(180deg,rgba(23,24,32,.86),rgba(17,18,23,.94))}
+.boot-cover,.appearance-status{color:var(--accent-primary)}
+.tab.active{border-color:var(--accent-selected)}
+.primary{color:var(--accent-primary);border-color:color-mix(in srgb,var(--accent-primary) 36%,transparent);background:color-mix(in srgb,var(--accent-primary) 9%,transparent)}
+.primary:hover{border-color:color-mix(in srgb,var(--accent-primary) 58%,transparent);background:color-mix(in srgb,var(--accent-primary) 13%,transparent)}
+.danger,.snapshot-delete,.danger-outline{color:var(--accent-danger)!important;border-color:color-mix(in srgb,var(--accent-danger) 36%,transparent)!important;background:color-mix(in srgb,var(--accent-danger) 8%,transparent)!important}
+.modal input:focus,.modal select:focus,.modal textarea:focus{border-color:color-mix(in srgb,var(--accent-primary) 52%,transparent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent-primary) 8%,transparent)}
+.calendar-view.active{box-shadow:inset 0 -1px 0 var(--accent-selected)}
+.day-header.today{color:var(--accent-primary);background:linear-gradient(180deg,color-mix(in srgb,var(--accent-primary) 6%,transparent),transparent)}
+.day-lane::after{background:linear-gradient(90deg,color-mix(in srgb,var(--accent-primary) 1.8%,transparent),transparent 45%)}
+.month-cell.today{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent-primary) 26%,transparent)}
+.now-line,.now-dot{background:var(--accent-primary);box-shadow:0 0 9px color-mix(in srgb,var(--accent-primary) 62%,transparent)}
+.repeat-summary{border-left-color:var(--accent-secondary);background:color-mix(in srgb,var(--accent-secondary) 4%,transparent)}
+.task-check:checked{background:var(--accent-success);border-color:var(--accent-success)}
+.filter.active,.chart-range button.active,.movement-days button.active{color:var(--accent-selected);border-color:color-mix(in srgb,var(--accent-selected) 42%,transparent);background:color-mix(in srgb,var(--accent-selected) 7%,transparent)}
+.fitness-toolbar,.fitness-chart-shell{background:linear-gradient(90deg,color-mix(in srgb,var(--accent-primary) 2.5%,transparent),transparent 36%,color-mix(in srgb,var(--accent-selected) 1.8%,transparent)),#0b0c10}
+.session-movement-name,.field-value{color:var(--accent-primary)}
+.positive,.risk-chip.ok,.replay-ticker[data-direction="inflow"] b{color:var(--accent-success)}
+.negative,.risk-chip.breach,.replay-ticker[data-direction="expense"] b{color:var(--accent-danger)}
+.risk-chip.ok{border-color:color-mix(in srgb,var(--accent-success) 28%,transparent);background:color-mix(in srgb,var(--accent-success) 5%,transparent)}
+.risk-chip.breach{border-color:color-mix(in srgb,var(--accent-danger) 40%,transparent);background:color-mix(in srgb,var(--accent-danger) 7%,transparent)}
+.active-mode,.replay-speed button.active{color:var(--accent-secondary)!important;border-color:color-mix(in srgb,var(--accent-secondary) 48%,transparent)!important;background:color-mix(in srgb,var(--accent-secondary) 8%,transparent)!important}
+.cash-replay-panel{background:linear-gradient(180deg,color-mix(in srgb,var(--accent-secondary) 2.8%,transparent),color-mix(in srgb,var(--accent-selected) 1.2%,transparent)),#0d0e13}
+.cash-panel.replay-active .cash-chart-shell{background:radial-gradient(circle at 24% 7%,color-mix(in srgb,var(--accent-secondary) 4%,transparent),transparent 30%),#0b0c10}
+.cash-panel.replay-active .finance-chart-note:before{color:var(--accent-secondary)}
+.replay-scrubber,input[type="range"]{accent-color:var(--accent-primary)}
+.allocation-track i,.risk-track i{background:linear-gradient(90deg,color-mix(in srgb,var(--accent-primary) 62%,transparent),color-mix(in srgb,var(--accent-selected) 70%,transparent))}
+.nexus-stage{background:radial-gradient(circle at 50% 42%,color-mix(in srgb,var(--accent-selected) 11%,transparent),color-mix(in srgb,var(--accent-primary) 3.5%,transparent) 44%,rgba(8,9,13,.96) 75%)}
+.nexus-stage[data-state="PANIC"]{border-color:color-mix(in srgb,var(--accent-danger) 52%,transparent);background:radial-gradient(circle at 50% 42%,color-mix(in srgb,var(--accent-danger) 18%,transparent),rgba(18,8,12,.96) 72%)}
+.nexus-stage[data-state="SUCCESS"]{border-color:color-mix(in srgb,var(--accent-success) 44%,transparent);background:radial-gradient(circle at 50% 42%,color-mix(in srgb,var(--accent-success) 12%,transparent),rgba(8,13,11,.96) 72%)}
+.nexus-stage[data-state="ANXIOUS"]{border-color:color-mix(in srgb,var(--accent-warning) 40%,transparent)}
+.nexus-stage[data-state="ANALYZING"]{border-color:color-mix(in srgb,var(--accent-selected) 52%,transparent)}
+.avatar-state-button.active,.assigned-effect.active{border-color:color-mix(in srgb,var(--accent-selected) 50%,transparent);background:color-mix(in srgb,var(--accent-selected) 7%,transparent)}
+.avatar-logic-preview,.system-test-strip{border-color:color-mix(in srgb,var(--accent-primary) 22%,transparent);background:color-mix(in srgb,var(--accent-primary) 3.5%,transparent)}
+.system-runtime-note{border-left-color:var(--accent-selected);background:color-mix(in srgb,var(--accent-selected) 3.5%,transparent)}
+.appearance-preview{background:radial-gradient(circle at 12% 0%,color-mix(in srgb,var(--accent-primary) 5.5%,transparent),transparent 35%),linear-gradient(135deg,#0c0d12,#11131a)}
+.appearance-preview-card{border-left-color:var(--accent-primary)}
+.appearance-preview-value{color:var(--accent-primary)}
+.font-preview-card{background:linear-gradient(120deg,color-mix(in srgb,var(--accent-selected) 3.5%,transparent),color-mix(in srgb,var(--accent-primary) 2.5%,transparent))}
+.semantic-color-guide{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:10px 0 4px;padding:10px;border:1px solid var(--line-soft);border-radius:9px;background:#0b0c10}
+.semantic-color-guide span{display:grid;grid-template-columns:12px auto 1fr;gap:7px;align-items:center;min-width:0;font:7px/1.35 var(--telemetry);letter-spacing:.04em;color:var(--muted)}
+.semantic-color-guide b{font-size:7px;color:var(--text);letter-spacing:.08em}.semantic-color-guide i{width:9px;height:9px;border-radius:50%}
+.semantic-color-guide i[data-role="primary"]{background:var(--accent-primary)}.semantic-color-guide i[data-role="selected"]{background:var(--accent-selected)}.semantic-color-guide i[data-role="danger"]{background:var(--accent-danger)}.semantic-color-guide i[data-role="warning"]{background:var(--accent-warning)}.semantic-color-guide i[data-role="success"]{background:var(--accent-success)}.semantic-color-guide i[data-role="secondary"]{background:var(--accent-secondary)}
+@media(max-width:900px){.semantic-color-guide{grid-template-columns:1fr 1fr}}@media(max-width:560px){.semantic-color-guide{grid-template-columns:1fr}}
