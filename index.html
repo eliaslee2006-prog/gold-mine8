@@ -29,7 +29,7 @@
   <button class="tab" data-page="pageFinance">FINANCE</button>
   <button class="tab" disabled>MEDIA</button>
   <button class="tab" data-page="pageFitness">FITNESS</button>
-  <button class="tab" disabled>CUSTOMIZE</button>
+  <button class="tab" data-page="pageCustomize">CUSTOMIZE</button>
 </nav>
 
 <main class="ops-grid page active" id="pageOps">
@@ -74,7 +74,13 @@
         <span id="nexusMood" class="mood">RELAXED</span>
       </div>
       <div class="nexus-core">
-        <div class="avatar-placeholder">N8</div>
+        <div class="nexus-stage" id="nexusStage" aria-label="NEXUS avatar state">
+          <div class="avatar-effects avatar-effects-back"></div>
+          <img class="avatar-base-image hidden" alt="NEXUS avatar">
+          <div class="avatar-fallback">N8</div>
+          <div class="avatar-effects avatar-effects-front"></div>
+          <span class="avatar-state-badge">RELAXED</span>
+        </div>
         <div><strong id="taskPressure">0 ACTIVE</strong><p id="pressureText">No urgent objectives detected.</p></div>
       </div>
     </section>
@@ -93,7 +99,7 @@
     </section>
 
     <section class="panel brief-card">
-      <span class="kicker">PHASE 4C STATUS</span>
+      <span class="kicker">PHASE 5A STATUS</span>
       <div class="status-grid">
         <span>AUTH</span><b id="statusAuth">—</b>
         <span>D1 EVENTS</span><b id="statusEvents">0</b>
@@ -310,6 +316,106 @@
       </div>
       <div id="journalList"></div>
       <div class="finance-section-head journal-pager"><span></span><div class="pager"><button id="journalPrevPage">←</button><span id="journalPager">0 / 0</span><button id="journalNextPage">→</button></div></div>
+    </section>
+  </section>
+</main>
+
+
+<main class="page customize-page" id="pageCustomize">
+  <section class="customize-grid">
+    <section class="panel avatar-library-panel">
+      <div class="panel-head compact">
+        <div><span class="kicker">CUSTOMIZE // NEXUS</span><h2>Avatar State Library</h2></div>
+        <span class="mood" id="selectedAvatarState">RELAXED</span>
+      </div>
+      <div class="avatar-library-body">
+        <p class="customize-copy">Each state can use its own image and independent effect stack. Files are stored privately in your R2 bucket.</p>
+        <div id="avatarStateList" class="avatar-state-list"></div>
+        <div class="avatar-selected-file"><span>STATE IMAGE</span><b id="selectedAvatarImage">NO IMAGE ASSIGNED</b></div>
+        <div class="actions">
+          <button type="button" id="uploadAvatarImageBtn" class="primary">UPLOAD / REPLACE IMAGE</button>
+          <button type="button" id="removeAvatarImageBtn" class="ghost">REMOVE IMAGE</button>
+          <button type="button" id="resetAvatarStateBtn" class="danger">RESET STATE</button>
+        </div>
+        <input id="avatarImageInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+      </div>
+    </section>
+
+    <section class="panel avatar-preview-panel">
+      <div class="panel-head compact">
+        <div><span class="kicker">LIVE PREVIEW</span><h2>NEXUS Visual Stack</h2></div>
+        <label class="preview-state-picker">PREVIEW
+          <select id="avatarPreviewState">
+            <option>RELAXED</option><option>FOCUSED</option><option>ANXIOUS</option><option>PANIC</option><option>SUCCESS</option><option>OFFLINE</option><option>ANALYZING</option>
+          </select>
+        </label>
+      </div>
+      <div class="avatar-preview-body">
+        <div class="avatar-preview-stage nexus-stage" id="avatarPreviewStage">
+          <div class="avatar-effects avatar-effects-back"></div>
+          <img class="avatar-base-image hidden" alt="NEXUS state preview">
+          <div class="avatar-fallback">RE</div>
+          <div class="avatar-effects avatar-effects-front"></div>
+          <span class="avatar-state-badge">RELAXED</span>
+        </div>
+        <div class="avatar-transform-grid">
+          <label>Image fit<select id="avatarFit"><option value="contain">CONTAIN</option><option value="cover">COVER</option></select></label>
+          <label>Scale <span id="avatarScaleValue" class="field-value">100%</span><input id="avatarScale" type="range" min="0.5" max="2" step="0.05" value="1"></label>
+          <label>Horizontal <span id="avatarPositionXValue" class="field-value">50%</span><input id="avatarPositionX" type="range" min="0" max="100" step="1" value="50"></label>
+          <label>Vertical <span id="avatarPositionYValue" class="field-value">50%</span><input id="avatarPositionY" type="range" min="0" max="100" step="1" value="50"></label>
+        </div>
+        <button type="button" id="saveAvatarStateBtn" class="primary avatar-save">SAVE STATE CONFIGURATION</button>
+      </div>
+    </section>
+
+    <section class="panel effects-panel">
+      <div class="panel-head compact">
+        <div><span class="kicker">VISUAL EFFECTS</span><h2>Effect Library</h2></div>
+        <button type="button" id="uploadEffectBtn" class="primary small">+ UPLOAD EFFECT</button>
+      </div>
+      <input id="avatarEffectInput" type="file" accept=".lottie,.json,image/png,image/jpeg,image/webp,image/gif" hidden>
+      <div class="effects-layout">
+        <div>
+          <div class="effects-subhead">ASSET LIBRARY</div>
+          <div id="effectLibrary" class="effect-library"></div>
+        </div>
+        <div>
+          <div class="effects-subhead">ASSIGNED TO STATE</div>
+          <div id="assignedEffects" class="assigned-effects"></div>
+          <div id="effectControls" class="effect-controls hidden">
+            <label class="toggle-line"><input id="effectEnabled" type="checkbox" checked> ENABLE EFFECT</label>
+            <div class="two">
+              <label>Layer<select id="effectLayer"><option value="back">BEHIND AVATAR</option><option value="front" selected>IN FRONT</option></select></label>
+              <label>Blend<select id="effectBlend"><option value="screen">SCREEN</option><option value="normal">NORMAL</option><option value="overlay">OVERLAY</option><option value="lighten">LIGHTEN</option><option value="multiply">MULTIPLY</option></select></label>
+            </div>
+            <label>Opacity <span id="effectOpacityValue" class="field-value">85%</span><input id="effectOpacity" type="range" min="0" max="100" step="1" value="85"></label>
+            <label>Scale <span id="effectScaleValue" class="field-value">100%</span><input id="effectScale" type="range" min="25" max="300" step="5" value="100"></label>
+            <div class="two">
+              <label>X offset <span id="effectXValue" class="field-value">0%</span><input id="effectX" type="range" min="-100" max="100" step="1" value="0"></label>
+              <label>Y offset <span id="effectYValue" class="field-value">0%</span><input id="effectY" type="range" min="-100" max="100" step="1" value="0"></label>
+            </div>
+            <button type="button" id="removeEffectAssignmentBtn" class="danger">REMOVE FROM STATE</button>
+          </div>
+        </div>
+      </div>
+      <div class="effect-format-note">SUPPORTED // .LOTTIE / LOTTIE JSON / PNG / JPG / WEBP / GIF // MAX 12 MB EACH</div>
+    </section>
+
+    <section class="panel avatar-logic-panel">
+      <div class="panel-head compact"><div><span class="kicker">DETERMINISTIC STATE ENGINE</span><h2>Avatar Logic</h2></div></div>
+      <form id="avatarLogicForm" class="avatar-logic-form">
+        <div id="avatarLogicPreview" class="avatar-logic-preview">CURRENT // RELAXED</div>
+        <div class="logic-grid">
+          <label>Due-soon window (hours)<input id="logicDueSoonHours" type="number" min="1" max="168" value="24"></label>
+          <label>ANXIOUS // active tasks<input id="logicAnxiousActive" type="number" min="1" max="99" value="6"></label>
+          <label>ANXIOUS // due soon<input id="logicAnxiousDueSoon" type="number" min="1" max="99" value="2"></label>
+          <label>PANIC // overdue tasks<input id="logicPanicOverdue" type="number" min="1" max="99" value="4"></label>
+          <label>PANIC // high overdue<input id="logicPanicHighOverdue" type="number" min="1" max="99" value="2"></label>
+          <label>SUCCESS // completed today<input id="logicSuccessCompleted" type="number" min="1" max="99" value="3"></label>
+        </div>
+        <div class="logic-order"><span>STATE PRIORITY</span><b>PANIC → SUCCESS → ANXIOUS → FOCUSED → RELAXED</b></div>
+        <div class="modal-actions"><span></span><span></span><span></span><button type="submit" class="primary">SAVE AVATAR LOGIC</button></div>
+      </form>
     </section>
   </section>
 </main>
