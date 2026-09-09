@@ -5,7 +5,7 @@ const $=s=>document.querySelector(s);
 let toast=()=>{},refreshTimer=null,progressTimer=null,lastPaintAt=0,seekBusy=false,refreshInFlight=false,spotifyCooldownUntil=0,lastLikeHydrateAt=0,lastLikeHydrateKey='',lastRecentLoadAt=0;
 let sdkPlayer=null,sdkDeviceId='',sdkReady=false,sdkLoading=null,sdkActivated=false,selectedOutputId='';
 let searchType='tracks',libraryTab='liked',likedOffset=0,likedLimit=30,playlistOffset=0,playlistLimit=24;
-let lastLyricsKey='',lyricsRequestSeq=0;
+let lastLyricsKey='',lyricsRequestSeq=0,syncedLyricLines=[],activeLyricIndex=-1;
 const likedMap=new Map();
 
 const connected=()=>!!state.integrations?.spotify;
@@ -97,10 +97,21 @@ function lyricsKey(track){
   return [track.id||track.uri||'',track.name||'',artistOf(track),track.album?.name||'',Math.round((Number(track.durationMs)||0)/1000)].join('|');
 }
 
+function parseSyncedLyrics(raw){
+  const lines=[];for(const line of String(raw||'').split(/\r?\n/)){const m=line.match(/^\s*\[(\d{1,2}):(\d{2})(?:[.:](\d{1,3}))?\]\s*(.*)$/);if(!m)continue;const frac=String(m[3]||'0'),ms=(Number(m[1])*60+Number(m[2]))*1000+Number(frac.padEnd(3,'0').slice(0,3));const text=(m[4]||'').trim();if(text)lines.push({ms,text});}return lines.sort((a,b)=>a.ms-b.ms);
+}
+function renderLyricDocument(data){
+  const body=$('#lyricsBody');if(!body)return;syncedLyricLines=parseSyncedLyrics(data?.syncedLyrics);activeLyricIndex=-1;body.dataset.state='success';body.classList.toggle('timed',syncedLyricLines.length>0);
+  const source=syncedLyricLines.length?syncedLyricLines.map((x,i)=>`<div class="media-lyric-line" data-lyric-index="${i}">${escapeHtml(x.text)}</div>`).join(''):String(data?.plainLyrics||'').split(/\r?\n/).filter(Boolean).map(x=>`<div class="media-lyric-line plain">${escapeHtml(x)}</div>`).join('');
+  body.innerHTML=source||'<div class="media-lyric-line plain">Lyrics unavailable.</div>';updateActiveLyric(state.media?.overview?.playback?.progressMs||0,true);
+}
+function updateActiveLyric(ms,force=false){
+  if(!syncedLyricLines.length)return;ms=Math.max(0,Number(ms)||0);let i=-1;for(let n=0;n<syncedLyricLines.length;n++){if(syncedLyricLines[n].ms<=ms)i=n;else break;}if(!force&&i===activeLyricIndex)return;activeLyricIndex=i;const body=$('#lyricsBody');body?.querySelectorAll('.media-lyric-line.current').forEach(x=>x.classList.remove('current'));if(i<0)return;const el=body?.querySelector(`[data-lyric-index="${i}"]`);if(el){el.classList.add('current');el.scrollIntoView({block:'center',behavior:force?'auto':'smooth'});}}
 function setLyricsState(status,text,stateName=''){
   const statusEl=$('#lyricsStatus'),body=$('#lyricsBody');
   if(statusEl){statusEl.textContent=status||'LYRICS';statusEl.dataset.state=stateName||'';}
-  if(body){body.textContent=text||'';body.dataset.state=stateName||'';}
+  if(body){body.textContent=text||'';body.dataset.state=stateName||'';body.classList.remove('timed');}
+  syncedLyricLines=[];activeLyricIndex=-1;
 }
 
 async function refreshLyricsForTrack(track){
@@ -115,7 +126,8 @@ async function refreshLyricsForTrack(track){
     if(d.instrumental){setLyricsState('INSTRUMENTAL','This track is marked instrumental.','success');return;}
     const text=String(d.plainLyrics||'').trim();
     if(!text){setLyricsState('UNAVAILABLE','Lyrics are unavailable for this track.','warning');return;}
-    setLyricsState(d.syncedAvailable?'LYRICS // TIMED SOURCE':'LYRICS // PLAIN',text,'success');
+    const statusEl=$('#lyricsStatus');if(statusEl){statusEl.textContent=d.syncedAvailable?'LYRICS // TIMED':'LYRICS // PLAIN';statusEl.dataset.state='success';}
+    renderLyricDocument(d);
   }catch(e){
     if(seq!==lyricsRequestSeq)return;
     const retry=e?.status===429?' Lyrics provider is rate limited; retry shortly.':'';
@@ -215,7 +227,7 @@ function syncLikedLocal(uri,value){const sets=[state.media?.search?.tracks,state
 async function hydrateLikes(){const o=state.media?.overview,uris=[];const add=t=>{if(t?.uri&&!uris.includes(t.uri))uris.push(t.uri);};add(o?.playback?.item);(o?.queue?.items||[]).forEach(add);(o?.recent||[]).forEach(add);(state.media?.search?.tracks||[]).forEach(add);if(!uris.length)return;const key=uris.slice(0,40).join(',');if(key===lastLikeHydrateKey&&Date.now()-lastLikeHydrateAt<120000)return;if(Date.now()<spotifyCooldownUntil)return;lastLikeHydrateKey=key;lastLikeHydrateAt=Date.now();try{const r=await api(`/api/v8/spotify/library/contains?uris=${encodeURIComponent(key)}`);Object.entries(r.contains||{}).forEach(([u,v])=>likedMap.set(u,!!v));renderLikeSurfaces();}catch(e){const m=String(e?.message||'');if(e?.status===429||/rate limit|too many requests|quota exceeded/i.test(m))spotifyCooldownUntil=Date.now()+60000;}}
 function renderLikeSurfaces(){const t=state.media?.overview?.playback?.item,liked=t?.uri?!!likedMap.get(t.uri):false;$('#spotifyNowLiked').textContent=liked?'♥':'♡';$('#spotifyNowLiked').classList.toggle('liked',liked);renderQueue(state.media?.overview?.queue);if(state.media?.search)renderSearch();if(libraryTab==='recent'||libraryTab==='liked')renderLibrary();}
 
-function paintProgress(forceValue=null){const p=state.media?.overview?.playback,item=p?.item;if(!item?.durationMs){$('#spotifyProgress').value=0;$('#spotifyElapsed').textContent='0:00';$('#spotifyDuration').textContent='0:00';return;}let ms=p.progressMs||0;if(forceValue==null&&p.isPlaying)ms+=Math.max(0,Date.now()-lastPaintAt);ms=Math.min(item.durationMs,ms);const ratio=forceValue==null?ms/item.durationMs:Number(forceValue)/1000;$('#spotifyProgress').value=Math.round(ratio*1000);$('#spotifyElapsed').textContent=fmtMs(ratio*item.durationMs);$('#spotifyDuration').textContent=fmtMs(item.durationMs);}
+function paintProgress(forceValue=null){const p=state.media?.overview?.playback,item=p?.item;if(!item?.durationMs){$('#spotifyProgress').value=0;$('#spotifyElapsed').textContent='0:00';$('#spotifyDuration').textContent='0:00';return;}let ms=p.progressMs||0;if(forceValue==null&&p.isPlaying)ms+=Math.max(0,Date.now()-lastPaintAt);ms=Math.min(item.durationMs,ms);const ratio=forceValue==null?ms/item.durationMs:Number(forceValue)/1000,displayMs=ratio*item.durationMs;$('#spotifyProgress').value=Math.round(ratio*1000);$('#spotifyElapsed').textContent=fmtMs(displayMs);$('#spotifyDuration').textContent=fmtMs(item.durationMs);updateActiveLyric(displayMs);}
 function tickProgress(){if(seekBusy)return;if($('#pageMedia')?.classList.contains('active'))paintProgress();}
 
 async function action(actionName,extra={},doRefresh=true){if(!connected())return spotifyConnect();try{await api('/api/v8/spotify/player',{method:'POST',body:{action:actionName,...extra}});if(actionName==='pause'&&state.media?.overview?.playback)state.media.overview.playback.isPlaying=false;if(actionName==='play'&&state.media?.overview?.playback)state.media.overview.playback.isPlaying=true;if(doRefresh)setTimeout(()=>refreshMedia(false),400);return true;}catch(e){toast(e.message,true);throw e;}}
