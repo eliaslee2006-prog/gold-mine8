@@ -322,29 +322,30 @@
 
 
 <main class="page media-page" id="pageMedia">
-  <section class="media-grid">
+  <section class="media-native-grid">
     <section class="panel media-player-panel">
       <div class="panel-head media-head">
-        <div><span class="kicker">MEDIA // 07A</span><h2>Spotify Intelligence</h2></div>
+        <div><span class="kicker">MEDIA // 07B</span><h2>Native Spotify Player</h2></div>
         <div class="actions">
           <span id="spotifyStatus" class="media-status">NOT CONNECTED</span>
           <button id="spotifyRefreshBtn" class="ghost">REFRESH</button>
           <button id="spotifyConnectBtn" class="primary">CONNECT SPOTIFY</button>
+          <button id="spotifyReconnectBtn" class="warning hidden">RECONNECT SPOTIFY</button>
           <button id="spotifyDisconnectBtn" class="danger hidden">DISCONNECT</button>
         </div>
       </div>
+
       <div id="spotifyDisconnected" class="media-disconnected">
         <div class="media-sigil">SP</div>
-        <div><span class="kicker">SPOTIFY WEB API</span><h3>Connect your playback environment</h3><p>Current track, devices, queue, recent listening and private playlists can be surfaced here without changing the Neon Ops visual language.</p></div>
+        <div><span class="kicker">SPOTIFY // NATIVE PLAYBACK</span><h3>Bring Spotify inside Neon Ops</h3><p>Connect your account to create a Neon Ops browser player, search Spotify, control playback, manage Liked Songs and keep the entire experience inside this HUD.</p></div>
       </div>
+
       <div id="spotifyConnected" class="hidden">
-        <div class="now-playing">
+        <div id="spotifyScopeWarning" class="media-scope-warning hidden"><div><b>NATIVE PLAYER PERMISSIONS REQUIRED</b><span>Reconnect once to grant streaming and library permissions.</span></div><button id="spotifyScopeReconnectBtn" class="warning">RECONNECT</button></div>
+        <div class="native-player-shell">
           <div class="album-art-shell"><img id="spotifyArt" alt="Current Spotify artwork"><div id="spotifyArtFallback" class="album-art-fallback">NO SIGNAL</div></div>
           <div class="now-playing-copy">
-            <span class="kicker" id="spotifyPlaybackState">PLAYBACK // IDLE</span>
-            <h3 id="spotifyTrack">Nothing playing</h3>
-            <p id="spotifyArtist">—</p>
-            <a id="spotifyOpenTrack" class="spotify-open hidden" target="_blank" rel="noopener">OPEN IN SPOTIFY ↗</a>
+            <div class="now-playing-heading"><div><span class="kicker" id="spotifyPlaybackState">PLAYBACK // IDLE</span><h3 id="spotifyTrack">Nothing playing</h3><p id="spotifyArtist">—</p><a id="spotifyNowSource" class="spotify-source-link hidden" target="_blank" rel="noopener">SPOTIFY SOURCE ↗</a></div><button id="spotifyNowLiked" class="like-button" type="button" aria-label="Toggle Liked Songs">♡</button></div>
             <div class="media-progress-row"><span id="spotifyElapsed">0:00</span><input id="spotifyProgress" type="range" min="0" max="1000" value="0"><span id="spotifyDuration">0:00</span></div>
             <div class="player-controls" aria-label="Spotify playback controls">
               <button id="spotifyShuffle" class="hud-icon" title="Shuffle">⇄</button>
@@ -354,45 +355,58 @@
               <button id="spotifyRepeat" class="hud-icon" title="Repeat">↻</button>
             </div>
           </div>
-          <div class="media-device-card">
-            <span class="kicker">SPOTIFY CONNECT</span>
-            <label>Device<select id="spotifyDevice"></select></label>
+          <div class="media-output-card">
+            <div class="media-output-head"><span class="kicker">AUDIO OUTPUT</span><span id="spotifyNativeState" class="media-status">SDK // STANDBY</span></div>
+            <button id="spotifyActivateBtn" class="primary media-activate">ACTIVATE NEON PLAYER</button>
+            <label>Output<select id="spotifyDevice"></select></label>
             <label>Volume <span id="spotifyVolumeValue" class="field-value">—</span><input id="spotifyVolume" type="range" min="0" max="100" step="1" value="50"></label>
-            <div id="spotifyDeviceMeta" class="media-device-meta">NO ACTIVE DEVICE</div>
-            <div class="media-premium-note">PLAYER COMMANDS REQUIRE A SPOTIFY PREMIUM ACCOUNT AND A CONTROLLABLE ACTIVE DEVICE.</div>
+            <div id="spotifyDeviceMeta" class="media-device-meta">NO ACTIVE OUTPUT</div>
+            <div class="media-premium-note">NEON OPS // WEB PLAYER streams Spotify directly in this browser. Spotify Premium is required for playback control.</div>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="panel media-queue-panel">
-      <div class="panel-head compact"><div><span class="kicker">UP NEXT</span><h2>Queue</h2></div><span id="spotifyQueueCount" class="media-status">0 ITEMS</span></div>
-      <div id="spotifyQueue" class="media-list"><div class="media-empty">CONNECT SPOTIFY TO LOAD QUEUE</div></div>
-    </section>
-
-    <section class="panel media-recent-panel">
-      <div class="panel-head compact"><div><span class="kicker">LISTENING HISTORY</span><h2>Recently Played</h2></div><span id="spotifyRecentCount" class="media-status">0 ITEMS</span></div>
-      <div id="spotifyRecent" class="media-list media-list-grid"><div class="media-empty">NO RECENT SIGNAL</div></div>
-    </section>
-
-    <section class="panel media-playlists-panel">
-      <div class="panel-head compact"><div><span class="kicker">LIBRARY</span><h2>Playlists</h2></div><span id="spotifyPlaylistCount" class="media-status">0 LISTS</span></div>
-      <div id="spotifyPlaylists" class="playlist-grid"><div class="media-empty">NO PLAYLISTS LOADED</div></div>
-    </section>
-
-    <section class="panel media-profile-panel">
-      <div class="panel-head compact"><div><span class="kicker">INTEGRATION STATUS</span><h2>Spotify Link</h2></div></div>
-      <div class="media-profile-body">
-        <div><span>ACCOUNT</span><b id="spotifyProfileName">—</b></div>
-        <div><span>PLAN</span><b id="spotifyPlan">—</b></div>
-        <div><span>DEVICE</span><b id="spotifyActiveDevice">—</b></div>
-        <div><span>SYNC</span><b id="spotifyLastRefresh">NOT YET</b></div>
+    <section class="panel media-search-panel">
+      <div class="panel-head compact"><div><span class="kicker">DISCOVERY</span><h2>Search Spotify</h2></div><span id="spotifySearchMeta" class="media-status">READY</span></div>
+      <form id="spotifySearchForm" class="spotify-search-form">
+        <input id="spotifySearchInput" type="search" autocomplete="off" placeholder="Search tracks, artists, albums or playlists…" aria-label="Search Spotify">
+        <button class="primary" type="submit">SEARCH</button>
+      </form>
+      <div class="media-subtabs" id="spotifySearchTabs">
+        <button type="button" class="active" data-search-type="tracks">TRACKS</button><button type="button" data-search-type="artists">ARTISTS</button><button type="button" data-search-type="albums">ALBUMS</button><button type="button" data-search-type="playlists">PLAYLISTS</button>
       </div>
-      <div class="spotify-attribution">Powered by Spotify Web API. Spotify content remains controlled by Spotify and opens in Spotify where linked.</div>
+      <div id="spotifySearchResults" class="media-search-results"><div class="media-empty">SEARCH THE SPOTIFY CATALOG WITHOUT LEAVING NEON OPS</div></div>
     </section>
+
+    <section class="panel media-library-panel">
+      <div class="panel-head compact"><div><span class="kicker">YOUR LIBRARY</span><h2>Spotify Library</h2></div><span id="spotifyLibraryMeta" class="media-status">—</span></div>
+      <div class="media-subtabs" id="spotifyLibraryTabs">
+        <button type="button" class="active" data-library-tab="liked">♥ LIKED SONGS</button><button type="button" data-library-tab="playlists">PLAYLISTS</button><button type="button" data-library-tab="recent">RECENT</button>
+      </div>
+      <div id="spotifyLibrary" class="media-library-body"><div class="media-empty">CONNECT SPOTIFY TO LOAD YOUR LIBRARY</div></div>
+      <div id="spotifyLibraryPager" class="media-library-pager hidden"><button id="spotifyLibraryPrev" class="ghost" type="button">← PREV</button><span id="spotifyLibraryPage">—</span><button id="spotifyLibraryNext" class="ghost" type="button">NEXT →</button></div>
+    </section>
+
+    <div class="media-side-stack">
+      <section class="panel media-queue-panel">
+        <div class="panel-head compact"><div><span class="kicker">UP NEXT</span><h2>Queue</h2></div><span id="spotifyQueueCount" class="media-status">0 ITEMS</span></div>
+        <div id="spotifyQueue" class="media-list"><div class="media-empty">CONNECT SPOTIFY TO LOAD QUEUE</div></div>
+      </section>
+
+      <section class="panel media-profile-panel">
+        <div class="panel-head compact"><div><span class="kicker">INTEGRATION STATUS</span><h2>Spotify Link</h2></div></div>
+        <div class="media-profile-body">
+          <div><span>ACCOUNT</span><b id="spotifyProfileName">—</b></div>
+          <div><span>PLAN</span><b id="spotifyPlan">—</b></div>
+          <div><span>OUTPUT</span><b id="spotifyActiveDevice">—</b></div>
+          <div><span>SYNC</span><b id="spotifyLastRefresh">NOT YET</b></div>
+        </div>
+        <div class="spotify-attribution">Powered by Spotify. Album artwork and metadata remain Spotify content. Small Spotify links are retained for attribution; playback and discovery stay inside Neon Ops.</div>
+      </section>
+    </div>
   </section>
 </main>
-
 
 <main class="page customize-page" id="pageCustomize">
   <section class="customize-grid">
