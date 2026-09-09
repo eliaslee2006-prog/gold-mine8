@@ -4,7 +4,7 @@ import { state } from './state.js';
 const $=s=>document.querySelector(s);
 const ALERT_KEY='neon_ops_reminder_browser_alerts';
 let toast=()=>{},pollTimer=null,refreshTimer=null,pollBusy=false;
-const REMINDER_PAGE_SIZE=4;let reminderPage=0;
+const REMINDER_PAGE_SIZE=4;let reminderPage=0,expandedReminderId=null;
 const pad=n=>String(n).padStart(2,'0');
 function localInput(value){const d=value?new Date(value):new Date(Date.now()+30*60000);return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;}
 function browserSupported(){return typeof Notification!=='undefined';}
@@ -56,13 +56,22 @@ function renderReminders(){
   if(!items.length){root.innerHTML='<div class="reminder-empty">NO ACTIVE REMINDERS // NEXUS CAN CREATE ONE</div>';renderReminderPager(0);return;}
   const pageItems=items.slice(reminderPage*REMINDER_PAGE_SIZE,(reminderPage+1)*REMINDER_PAGE_SIZE);
   for(const r of pageItems){
-    const priority=reminderPriority(r.scheduledAt),row=document.createElement('article');row.className=`reminder-center-item priority-${priority.band} ${r.virtual?'virtual':''}`;row.dataset.priority=priority.band;
+    const priority=reminderPriority(r.scheduledAt),row=document.createElement('article'),expanded=String(expandedReminderId)===String(r.id),body=reminderBody(r);
+    row.className=`reminder-center-item priority-${priority.band} ${r.virtual?'virtual':''} ${expanded?'expanded':''}`;row.dataset.priority=priority.band;
     const actions=r.virtual?`<span class="reminder-google-chip">GOOGLE</span><button type="button" data-rem-delete="${escapeHtml(r.id)}">DELETE</button>`:`<button type="button" data-rem-snooze="${escapeHtml(r.id)}">+10M</button><button type="button" data-rem-dismiss="${escapeHtml(r.id)}">DISMISS</button><button type="button" data-rem-delete="${escapeHtml(r.id)}">DELETE</button>`;
-    row.innerHTML=`<div class="reminder-timing"><b>${escapeHtml(r.timingUnknown?'DEFAULT':rel(r.scheduledAt))}</b><span>${escapeHtml(stamp(r.scheduledAt))}</span></div><div class="reminder-copy"><div class="reminder-copy-head"><strong>${escapeHtml(r.title)}</strong><em>${priority.label}</em></div><span>${escapeHtml(r.sourceLabel||'REMINDER')}${r.status==='snoozed'?' // SNOOZED':''}${r.googleSync?' // GOOGLE':''}</span></div><div class="reminder-actions">${actions}</div>`;
+    row.innerHTML=`<button type="button" class="reminder-main" data-rem-toggle="${escapeHtml(r.id)}" aria-expanded="${expanded?'true':'false'}"><div class="reminder-timing"><b>${escapeHtml(r.timingUnknown?'DEFAULT':rel(r.scheduledAt))}</b><span>${escapeHtml(stamp(r.scheduledAt))}</span></div><div class="reminder-copy"><div class="reminder-copy-head"><strong>${escapeHtml(r.title)}</strong><em>${priority.label}</em><i class="reminder-chevron" aria-hidden="true">⌄</i></div><span>${escapeHtml(r.sourceLabel||'REMINDER')}${r.status==='snoozed'?' // SNOOZED':''}${r.googleSync?' // GOOGLE':''}</span></div></button><div class="reminder-actions">${actions}</div>${expanded?`<div class="reminder-details"><div><span>TITLE</span><strong>${escapeHtml(r.title)}</strong></div><div><span>DESCRIPTION</span><p>${escapeHtml(body||'NO DESCRIPTION ATTACHED')}</p></div><div class="reminder-detail-meta"><span>${escapeHtml(r.sourceLabel||'REMINDER')}</span><span>${escapeHtml(stamp(r.scheduledAt))}</span>${r.googleSync?'<span>GOOGLE SYNC</span>':''}${r.status==='snoozed'?'<span>SNOOZED</span>':''}</div></div>`:''}`;
     root.append(row);
   }
   renderReminderPager(items.length);
-  root.querySelectorAll('[data-rem-snooze]').forEach(b=>b.onclick=()=>snooze(b.dataset.remSnooze,10));root.querySelectorAll('[data-rem-dismiss]').forEach(b=>b.onclick=()=>dismiss(b.dataset.remDismiss));root.querySelectorAll('[data-rem-delete]').forEach(b=>b.onclick=()=>removeReminder(b.dataset.remDelete));
+  root.querySelectorAll('[data-rem-toggle]').forEach(b=>b.onclick=()=>{const id=b.dataset.remToggle;expandedReminderId=String(expandedReminderId)===String(id)?null:id;renderReminders();});
+  root.querySelectorAll('[data-rem-snooze]').forEach(b=>b.onclick=e=>{e.stopPropagation();snooze(b.dataset.remSnooze,10);});root.querySelectorAll('[data-rem-dismiss]').forEach(b=>b.onclick=e=>{e.stopPropagation();dismiss(b.dataset.remDismiss);});root.querySelectorAll('[data-rem-delete]').forEach(b=>b.onclick=e=>{e.stopPropagation();removeReminder(b.dataset.remDelete);});
+}
+
+function reminderBody(r){
+  const direct=String(r?.notes||r?.description||r?.body||'').trim();if(direct)return direct;
+  const sourceId=String(r?.sourceId||'');if(!sourceId)return '';
+  const source=r?.sourceType==='event'?(state.events||[]).find(x=>String(x.id)===sourceId):r?.sourceType==='task'?(state.tasks||[]).find(x=>String(x.id)===sourceId):null;
+  return String(source?.notes||source?.description||source?.body||source?.details||'').trim();
 }
 function openReminder(){
   $('#reminderTitleInput').value='';$('#reminderTimeInput').value=localInput();$('#reminderNotesInput').value='';$('#reminderChannelInput').value='both';$('#reminderDialog').showModal();setTimeout(()=>$('#reminderTitleInput').focus(),50);
