@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#09090d"/>
   <title>NEON OPERATIONS CENTER // V8</title>
   <link rel="stylesheet" href="./css/app.css"/>
+  <script src="https://unpkg.com/lightweight-charts@5.2.1/dist/lightweight-charts.standalone.production.js"></script>
   <script type="module" src="./js/app.js"></script>
 </head>
 <body>
@@ -24,14 +25,14 @@
 </header>
 
 <nav class="tabs" aria-label="Primary">
-  <button class="tab active">OPS</button>
+  <button class="tab active" data-page="pageOps">OPS</button>
   <button class="tab" disabled>FINANCE</button>
   <button class="tab" disabled>MEDIA</button>
-  <button class="tab" disabled>FITNESS</button>
+  <button class="tab" data-page="pageFitness">FITNESS</button>
   <button class="tab" disabled>CUSTOMIZE</button>
 </nav>
 
-<main class="ops-grid">
+<main class="ops-grid page active" id="pageOps">
   <section class="panel calendar-panel">
     <div class="panel-head calendar-panel-head">
       <div>
@@ -92,7 +93,7 @@
     </section>
 
     <section class="panel brief-card">
-      <span class="kicker">PHASE 2C STATUS</span>
+      <span class="kicker">PHASE 3A STATUS</span>
       <div class="status-grid">
         <span>AUTH</span><b id="statusAuth">—</b>
         <span>D1 EVENTS</span><b id="statusEvents">0</b>
@@ -102,6 +103,50 @@
       </div>
     </section>
   </aside>
+</main>
+
+<main class="page fitness-page" id="pageFitness">
+  <section class="panel fitness-command-panel">
+    <div class="panel-head fitness-head">
+      <div><span class="kicker">FITNESS // 03</span><h2>Movement Intelligence</h2></div>
+      <div class="actions">
+        <button id="editMovementBtn" class="ghost">EDIT MOVEMENT</button>
+        <button id="newMovementBtn" class="ghost">+ MOVEMENT</button>
+        <button id="logSessionBtn" class="primary">+ LOG SESSION</button>
+      </div>
+    </div>
+    <div class="fitness-toolbar">
+      <label class="movement-picker"><span>MOVEMENT</span><select id="movementSelect"></select></label>
+      <div class="fitness-identity"><b id="fitnessSymbol">—</b><span id="fitnessSchedule">SCHEDULE // NONE</span></div>
+      <div class="chart-range" id="fitnessRanges">
+        <button data-range="1">1M</button><button class="active" data-range="3">3M</button><button data-range="6">6M</button><button data-range="12">1Y</button><button data-range="ALL">ALL</button>
+        <button id="fitnessReset">LIVE</button>
+      </div>
+    </div>
+    <div id="fitnessEmpty" class="fitness-empty-state">
+      <span class="kicker">NO MOVEMENT DATA</span>
+      <h3>Create your first tracked movement.</h3>
+      <p>Each movement becomes its own performance market with completed-session candles, missed-session decay and closed rest days.</p>
+      <button class="primary" onclick="document.getElementById('newMovementBtn').click()">CREATE MOVEMENT</button>
+    </div>
+    <div id="fitnessBody" class="hidden">
+      <div class="fitness-metrics">
+        <div><span>MOVEMENT INDEX</span><b id="fitnessIndex">100.00</b></div>
+        <div><span>SESSIONS // 7D</span><b id="fitnessWeekSessions">0</b></div>
+        <div><span>MISSED STREAK</span><b id="fitnessMissed">0</b></div>
+        <div><span>BEST E1RM</span><b id="fitnessBestE1rm">—</b></div>
+      </div>
+      <div class="fitness-chart-shell">
+        <div id="fitnessChart" class="fitness-chart"></div>
+        <div class="fitness-chart-note"><span>BULLISH // COMPLETED</span><span>BEARISH // MISSED</span><span>GAPS // MARKET CLOSED</span></div>
+      </div>
+      <div class="fitness-records-panel">
+        <div class="fitness-records-head"><div><span class="kicker">TRAINING LEDGER</span><h3>Completed Sessions</h3></div><div class="pager"><button id="fitnessPrevPage">←</button><span id="fitnessPager">0 / 0</span><button id="fitnessNextPage">→</button></div></div>
+        <div id="fitnessRecords"></div>
+      </div>
+      <div class="tradingview-credit">TradingView Lightweight Charts™ — Copyright © 2025 TradingView, Inc. <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a>.</div>
+    </div>
+  </section>
 </main>
 
 <dialog id="eventDialog" class="modal">
@@ -276,6 +321,31 @@
     <button type="button" class="ghost" data-close="taskDialog">CANCEL</button>
     <button type="submit" class="primary">SAVE</button>
   </div>
+</form>
+</dialog>
+
+
+
+<dialog id="movementDialog" class="modal">
+<form id="movementForm" method="dialog">
+  <input type="hidden" id="movementId">
+  <div class="modal-head"><div><span class="kicker">FITNESS MARKET</span><h2 id="movementModalTitle">New Movement</h2></div><button type="button" class="x" data-close="movementDialog">×</button></div>
+  <div class="two"><label>Name<input id="movementName" maxlength="160" required placeholder="Bench Press"></label><label>Symbol<input id="movementSymbol" maxlength="12" placeholder="BENCH"></label></div>
+  <div class="two"><label>Baseline Volume<input id="movementBaselineVolume" type="number" min="0" step="1" placeholder="Optional"></label><label>Baseline E1RM<input id="movementBaselineE1rm" type="number" min="0" step="0.1" placeholder="Optional"></label></div>
+  <fieldset class="fitness-fieldset"><legend>Scheduled training days</legend><div id="movementDays" class="movement-days"><button type="button" data-day="1">M</button><button type="button" data-day="2">T</button><button type="button" data-day="3">W</button><button type="button" data-day="4">T</button><button type="button" data-day="5">F</button><button type="button" data-day="6">S</button><button type="button" data-day="7">S</button></div></fieldset>
+  <fieldset class="fitness-fieldset"><legend>Missed-session decay</legend><div class="three"><label>Base %<input id="decayBase" type="number" min="0" max="20" step="0.05" value="0.50"></label><label>Acceleration %<input id="decayAcceleration" type="number" min="0" max="20" step="0.05" value="0.15"></label><label>Maximum %<input id="decayMax" type="number" min="0" max="50" step="0.1" value="2.00"></label></div></fieldset>
+  <div class="modal-actions"><button type="button" id="deleteMovementBtn" class="danger hidden">DELETE</button><span></span><button type="button" class="ghost" data-close="movementDialog">CANCEL</button><button type="submit" class="primary">SAVE</button></div>
+</form>
+</dialog>
+
+<dialog id="sessionDialog" class="modal">
+<form id="sessionForm" method="dialog">
+  <input type="hidden" id="sessionId">
+  <div class="modal-head"><div><span class="kicker">COMPLETED TRAINING</span><h2 id="sessionModalTitle">Log Session</h2><div id="sessionMovementName" class="session-movement-name">—</div></div><button type="button" class="x" data-close="sessionDialog">×</button></div>
+  <div class="two"><label>Performed at<input id="sessionPerformedAt" type="datetime-local" required></label><label>Body weight kg<input id="sessionBodyWeight" type="number" min="0" step="0.1" placeholder="Optional"></label></div>
+  <div class="sets-head"><span>SETS</span><span>WEIGHT</span><span>REPS</span><span>RPE</span><span></span></div><div id="setRows" class="set-rows"></div><button type="button" id="addSetBtn" class="ghost add-set">+ ADD SET</button>
+  <label>Notes<textarea id="sessionNotes" rows="3"></textarea></label>
+  <div class="modal-actions"><button type="button" id="deleteSessionBtn" class="danger hidden">DELETE</button><span></span><button type="button" class="ghost" data-close="sessionDialog">CANCEL</button><button type="submit" class="primary">SAVE SESSION</button></div>
 </form>
 </dialog>
 
