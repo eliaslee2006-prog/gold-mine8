@@ -85,6 +85,23 @@
       </div>
     </section>
 
+    <section class="panel ai-brief-card">
+      <div class="panel-head compact ai-brief-head">
+        <div><span class="kicker">INTELLIGENCE // GEMINI</span><h2>AI Brief</h2></div>
+        <span id="aiSeverity" class="ai-severity" data-severity="stable">STANDBY</span>
+      </div>
+      <div class="ai-brief-body">
+        <div class="ai-quick-controls">
+          <select id="aiScopeQuick" aria-label="AI brief scope"><option>DAILY</option><option>WEEKLY</option><option>OPS</option><option>TASKS</option><option>FINANCE</option><option>FITNESS</option><option>FULL</option></select>
+          <button id="aiQuickGenerate" data-ai-generate class="primary small">GENERATE</button>
+        </div>
+        <h3 id="aiHeadline">No intelligence report yet.</h3>
+        <p id="aiSummary">Generate a DAILY or WEEKLY brief from your current Neon Ops data.</p>
+        <div class="ai-brief-meta"><span id="aiBriefModel">GEMINI 3.8 FLASH</span><span id="aiGenerated">NOT YET</span></div>
+        <div class="ai-brief-actions"><button id="aiOpenBtn" class="ghost small">OPEN REPORT</button><button id="aiHistoryBtn" class="ghost small">HISTORY</button></div>
+      </div>
+    </section>
+
     <section class="panel tasks-panel">
       <div class="panel-head compact">
         <div><span class="kicker">OBJECTIVES</span><h2>Tasks</h2></div>
@@ -903,6 +920,48 @@
   <label>Entry<textarea id="journalBody" rows="8" maxlength="12000" required placeholder="Rationale, observations, rules followed, lessons..."></textarea></label>
   <div class="modal-actions"><button type="button" id="deleteJournalBtn" class="danger hidden">DELETE</button><span></span><button type="button" class="ghost" data-close="journalDialog">CANCEL</button><button type="submit" class="primary">SAVE</button></div>
 </form>
+</dialog>
+
+<dialog id="aiDialog" class="modal ai-modal">
+  <div class="modal-head">
+    <div><span class="kicker">NEXUS // GEMINI INTELLIGENCE</span><h2>Operational Analysis</h2></div>
+    <button type="button" class="x" data-close="aiDialog">×</button>
+  </div>
+  <div class="ai-command-row">
+    <label>Scope<select id="aiScopeFull"><option>DAILY</option><option>WEEKLY</option><option>OPS</option><option>TASKS</option><option>FINANCE</option><option>FITNESS</option><option>FULL</option></select></label>
+    <label>Thinking<select id="aiThinkingLevel"><option value="low">LOW</option><option value="medium" selected>MEDIUM</option><option value="high">HIGH</option></select></label>
+    <button id="aiGenerateFull" data-ai-generate class="primary">GENERATE ANALYSIS</button>
+  </div>
+  <div class="ai-report-meta"><span id="aiReportScope">—</span><b id="aiReportSeverity" class="ai-severity" data-severity="stable">—</b><span id="aiReportTime">—</span><span id="aiReportModel">—</span></div>
+  <section class="ai-report-lead"><h3 id="aiReportHeadline">No report selected.</h3><p id="aiReportSummary">Generate a report or open one from history.</p></section>
+  <div class="ai-score-grid">
+    <div><span>OPERATIONS</span><b id="aiScoreOps">0</b></div><div><span>WORKLOAD</span><b id="aiScoreWorkload">0</b></div><div><span>DISCIPLINE</span><b id="aiScoreDiscipline">0</b></div><div><span>FINANCE</span><b id="aiScoreFinance">0</b></div><div><span>FITNESS</span><b id="aiScoreFitness">0</b></div>
+  </div>
+  <div class="ai-report-grid">
+    <section><span class="kicker">INSIGHTS</span><div id="aiInsights" class="ai-list"></div></section>
+    <section><span class="kicker">NEXT ACTIONS</span><div id="aiActions" class="ai-list"></div></section>
+    <section><span class="kicker">STRENGTHS</span><div id="aiStrengths" class="ai-list"></div></section>
+    <section><span class="kicker">WEAKNESSES</span><div id="aiWeaknesses" class="ai-list"></div></section>
+  </div>
+  <details class="ai-privacy">
+    <summary>AI DATA ACCESS / PRIVACY</summary>
+    <div class="ai-privacy-status"><span>MODEL</span><b id="aiModelLabel">GEMINI 3.8 FLASH</b><span>API</span><b id="aiApiState">—</b></div>
+    <div class="ai-privacy-grid">
+      <label><input id="aiPrivacyEventTitles" type="checkbox" checked> EVENT TITLES</label><label><input id="aiPrivacyEventNotes" type="checkbox"> EVENT NOTES</label>
+      <label><input id="aiPrivacyTaskTitles" type="checkbox" checked> TASK TITLES</label><label><input id="aiPrivacyTaskNotes" type="checkbox"> TASK NOTES</label>
+      <label><input id="aiPrivacyFinanceTotals" type="checkbox" checked> FINANCE TOTALS</label><label><input id="aiPrivacyPositions" type="checkbox"> PORTFOLIO POSITIONS</label>
+      <label><input id="aiPrivacyJournal" type="checkbox"> FINANCE JOURNAL</label><label><input id="aiPrivacyFitness" type="checkbox" checked> FITNESS METRICS</label>
+    </div>
+    <p class="ai-privacy-note">Notes, portfolio positions and journal content remain excluded unless you explicitly enable them. Attachments are never sent in this phase.</p>
+    <button id="aiSavePrivacy" type="button" class="ghost">SAVE AI SETTINGS</button>
+  </details>
+  <div class="modal-actions"><button id="aiOpenHistoryFromReport" type="button" class="ghost">REPORT HISTORY</button><span></span><span></span><button type="button" class="primary" data-close="aiDialog">CLOSE</button></div>
+</dialog>
+
+<dialog id="aiHistoryDialog" class="modal ai-history-modal">
+  <div class="modal-head"><div><span class="kicker">INTELLIGENCE ARCHIVE</span><h2>Report History</h2></div><button type="button" class="x" data-close="aiHistoryDialog">×</button></div>
+  <div id="aiHistoryList" class="ai-history-list"></div>
+  <div class="ai-history-footer"><button id="aiHistoryPrev" class="ghost">← PREV</button><span id="aiHistoryPager">0 / 0</span><button id="aiHistoryNext" class="ghost">NEXT →</button></div>
 </dialog>
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
