@@ -7,10 +7,10 @@ const $$=s=>[...document.querySelectorAll(s)];
 let notify=()=>{};
 let hooks={navigate:()=>{},refreshDomains:async()=>{}};
 let busy=false;
-let recorder=null,recordStream=null,recordChunks=[],recordTimer=null,recordOrigin='composer';
+let recorder=null,recordStream=null,recordChunks=[],recordTimer=null;let messageStickToBottom=true;
 
 function ensureState(){
-  state.nexus=state.nexus||{threads:[],messages:[],currentThreadId:null,settings:{thinkingMode:'auto',voiceReply:false,voiceWriteConfirm:true,maxContextMessages:12,freeTierGuard:true},models:{chat:'gemini-3.8-flash',fast:'gemini-3.5-flash-lite',transcribe:'gemini-3.5-transcribe'},usage:null,configured:false};
+  state.nexus=state.nexus||{threads:[],messages:[],currentThreadId:null,settings:{thinkingMode:'auto',voiceReply:false,voiceWriteConfirm:true,maxContextMessages:12,freeTierGuard:true,startingCreditUsd:5,creditBaselineAt:null},models:{chat:'gemini-3.8-flash',fast:'gemini-3.5-flash-lite',transcribe:'gemini-3.5-transcribe',transcribeFallback:'gemini-3.5-flash-lite'},usage:null,configured:false};
   return state.nexus;
 }
 function escText(v){return v==null?'':String(v);}
@@ -18,14 +18,18 @@ function fmtTime(v){if(!v)return'—';try{return new Date(v).toLocaleString('en-
 function currentPage(){return document.querySelector('.page.active')?.id||'pageOps';}
 function setStatus(text,mode='ready'){
   const el=$('#nexusStatus');if(el){el.textContent=text;el.dataset.state=mode;}
-  const dock=$('#nexusDock');if(dock)dock.dataset.state=mode;
 }
 function setBusy(v,label='ANALYZING'){
   busy=!!v;
-  for(const el of ['#nexusSendBtn','#nexusDockRun','#nexusNewThread'])if($(el))$(el).disabled=busy;
+  for(const el of ['#nexusSendBtn','#nexusNewThread','#nexusClearThread','#nexusWipeHistory'])if($(el))$(el).disabled=busy;
   if(busy){setStatus(label,'busy');beginAvatarAnalyzing(`NEXUS ${label}`);}else{setStatus('READY','ready');endAvatarAnalyzing();}
 }
-function scrollMessages(){const root=$('#nexusMessages');if(root)requestAnimationFrame(()=>{root.scrollTop=root.scrollHeight;});}
+function nearBottom(root){return !root||root.scrollHeight-root.scrollTop-root.clientHeight<90;}
+function scrollMessages(force=false){const root=$('#nexusMessages');if(root&&(force||messageStickToBottom))requestAnimationFrame(()=>{root.scrollTop=root.scrollHeight;});}
+function isoToSgInput(v){
+  if(!v)return'';try{const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Singapore',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(new Date(v));const get=t=>parts.find(x=>x.type===t)?.value||'';return `${get('year')}-${get('month')}-${get('day')}T${get('hour')}:${get('minute')}`;}catch{return'';}
+}
+function sgInputToIso(v){if(!v)return null;const d=new Date(`${v}:00+08:00`);return Number.isFinite(d.getTime())?d.toISOString():null;}
 function speak(text){
   const nx=ensureState();if(!nx.settings?.voiceReply||!('speechSynthesis'in window)||!text)return;
   try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(String(text).slice(0,1800));u.lang='en-SG';u.rate=1;u.pitch=1;speechSynthesis.speak(u);}catch{}
@@ -45,12 +49,30 @@ function actionCard(action,context='message'){
   const wrap=document.createElement('div');wrap.className=`nxc-action-card risk-${action.riskLevel||1}`;wrap.dataset.status=action.status||'unknown';
   const head=document.createElement('div');head.className='nxc-action-head';const left=document.createElement('span');left.textContent=`L${action.riskLevel||1} // ${String(action.tool||'ACTION').replaceAll('_',' ').toUpperCase()}`;const st=document.createElement('b');st.textContent=String(action.status||'').toUpperCase();head.append(left,st);
   const desc=document.createElement('p');desc.textContent=action.summary||action.tool||'Proposed action';wrap.append(head,desc);
+  const editable=action.status==='pending'&&['task_create','calendar_create'].includes(action.tool);
+  if(editable){
+    const args=action.args||{},review=document.createElement('div');review.className='nxc-action-review';
+    const grid=document.createElement('div');grid.className='review-grid';
+    const typeLabel=document.createElement('label');typeLabel.textContent='LOG AS';const type=document.createElement('select');type.dataset.review='kind';type.innerHTML='<option value="event">EVENT</option><option value="task">TASK</option>';type.value=action.tool==='task_create'?'task':'event';typeLabel.append(type);
+    const titleLabel=document.createElement('label');titleLabel.textContent='TITLE';const title=document.createElement('input');title.dataset.review='title';title.value=args.title||'';title.maxLength=240;titleLabel.append(title);
+    const timeLabel=document.createElement('label');timeLabel.textContent='DATE / TIME (SGT)';const time=document.createElement('input');time.type='datetime-local';time.dataset.review='time';time.value=isoToSgInput(args.dueAt||args.startAt);timeLabel.append(time);
+    const minsLabel=document.createElement('label');minsLabel.textContent='REMINDER MINUTES';const mins=document.createElement('input');mins.type='number';mins.min='0';mins.max='40320';mins.step='1';mins.dataset.review='minutes';mins.value=String(args.reminderMinutes??10);minsLabel.append(mins);
+    const check=document.createElement('label');check.className='review-check';const cb=document.createElement('input');cb.type='checkbox';cb.dataset.review='google';cb.checked=!!args.googleReminderEnabled;check.append(cb,document.createTextNode(' GOOGLE-SYNCED REMINDER'));
+    const note=document.createElement('div');note.className='review-note';note.dataset.review='note';
+    const updateNote=()=>{mins.disabled=!cb.checked;note.textContent=type.value==='task'?'TASKS sync to Google Tasks. If reminder is enabled, NEXUS creates a 5-minute companion Google Calendar reminder at the task due time.':'EVENTS sync to Google Calendar with the selected popup reminder.';};
+    type.onchange=updateNote;cb.onchange=updateNote;updateNote();grid.append(typeLabel,titleLabel,timeLabel,minsLabel,check,note);review.append(grid);wrap.append(review);
+  }
   const controls=document.createElement('div');controls.className='nxc-action-controls';
   if(action.status==='pending'){
-    controls.append(button('CONFIRM','primary small',()=>actionOp(action.id,'confirm')),button('CANCEL','ghost small',()=>actionOp(action.id,'cancel')));
+    controls.append(button(editable?'REVIEW + CONFIRM':'CONFIRM','primary small',()=>editable?confirmReviewed(action,wrap):actionOp(action.id,'confirm')),button('CANCEL','ghost small',()=>actionOp(action.id,'cancel')));
   }else if(action.undoAvailable){controls.append(button('UNDO','ghost small',()=>actionOp(action.id,'undo')));}
   if(controls.childElementCount)wrap.append(controls);
   if(context==='queue')wrap.classList.add('queue-card');return wrap;
+}
+async function confirmReviewed(action,wrap){
+  if(busy)return;const kind=wrap.querySelector('[data-review="kind"]')?.value||'event',title=wrap.querySelector('[data-review="title"]')?.value?.trim()||'',local=wrap.querySelector('[data-review="time"]')?.value||'',googleReminderEnabled=!!wrap.querySelector('[data-review="google"]')?.checked,reminderMinutes=Number(wrap.querySelector('[data-review="minutes"]')?.value||0),scheduledAt=sgInputToIso(local);
+  if(!title)return notify('VOICE REVIEW NEEDS A TITLE',true);if(kind==='event'&&!scheduledAt)return notify('EVENT REVIEW NEEDS A DATE AND TIME',true);if(googleReminderEnabled&&!scheduledAt)return notify('A GOOGLE REMINDER NEEDS A DATE AND TIME',true);
+  setBusy(true,'REVIEWING');try{await api(`/api/v8/nexus/actions/${encodeURIComponent(action.id)}`,{method:'PATCH',body:{kind,title,scheduledAt,googleReminderEnabled,reminderMinutes}});setBusy(false);await actionOp(action.id,'confirm');}catch(e){notify(e.message,true);setBusy(false);}
 }
 function renderMessage(m){
   const box=document.createElement('article');box.className=`nxc-message ${m.role==='user'?'user':'assistant'}`;
@@ -66,10 +88,10 @@ function renderMessage(m){
   return box;
 }
 function renderMessages(){
-  const nx=ensureState(),root=$('#nexusMessages');if(!root)return;root.replaceChildren();
-  if(!nx.messages.length){const w=document.createElement('div');w.className='nxc-welcome';w.innerHTML='<span class="kicker">OPEN CHANNEL</span><h3>Ask, analyse or command.</h3><p>NEXUS can interrogate dashboard data and execute supported actions through the server command gate. Destructive, batch and voice write actions require confirmation.</p>';root.append(w);}
+  const nx=ensureState(),root=$('#nexusMessages');if(!root)return;const stick=messageStickToBottom||nearBottom(root);root.replaceChildren();
+  if(!nx.messages.length){const w=document.createElement('div');w.className='nxc-welcome';w.innerHTML='<span class="kicker">OPEN CHANNEL</span><h3>Ask, analyse or command.</h3><p>NEXUS can interrogate dashboard data and execute supported actions through the server command gate. Voice writes appear as editable Event / Task review cards before confirmation.</p>';root.append(w);}
   else for(const m of nx.messages)root.append(renderMessage(m));
-  renderPending();scrollMessages();
+  renderPending();messageStickToBottom=stick;scrollMessages();
 }
 function pendingActions(){
   const seen=new Map();for(const m of ensureState().messages){for(const a of [...(m.metadata?.pendingActions||[]),...(m.metadata?.executedActions||[])])seen.set(a.id,a);}return[...seen.values()].filter(a=>a.status==='pending'||a.undoAvailable).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));
@@ -81,10 +103,12 @@ function renderPending(){
   for(const a of rows)root.append(actionCard(a,'queue'));
 }
 function renderRuntime(){
-  const nx=ensureState(),u=nx.usage?.today||{};const set=(id,v)=>{const e=$(id);if(e)e.textContent=v;};
-  set('#nexusUsageRequests',Number(u.requests||0).toLocaleString());set('#nexusUsageTokens',Number(u.totalTokens||0).toLocaleString());set('#nexusUsageFailures',Number(u.failures||0).toLocaleString());
+  const nx=ensureState(),u=nx.usage?.today||{},c=nx.usage?.cost||{},m=nx.usage?.month||{},d7=nx.usage?.sevenDays||{};const set=(id,v)=>{const e=$(id);if(e)e.textContent=v;},money=v=>`$${Number(v||0).toFixed(Number(v||0)<.1?4:2)}`;
+  set('#nexusUsageRequests',Number(u.requests||0).toLocaleString());set('#nexusUsageInput',Number(u.inputTokens||0).toLocaleString());set('#nexusUsageOutput',Number(u.outputTokens||0).toLocaleString());set('#nexusUsageThinking',Number(u.thoughtTokens||0).toLocaleString());set('#nexusUsageFailures',Number((u.failures||0)+(u.empty||0)).toLocaleString());
+  set('#nexusCostToday',money(u.costUsd));set('#nexusCost7d',money(d7.costUsd));set('#nexusCostMonth',money(m.costUsd));set('#nexusCreditRemaining',money(c.estimatedRemainingUsd));
+  const credit=$('#nexusCreditState');if(credit){const w=String(c.warning||'NORMAL').toLowerCase();credit.dataset.state=w;credit.textContent=`CREDIT // ${String(c.warning||'NORMAL').toUpperCase()}`;}const base=$('#nexusCreditBaseline');if(base)base.textContent=c.creditBaselineAt?`BASELINE // ${fmtTime(c.creditBaselineAt)}`:'BASELINE // ALL TRACKED USAGE';
   const recent=nx.usage?.recent||[];set('#nexusUsageModel',String(recent[0]?.model||nx.models?.chat||'—').toUpperCase());set('#nexusVoiceModel',String(nx.models?.transcribe||'—').toUpperCase());
-  if($('#nexusThinkingMode'))$('#nexusThinkingMode').value=nx.settings?.thinkingMode||'auto';if($('#nexusContextMessages'))$('#nexusContextMessages').value=nx.settings?.maxContextMessages||12;if($('#nexusVoiceReply'))$('#nexusVoiceReply').checked=!!nx.settings?.voiceReply;if($('#nexusVoiceConfirm'))$('#nexusVoiceConfirm').checked=nx.settings?.voiceWriteConfirm!==false;if($('#nexusFreeGuard'))$('#nexusFreeGuard').checked=nx.settings?.freeTierGuard!==false;
+  if($('#nexusThinkingMode'))$('#nexusThinkingMode').value=nx.settings?.thinkingMode||'auto';if($('#nexusContextMessages'))$('#nexusContextMessages').value=nx.settings?.maxContextMessages||12;if($('#nexusStartingCredit'))$('#nexusStartingCredit').value=Number(nx.settings?.startingCreditUsd??5).toFixed(2);if($('#nexusVoiceReply'))$('#nexusVoiceReply').checked=!!nx.settings?.voiceReply;if($('#nexusVoiceConfirm'))$('#nexusVoiceConfirm').checked=nx.settings?.voiceWriteConfirm!==false;if($('#nexusFreeGuard'))$('#nexusFreeGuard').checked=nx.settings?.freeTierGuard!==false;
 }
 function renderContext(){const nx=ensureState(),t=nx.threads.find(x=>x.id===nx.currentThreadId);if($('#nexusContextThread'))$('#nexusContextThread').textContent=t?String(t.title||'THREAD').toUpperCase():'NO THREAD';if($('#nexusContextPage'))$('#nexusContextPage').textContent=`CONTEXT // ${currentPage().replace(/^page/,'').toUpperCase()}`;}
 
@@ -96,14 +120,24 @@ async function selectThread(id){if(busy)return;ensureState().currentThreadId=id;
 async function newThread(){if(busy)return;try{const d=await api('/api/v8/nexus/threads',{method:'POST',body:{title:'New conversation'}});ensureState().currentThreadId=d.thread.id;ensureState().messages=[];await loadThreads(false);renderMessages();$('#nexusInput')?.focus();}catch(e){notify(e.message,true);}}
 async function deleteThread(id,title){if(!confirm(`Delete NEXUS thread “${title||'Conversation'}”? This removes its messages and action history.`))return;try{await api(`/api/v8/nexus/threads/${encodeURIComponent(id)}`,{method:'DELETE'});const nx=ensureState();if(nx.currentThreadId===id)nx.currentThreadId=null;await loadThreads(true);notify('NEXUS THREAD DELETED');}catch(e){notify(e.message,true);}}
 
+async function clearCurrentThread(){
+  const nx=ensureState();if(!nx.currentThreadId)return notify('NO ACTIVE NEXUS THREAD',true);if(!confirm('Clear every message and action in the current NEXUS thread? Gemini usage/cost history will be preserved.'))return;
+  try{await api(`/api/v8/nexus/threads/${encodeURIComponent(nx.currentThreadId)}/messages`,{method:'DELETE'});nx.messages=[];renderMessages();await loadThreads(false);notify('CURRENT NEXUS THREAD CLEARED');}catch(e){notify(e.message,true);}
+}
+async function wipeHistory(){
+  if(!confirm('WIPE ALL NEXUS CHAT HISTORY? This deletes every NEXUS thread, message and action. Calendar, Tasks, Finance, Fitness and Gemini usage telemetry are preserved.'))return;
+  if(!confirm('Final confirmation: permanently wipe all NEXUS chat history?'))return;
+  try{const d=await api('/api/v8/nexus/threads',{method:'DELETE'});const nx=ensureState();nx.threads=[];nx.messages=[];nx.currentThreadId=null;renderThreads();renderMessages();renderContext();notify(`NEXUS HISTORY WIPED // ${d.wiped?.messages||0} MESSAGES`);}catch(e){notify(e.message,true);}
+}
+
 async function refreshAfter(domains){if(Array.isArray(domains)&&domains.length)await hooks.refreshDomains([...new Set(domains)]);}
-async function submitMessage(raw,source='text',{fromDock=false}={}){
+async function submitMessage(raw,source='text',{fromPalette=false}={}){
   const text=String(raw||'').trim();if(!text||busy)return null;const nx=ensureState();setBusy(true,source==='voice'?'VOICE COMMAND':'ANALYZING');
   try{
     const d=await api('/api/v8/nexus/chat',{method:'POST',body:{threadId:nx.currentThreadId||null,message:text,source,currentPage:currentPage()}});nx.currentThreadId=d.thread?.id||nx.currentThreadId;
     await loadThreads(false);await loadMessages(nx.currentThreadId);await refreshAfter(d.changedDomains);await loadUsage();renderContext();
     if(d.navigation&&d.navigation!=='NONE')hooks.navigate(d.navigation);const response=d.assistant?.content||'';speak(response);
-    if(fromDock&&(!d.navigation||d.navigation==='NONE')){const intent=d.assistant?.metadata?.intent||'';const commandOnly=intent==='COMMAND'&&(d.pendingActions?.length||d.executedActions?.length);if(!commandOnly)hooks.navigate('NEXUS');}
+    if(fromPalette&&(!d.navigation||d.navigation==='NONE')){const intent=d.assistant?.metadata?.intent||'';const commandOnly=intent==='COMMAND'&&(d.pendingActions?.length||d.executedActions?.length);if(!commandOnly)hooks.navigate('NEXUS');}
     return d;
   }catch(e){notify(e.message,true);return null;}finally{setBusy(false);}
 }
@@ -111,31 +145,40 @@ async function actionOp(id,op){if(busy)return;setBusy(true,op==='confirm'?'EXECU
 async function confirmAll(){const ids=pendingActions().filter(x=>x.status==='pending').map(x=>x.id);if(!ids.length)return;if(!confirm(`Confirm ${ids.length} pending NEXUS actions? They will execute sequentially.`))return;for(const id of ids){await actionOp(id,'confirm');if(busy)break;}}
 
 function bestRecorderMime(){const choices=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg;codecs=opus'];return choices.find(x=>window.MediaRecorder?.isTypeSupported?.(x))||'';}
-async function toggleVoice(origin='composer'){
+async function toggleVoice(){
   if(recorder&&recorder.state==='recording'){recorder.stop();return;}
   if(busy)return;if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){notify('VOICE INPUT IS NOT SUPPORTED BY THIS BROWSER',true);return;}
   try{
-    recordOrigin=origin;recordStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});recordChunks=[];const mime=bestRecorderMime();recorder=new MediaRecorder(recordStream,mime?{mimeType:mime}:undefined);
+    recordStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});recordChunks=[];const mime=bestRecorderMime();recorder=new MediaRecorder(recordStream,mime?{mimeType:mime}:undefined);
     recorder.ondataavailable=e=>{if(e.data?.size)recordChunks.push(e.data);};recorder.onerror=()=>stopVoiceUi();recorder.onstop=finishVoice;recorder.start(250);setVoiceUi(true);recordTimer=setTimeout(()=>{if(recorder?.state==='recording')recorder.stop();},45000);
   }catch(e){stopVoiceUi();notify(e?.name==='NotAllowedError'?'MICROPHONE PERMISSION WAS DENIED':'MICROPHONE COULD NOT START',true);}
 }
-function setVoiceUi(active){for(const id of ['#nexusVoiceBtn','#nexusDockVoice']){const e=$(id);if(e){e.classList.toggle('recording',active);e.textContent=active?'STOP':'MIC';}}setStatus(active?'LISTENING':'READY',active?'listening':'ready');if(active)setAvatarTransientState('FOCUSED',0,'NEXUS LISTENING');else if(!busy)clearAvatarTransientState();}
+function setVoiceUi(active){for(const id of ['#nexusVoiceBtn']){const e=$(id);if(e){e.classList.toggle('recording',active);e.textContent=active?'STOP':'MIC';}}setStatus(active?'LISTENING':'READY',active?'listening':'ready');if(active)setAvatarTransientState('FOCUSED',0,'NEXUS LISTENING');else if(!busy)clearAvatarTransientState();}
 function stopVoiceUi(){clearTimeout(recordTimer);recordTimer=null;setVoiceUi(false);try{recordStream?.getTracks().forEach(t=>t.stop());}catch{}recordStream=null;recorder=null;}
 async function finishVoice(){
   clearTimeout(recordTimer);recordTimer=null;const chunks=recordChunks.slice(),mime=recorder?.mimeType||chunks[0]?.type||'audio/webm';try{recordStream?.getTracks().forEach(t=>t.stop());}catch{}recordStream=null;recorder=null;setVoiceUi(false);if(!chunks.length){notify('NO VOICE AUDIO CAPTURED',true);return;}
-  setBusy(true,'TRANSCRIBING');try{const blob=new Blob(chunks,{type:mime});const form=new FormData();const ext=mime.includes('mp4')?'m4a':mime.includes('ogg')?'ogg':'webm';form.append('audio',blob,`nexus-command.${ext}`);const d=await apiForm('/api/v8/nexus/transcribe',form);const transcript=String(d.transcript||'').trim();if(!transcript)throw new Error('No speech was detected.');if(recordOrigin==='dock'&&$('#nexusDockInput'))$('#nexusDockInput').value=transcript;if(recordOrigin==='composer'&&$('#nexusInput'))$('#nexusInput').value=transcript;setBusy(false);await submitMessage(transcript,'voice',{fromDock:recordOrigin==='dock'});}catch(e){notify(e.message,true);setBusy(false);}}
+  setBusy(true,'TRANSCRIBING');try{const blob=new Blob(chunks,{type:mime});const form=new FormData();const ext=mime.includes('mp4')?'m4a':mime.includes('ogg')?'ogg':'webm';form.append('audio',blob,`nexus-command.${ext}`);const d=await apiForm('/api/v8/nexus/transcribe',form);const transcript=String(d.transcript||'').trim();if(!transcript)throw new Error('No speech was detected.');if($('#nexusInput'))$('#nexusInput').value=transcript;if(d.fallbackUsed)notify(`VOICE FALLBACK // ${String(d.model||'FLASH-LITE').toUpperCase()}`);setBusy(false);messageStickToBottom=true;await submitMessage(transcript,'voice');}catch(e){notify(e.message,true);setBusy(false);}}
 
-async function saveSettings(e){e?.preventDefault();const body={settings:{thinkingMode:$('#nexusThinkingMode')?.value||'auto',maxContextMessages:Number($('#nexusContextMessages')?.value)||12,voiceReply:!!$('#nexusVoiceReply')?.checked,voiceWriteConfirm:!!$('#nexusVoiceConfirm')?.checked,freeTierGuard:!!$('#nexusFreeGuard')?.checked}};try{const d=await api('/api/v8/nexus/settings',{method:'PATCH',body});ensureState().settings=d.settings||body.settings;renderRuntime();notify('NEXUS SETTINGS SAVED');}catch(err){notify(err.message,true);}}
+async function saveSettings(e){e?.preventDefault();const body={settings:{thinkingMode:$('#nexusThinkingMode')?.value||'auto',maxContextMessages:Number($('#nexusContextMessages')?.value)||12,startingCreditUsd:Number($('#nexusStartingCredit')?.value)||0,voiceReply:!!$('#nexusVoiceReply')?.checked,voiceWriteConfirm:!!$('#nexusVoiceConfirm')?.checked,freeTierGuard:!!$('#nexusFreeGuard')?.checked}};try{const d=await api('/api/v8/nexus/settings',{method:'PATCH',body});ensureState().settings=d.settings||body.settings;await loadUsage();renderRuntime();notify('NEXUS SETTINGS SAVED');}catch(err){notify(err.message,true);}}
+
+async function resetCreditBaseline(){
+  if(!confirm('Set the Gemini credit baseline to now? Estimated remaining credit will subtract only usage recorded after this moment.'))return;
+  try{const nx=ensureState(),settings={...nx.settings,creditBaselineAt:new Date().toISOString()};const d=await api('/api/v8/nexus/settings',{method:'PATCH',body:{settings}});nx.settings={...nx.settings,...(d.settings||settings)};await loadUsage();renderRuntime();notify('GEMINI CREDIT BASELINE SET');}catch(e){notify(e.message,true);}
+}
 function openPrivacy(){const d=$('#aiDialog');if(d&&!d.open)d.showModal();const details=d?.querySelector('.ai-privacy');if(details)details.open=true;}
+function openPalette(){const p=$('#nexusCommandPalette');if(!p)return;p.classList.remove('hidden');setTimeout(()=>$('#nexusCommandInput')?.focus(),0);}
+function closePalette(){const p=$('#nexusCommandPalette');if(p)p.classList.add('hidden');}
 function bind(){
-  $('#nexusComposer')?.addEventListener('submit',e=>{e.preventDefault();const input=$('#nexusInput'),v=input?.value||'';if(input)input.value='';submitMessage(v,'text');});
+  $('#nexusComposer')?.addEventListener('submit',e=>{e.preventDefault();const input=$('#nexusInput'),v=input?.value||'';if(input)input.value='';messageStickToBottom=true;submitMessage(v,'text');});
   $('#nexusInput')?.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();$('#nexusComposer')?.requestSubmit();}});
-  $('#nexusNewThread')?.addEventListener('click',newThread);$('#nexusVoiceBtn')?.addEventListener('click',()=>toggleVoice('composer'));$('#nexusDockVoice')?.addEventListener('click',()=>toggleVoice('dock'));
-  $('#nexusDockRun')?.addEventListener('click',()=>{const i=$('#nexusDockInput'),v=i?.value||'';if(i)i.value='';submitMessage(v,'text',{fromDock:true});});$('#nexusDockInput')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('#nexusDockRun')?.click();}});
-  $('#nexusDockOpen')?.addEventListener('click',()=>hooks.navigate('NEXUS'));$('#aiAskNexusBtn')?.addEventListener('click',()=>hooks.navigate('NEXUS'));
+  $('#nexusMessages')?.addEventListener('scroll',e=>{messageStickToBottom=nearBottom(e.currentTarget);},{passive:true});
+  $('#nexusNewThread')?.addEventListener('click',newThread);$('#nexusVoiceBtn')?.addEventListener('click',toggleVoice);$('#nexusClearThread')?.addEventListener('click',clearCurrentThread);$('#nexusWipeHistory')?.addEventListener('click',wipeHistory);$('#nexusResetCreditBaseline')?.addEventListener('click',resetCreditBaseline);
+  $('#aiAskNexusBtn')?.addEventListener('click',()=>hooks.navigate('NEXUS'));
   $$('#nexusSuggestions [data-nexus-prompt]').forEach(b=>b.onclick=()=>{const input=$('#nexusInput');if(input){input.value=b.dataset.nexusPrompt||'';input.focus();}});
   $('#nexusSettingsForm')?.addEventListener('submit',saveSettings);$('#nexusPrivacyBtn')?.addEventListener('click',openPrivacy);
-  window.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.shiftKey&&String(e.key).toLowerCase()==='k'){e.preventDefault();$('#nexusDockInput')?.focus();}});
+  $('#nexusCommandForm')?.addEventListener('submit',e=>{e.preventDefault();const i=$('#nexusCommandInput'),v=i?.value||'';if(i)i.value='';closePalette();submitMessage(v,'text',{fromPalette:true});});
+  $('#nexusCommandPalette')?.addEventListener('click',e=>{if(e.target===e.currentTarget)closePalette();});
+  window.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.shiftKey&&String(e.key).toLowerCase()==='k'){e.preventDefault();openPalette();return;}if(e.key==='Escape'&&!$('#nexusCommandPalette')?.classList.contains('hidden'))closePalette();});
 }
 
 export async function initNexus(toast,callbacks={}){notify=toast||notify;hooks={...hooks,...callbacks};ensureState();bind();try{await Promise.all([loadSettings(),loadUsage()]);await loadThreads(true);renderContext();}catch(e){notify(e.message,true);}}
