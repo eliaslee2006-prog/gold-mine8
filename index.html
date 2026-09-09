@@ -93,7 +93,7 @@
     </section>
 
     <section class="panel brief-card">
-      <span class="kicker">PHASE 4A STATUS</span>
+      <span class="kicker">PHASE 4C STATUS</span>
       <div class="status-grid">
         <span>AUTH</span><b id="statusAuth">—</b>
         <span>D1 EVENTS</span><b id="statusEvents">0</b>
@@ -162,7 +162,7 @@
   <section class="finance-grid">
     <section class="panel cash-panel">
       <div class="panel-head finance-head">
-        <div><span class="kicker">FINANCE // 04B</span><h2>Personal Allowance</h2></div>
+        <div><span class="kicker">FINANCE // 04C</span><h2>Personal Allowance</h2></div>
         <div class="actions">
           <button id="cashExportBtn" class="ghost">EXPORT CSV</button>
           <button id="financeSettingsBtn" class="ghost">SETTINGS</button>
@@ -233,20 +233,73 @@
 
     <section class="panel portfolio-panel">
       <div class="panel-head finance-head">
-        <div><span class="kicker">PORTFOLIO // CORE</span><h2>Portfolio Intelligence</h2></div>
-        <div class="actions"><button id="newPositionBtn" class="primary">+ POSITION</button></div>
+        <div><span class="kicker">PORTFOLIO // 04C</span><h2>Portfolio Intelligence</h2></div>
+        <div class="actions">
+          <button id="portfolioRiskBtn" class="ghost">RISK</button>
+          <button id="captureSnapshotBtn" class="ghost">CAPTURE</button>
+          <button id="newTradeBtn" class="ghost">+ HISTORY</button>
+          <button id="newPositionBtn" class="primary">+ POSITION</button>
+        </div>
       </div>
-      <div class="finance-metrics portfolio-metrics">
+      <div class="finance-metrics portfolio-metrics portfolio-metrics-extended">
         <div><span>TOTAL EQUITY</span><b id="portfolioEquity">S$0.00</b></div>
         <div><span>CASH</span><b id="portfolioCash">S$0.00</b></div>
         <div><span>MARKET VALUE</span><b id="portfolioMarket">S$0.00</b></div>
+        <div><span>TOTAL P&amp;L</span><b id="portfolioTotalPnl">S$0.00</b></div>
         <div><span>UNREALIZED P&amp;L</span><b id="portfolioPnl">S$0.00</b></div>
-        <div><span>P&amp;L %</span><b id="portfolioPnlPct">+0.00%</b></div>
+        <div><span>REALIZED P&amp;L</span><b id="portfolioRealizedPnl">S$0.00</b></div>
+        <div><span>DAILY P&amp;L</span><b id="portfolioDailyPnl">—</b></div>
+        <div><span>WEEKLY P&amp;L</span><b id="portfolioWeeklyPnl">—</b></div>
+        <div><span>MONTHLY P&amp;L</span><b id="portfolioMonthlyPnl">—</b></div>
         <div><span>GROSS EXPOSURE</span><b id="portfolioExposure">S$0.00</b></div>
+        <div><span>CASH %</span><b id="portfolioCashPct">0.00%</b></div>
+        <div><span>CURRENT DRAWDOWN</span><b id="portfolioDrawdown">0.00%</b></div>
       </div>
+      <div id="portfolioRiskStrip" class="portfolio-risk-strip"></div>
       <div class="position-table-head"><span>POSITION</span><span>QTY</span><span>ENTRY</span><span>CURRENT</span><span>VALUE</span><span>P&amp;L</span><span></span></div>
       <div id="positionList" class="position-list"></div>
-      <div class="portfolio-disclaimer">PRICES ARE MANUAL IN PHASE 4A // LIVE TWELVE DATA MARKET FEEDS ARRIVE IN THE INTEGRATION PHASE.</div>
+      <div class="portfolio-disclaimer">CURRENT PRICES ARE MANUAL IN PHASE 4C // HISTORY RECORDS DRIVE REALIZED P&amp;L // LIVE TWELVE DATA PRICING ARRIVES IN THE INTEGRATION PHASE.</div>
+    </section>
+
+    <section class="panel portfolio-analytics-panel">
+      <div class="panel-head finance-head">
+        <div><span class="kicker">PORTFOLIO HISTORY</span><h2>Equity & Drawdown</h2></div>
+        <div class="chart-range" id="portfolioRanges">
+          <button data-portfolio-range="1">1M</button><button class="active" data-portfolio-range="3">3M</button><button data-portfolio-range="6">6M</button><button data-portfolio-range="YTD">YTD</button><button data-portfolio-range="ALL">ALL</button>
+          <button id="portfolioLiveBtn">LIVE</button>
+        </div>
+      </div>
+      <div class="portfolio-analytics-grid">
+        <div class="portfolio-chart-card">
+          <div class="portfolio-chart-head"><span>EQUITY CURVE</span><b id="portfolioChartStatus">NO SNAPSHOTS</b></div>
+          <div id="portfolioEquityChart" class="portfolio-chart"></div>
+        </div>
+        <div class="portfolio-chart-card">
+          <div class="portfolio-chart-head"><span>DRAWDOWN</span><b id="portfolioMaxDrawdown">MAX // 0.00%</b></div>
+          <div id="portfolioDrawdownChart" class="portfolio-chart drawdown-chart"></div>
+        </div>
+      </div>
+      <div class="portfolio-intel-grid">
+        <div class="allocation-card">
+          <div class="finance-section-head"><div><span class="kicker">ALLOCATION</span><h3>Sector Exposure</h3></div></div>
+          <div id="sectorAllocation" class="allocation-list"></div>
+        </div>
+        <div class="risk-card">
+          <div class="finance-section-head"><div><span class="kicker">RISK MONITOR</span><h3>Limit Utilisation</h3></div></div>
+          <div id="riskMonitor" class="risk-monitor"></div>
+        </div>
+      </div>
+      <div class="tradingview-credit">TradingView Lightweight Charts™ — Copyright © 2025 TradingView, Inc. <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a>.</div>
+    </section>
+
+    <section class="panel trade-history-panel">
+      <div class="panel-head compact">
+        <div><span class="kicker">PORTFOLIO HISTORY</span><h2>Trade / Action Log</h2></div>
+        <button id="newTradeBtnSecondary" class="ghost">+ ENTRY</button>
+      </div>
+      <div class="trade-table-head"><span>TIME</span><span>ACTION</span><span>SYMBOL</span><span>QTY / PRICE</span><span>REALIZED P&amp;L</span><span></span></div>
+      <div id="tradeHistoryList"></div>
+      <div class="finance-section-head"><span class="finance-microcopy">HISTORY DOES NOT AUTO-MUTATE CURRENT POSITIONS.</span><div class="pager"><button id="tradePrevPage">←</button><span id="tradePager">0 / 0</span><button id="tradeNextPage">→</button></div></div>
     </section>
 
     <section class="panel journal-panel">
@@ -497,6 +550,36 @@
   <label>Sector / Group<input id="positionSector" maxlength="120" placeholder="Technology"></label>
   <label>Notes<textarea id="positionNotes" rows="3"></textarea></label>
   <div class="modal-actions"><button type="button" id="deletePositionBtn" class="danger hidden">DELETE</button><span></span><button type="button" class="ghost" data-close="positionDialog">CANCEL</button><button type="submit" class="primary">SAVE</button></div>
+</form>
+</dialog>
+
+<dialog id="portfolioRiskDialog" class="modal">
+<form id="portfolioRiskForm" method="dialog">
+  <div class="modal-head"><div><span class="kicker">PORTFOLIO RISK CONTROL</span><h2>Risk Parameters</h2></div><button type="button" class="x" data-close="portfolioRiskDialog">×</button></div>
+  <div class="risk-form-grid">
+    <label>Max position size <span id="riskMaxPositionValue" class="field-value">20%</span><input id="riskMaxPosition" type="range" min="1" max="100" step="1"></label>
+    <label>Max sector exposure <span id="riskMaxSectorValue" class="field-value">35%</span><input id="riskMaxSector" type="range" min="1" max="100" step="1"></label>
+    <label>Max daily loss <span id="riskDailyLossValue" class="field-value">3%</span><input id="riskDailyLoss" type="range" min="0.5" max="25" step="0.5"></label>
+    <label>Risk per trade <span id="riskPerTradeValue" class="field-value">1%</span><input id="riskPerTrade" type="range" min="0.25" max="10" step="0.25"></label>
+    <label>Max drawdown <span id="riskMaxDrawdownValue" class="field-value">12%</span><input id="riskMaxDrawdown" type="range" min="1" max="50" step="1"></label>
+  </div>
+  <fieldset class="fitness-fieldset"><legend>Target allocation</legend><div class="two"><label>Cash %<input id="riskTargetCash" type="number" min="0" max="100" step="1"></label><label>Equity %<input id="riskTargetEquity" type="number" min="0" max="100" step="1"></label><label>Commodity %<input id="riskTargetCommodity" type="number" min="0" max="100" step="1"></label><label>Other %<input id="riskTargetOther" type="number" min="0" max="100" step="1"></label></div></fieldset>
+  <fieldset class="fitness-fieldset"><legend>Portfolio chart palette</legend><div class="two chart-color-fields"><label>Equity curve<input id="portfolioEquityColor" type="color" value="#45e8ff"></label><label>Drawdown<input id="portfolioDrawdownColor" type="color" value="#ff405c"></label></div></fieldset>
+  <div class="finance-settings-note">Targets are advisory; risk limits generate warnings but do not block position edits.</div>
+  <div class="modal-actions"><span></span><span></span><button type="button" class="ghost" data-close="portfolioRiskDialog">CANCEL</button><button type="submit" class="primary">APPLY</button></div>
+</form>
+</dialog>
+
+<dialog id="tradeDialog" class="modal">
+<form id="tradeForm" method="dialog">
+  <input type="hidden" id="tradeId">
+  <div class="modal-head"><div><span class="kicker">PORTFOLIO HISTORY RECORD</span><h2 id="tradeModalTitle">New History Entry</h2></div><button type="button" class="x" data-close="tradeDialog">×</button></div>
+  <div class="two"><label>Occurred at<input id="tradeOccurredAt" type="datetime-local" required></label><label>Action<select id="tradeAction"><option>BUY</option><option>SELL</option><option>DIVIDEND</option><option>FEE</option><option>DEPOSIT</option><option>WITHDRAWAL</option><option>ADJUSTMENT</option></select></label></div>
+  <div class="three"><label>Symbol<input id="tradeSymbol" maxlength="24" placeholder="AAPL"></label><label>Quantity<input id="tradeQuantity" type="number" step="0.000001"></label><label>Price<input id="tradePrice" type="number" min="0" step="0.0001"></label></div>
+  <label>Realized P&amp;L<input id="tradeRealizedPnl" type="number" step="0.01" value="0"></label>
+  <label>Rationale<textarea id="tradeRationale" rows="3" placeholder="Why this action was taken..."></textarea></label>
+  <label>Notes<textarea id="tradeNotes" rows="3"></textarea></label>
+  <div class="modal-actions"><button type="button" id="deleteTradeBtn" class="danger hidden">DELETE</button><span></span><button type="button" class="ghost" data-close="tradeDialog">CANCEL</button><button type="submit" class="primary">SAVE</button></div>
 </form>
 </dialog>
 
