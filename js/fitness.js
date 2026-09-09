@@ -17,6 +17,8 @@ const isoDow=key=>{const d=new Date(key+'T00:00:00Z').getUTCDay();return d===0?7
 const today=()=>dayKey(new Date());
 const hex=(v,f)=>/^#[0-9a-fA-F]{6}$/.test(String(v||''))?String(v):f;
 const currentMovement=()=>state.fitness.movements.find(m=>m.id===activeMovementId)||state.fitness.movements[0]||null;
+const themeColor=(name,fallback)=>getComputedStyle(document.documentElement).getPropertyValue(name).trim()||fallback;
+const alpha=(hex,a)=>{const h=String(hex).replace('#','');if(!/^[0-9a-fA-F]{6}$/.test(h))return `rgba(0,217,255,${a})`;const n=parseInt(h,16);return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`};
 const movementSessions=m=>state.fitness.sessions.filter(s=>s.movementId===m.id).sort((a,b)=>new Date(a.performedAt)-new Date(b.performedAt));
 
 function metricsOf(sessions){let volume=0,e1rm=0,sets=0;for(const s of sessions)for(const x of s.sets||[]){const w=Number(x.weightKg)||0,r=Number(x.reps)||0;volume+=w*r;sets++;if(w&&r)e1rm=Math.max(e1rm,w*(1+r/30));}return{volume,e1rm,sets};}
@@ -48,11 +50,12 @@ function applyPalette(m){if(!series||!m)return;const up=hex(m.chartUpColor,'#2fd
 function markerData(m,detail){if(!markersEnabled)return[];const down=hex(m.chartDownColor,'#ff405c');return detail.filter(d=>d.state==='missed').map(d=>({time:d.time,position:'aboveBar',color:down,shape:'circle',text:`MISS ${d.missed}`,size:.65}));}
 function ensureChart(){
   const el=$('#fitnessChart');if(!el||chart)return;const L=window.LightweightCharts;if(!L){el.innerHTML='<div class="fitness-empty">CHART ENGINE FAILED TO LOAD</div>';return;}
-  chart=L.createChart(el,{autoSize:true,layout:{background:{type:'solid',color:'transparent'},textColor:'#8f909a',fontFamily:'Arial, Helvetica, sans-serif'},grid:{vertLines:{color:'rgba(255,255,255,.03)'},horzLines:{color:'rgba(255,255,255,.04)'}},rightPriceScale:{borderColor:'#2b2c35',scaleMargins:{top:.14,bottom:.12}},timeScale:{borderColor:'#2b2c35',timeVisible:false,rightOffset:3,barSpacing:10,minBarSpacing:3,fixLeftEdge:false,fixRightEdge:false},crosshair:{mode:L.CrosshairMode?.Normal??0,vertLine:{color:'rgba(0,217,255,.28)',labelBackgroundColor:'#151820'},horzLine:{color:'rgba(0,217,255,.18)',labelBackgroundColor:'#151820'}},handleScroll:{mouseWheel:true,pressedMouseMove:true,horzTouchDrag:true,vertTouchDrag:false},handleScale:{axisPressedMouseMove:true,mouseWheel:true,pinch:true}});
+  chart=L.createChart(el,{autoSize:true,layout:{background:{type:'solid',color:'transparent'},textColor:'#8f909a',fontFamily:'Arial, Helvetica, sans-serif'},grid:{vertLines:{color:'rgba(255,255,255,.03)'},horzLines:{color:'rgba(255,255,255,.04)'}},rightPriceScale:{borderColor:'#2b2c35',scaleMargins:{top:.14,bottom:.12}},timeScale:{borderColor:'#2b2c35',timeVisible:false,rightOffset:3,barSpacing:10,minBarSpacing:3,fixLeftEdge:false,fixRightEdge:false},crosshair:{mode:L.CrosshairMode?.Normal??0,vertLine:{color:alpha(themeColor('--accent-primary','#00d9ff'),.28),labelBackgroundColor:'#151820'},horzLine:{color:alpha(themeColor('--accent-primary','#00d9ff'),.18),labelBackgroundColor:'#151820'}},handleScroll:{mouseWheel:true,pressedMouseMove:true,horzTouchDrag:true,vertTouchDrag:false},handleScale:{axisPressedMouseMove:true,mouseWheel:true,pinch:true}});
   series=chart.addSeries(L.CandlestickSeries,{upColor:'#2fd69a',downColor:'#ff405c',borderUpColor:'#2fd69a',borderDownColor:'#ff405c',wickUpColor:'#2fd69a',wickDownColor:'#ff405c',priceLineVisible:false,lastValueVisible:true});
   if(typeof L.createSeriesMarkers==='function')markerPlugin=L.createSeriesMarkers(series,[],{autoScale:false});
   chart.subscribeCrosshairMove(param=>{const k=timeKey(param.time);if(!k){showReadout();return;}showReadout(k);});
 }
+window.addEventListener('neon:themechange',()=>{if(!chart)return;const c=themeColor('--accent-primary','#00d9ff');chart.applyOptions({crosshair:{vertLine:{color:alpha(c,.28)},horzLine:{color:alpha(c,.18)}}});});
 function setRange(range){
   if(!chart||!chartData.length)return;const valid=chartData.filter(x=>x.open!==undefined);if(!valid.length)return;
   activeRange=range;localStorage.setItem(RANGE_KEY,range);$$('#fitnessRanges [data-range]').forEach(b=>b.classList.toggle('active',b.dataset.range===range));
