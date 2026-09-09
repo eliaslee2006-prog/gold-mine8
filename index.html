@@ -1,9 +1,264 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/><meta name="theme-color" content="#09090d"/><title>NEON OPERATIONS CENTER // V8</title><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@7.1.0/skeleton.css"><script src="https://cdn.jsdelivr.net/npm/fullcalendar@7.1.0/all/global.min.js" defer></script><link rel="stylesheet" href="./app.css"/><script type="module" src="./app.js"></script></head><body>
-<div id="bootCover" class="boot-cover">INITIALIZING V8 // OPS CORE</div><header class="topbar"><div><div class="eyebrow">PRIVATE TACTICAL OPERATIONS / FINANCIAL INTELLIGENCE</div><h1>NEON OPERATIONS CENTER</h1></div><div class="top-meta"><span class="pill" id="apiStatus">API // CHECKING</span><span class="pill" id="authStatus">AUTH // CHECKING</span><span class="telemetry" id="clock">--:--:-- SGT</span></div></header>
-<nav class="tabs" aria-label="Primary"><button class="tab active">OPS</button><button class="tab" disabled>FINANCE</button><button class="tab" disabled>MEDIA</button><button class="tab" disabled>FITNESS</button><button class="tab" disabled>CUSTOMIZE</button></nav>
-<main class="ops-grid"><section class="panel calendar-panel"><div class="panel-head calendar-panel-head"><div><span class="kicker">OPS // 01</span><h2>Operational Calendar</h2></div><div class="actions"><button id="syncGoogleBtn" class="ghost">SYNC NOW</button><button id="todayBtn" class="ghost">TODAY</button><button id="newEventBtn" class="primary">+ EVENT</button></div></div><div class="calendar-commandbar" aria-label="Calendar controls"><div class="calendar-nav"><button id="calPrev" class="hud-icon" aria-label="Previous period">←</button><button id="calNext" class="hud-icon" aria-label="Next period">→</button><div class="calendar-period"><span class="kicker">WINDOW</span><strong id="calendarPeriod">—</strong></div></div><div class="calendar-view-switch" role="group" aria-label="Calendar view"><button class="calendar-view active" data-view="timeGridWeek">WEEK</button><button class="calendar-view" data-view="timeGridDay">DAY</button><button class="calendar-view" data-view="dayGridMonth">MONTH</button><button class="calendar-view" data-view="listWeek">AGENDA</button></div></div><div id="calendar"></div></section>
-<aside class="right-rail"><section class="panel nexus-card"><div class="panel-head compact"><div><span class="kicker">NEXUS</span><h2>Workload State</h2></div><span id="nexusMood" class="mood">RELAXED</span></div><div class="nexus-core"><div class="avatar-placeholder">N8</div><div><strong id="taskPressure">0 ACTIVE</strong><p id="pressureText">No urgent objectives detected.</p></div></div></section>
-<section class="panel tasks-panel"><div class="panel-head compact"><div><span class="kicker">OBJECTIVES</span><h2>Tasks</h2></div><button id="newTaskBtn" class="primary small">+ TASK</button></div><div class="task-filters"><button data-filter="active" class="filter active">ACTIVE</button><button data-filter="completed" class="filter">DONE</button><button data-filter="all" class="filter">ALL</button></div><div id="taskList" class="task-list"></div></section>
-<section class="panel brief-card"><span class="kicker">PHASE 2B STATUS</span><div class="status-grid"><span>AUTH</span><b id="statusAuth">—</b><span>D1 EVENTS</span><b id="statusEvents">0</b><span>D1 TASKS</span><b id="statusTasks">0</b><span>GOOGLE</span><b id="statusGoogle">—</b><span>LAST SYNC</span><b id="statusSync">NOT YET</b></div></section></aside></main>
-<dialog id="eventDialog" class="modal"><form id="eventForm" method="dialog"><input type="hidden" id="eventId"><div class="modal-head"><div><span class="kicker">CALENDAR RECORD</span><h2 id="eventModalTitle">New Event</h2></div><button type="button" class="x" data-close="eventDialog">×</button></div><label>Title<input id="eventTitle" maxlength="240" required></label><div class="two"><label>Start<input id="eventStart" type="datetime-local" required></label><label>End<input id="eventEnd" type="datetime-local" required></label></div><div class="two"><label>Category<select id="eventCategory"><option>OPERATIONAL</option><option>PERSONAL</option><option>FITNESS</option><option>FINANCE</option><option>MAINTENANCE</option><option>GOOGLE</option></select></label><label>Color<input id="eventColor" type="color" value="#00d9ff"></label></div><label>Location<input id="eventLocation" maxlength="300"></label><label>Notes<textarea id="eventNotes" rows="4"></textarea></label><div class="modal-actions"><button type="button" id="deleteEventBtn" class="danger hidden">DELETE</button><span></span><button type="button" class="ghost" data-close="eventDialog">CANCEL</button><button type="submit" class="primary">SAVE</button></div></form></dialog>
-<dialog id="taskDialog" class="modal"><form id="taskForm" method="dialog"><input type="hidden" id="taskId"><div class="modal-head"><div><span class="kicker">OBJECTIVE RECORD</span><h2 id="taskModalTitle">New Task</h2></div><button type="button" class="x" data-close="taskDialog">×</button></div><label>Title<input id="taskTitle" maxlength="240" required></label><div class="two"><label>Priority<select id="taskPriority"><option value="low">LOW</option><option value="medium" selected>MEDIUM</option><option value="high">HIGH</option><option value="critical">CRITICAL</option></select></label><label>Due<input id="taskDue" type="datetime-local"></label></div><label>Category<select id="taskCategory"><option>DAILY</option><option>OPERATIONAL</option><option>MAINTENANCE</option><option>PERSONAL</option><option>FOLLOW-UP</option><option>GOOGLE</option></select></label><label>Notes<textarea id="taskNotes" rows="4"></textarea></label><div class="modal-actions"><button type="button" id="deleteTaskBtn" class="danger hidden">DELETE</button><span></span><button type="button" class="ghost" data-close="taskDialog">CANCEL</button><button type="submit" class="primary">SAVE</button></div></form></dialog><div id="toast" class="toast" role="status" aria-live="polite"></div></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <meta name="theme-color" content="#09090d"/>
+  <title>NEON OPERATIONS CENTER // V8</title>
+  <link rel="stylesheet" href="./app.css"/>
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+<div id="bootCover" class="boot-cover">INITIALIZING V8 // OPS CORE</div>
+
+<header class="topbar">
+  <div>
+    <div class="eyebrow">PRIVATE TACTICAL OPERATIONS / FINANCIAL INTELLIGENCE</div>
+    <h1>NEON OPERATIONS CENTER</h1>
+  </div>
+  <div class="top-meta">
+    <span class="pill" id="apiStatus">API // CHECKING</span>
+    <span class="pill" id="authStatus">AUTH // CHECKING</span>
+    <span class="telemetry" id="clock">--:--:-- SGT</span>
+  </div>
+</header>
+
+<nav class="tabs" aria-label="Primary">
+  <button class="tab active">OPS</button>
+  <button class="tab" disabled>FINANCE</button>
+  <button class="tab" disabled>MEDIA</button>
+  <button class="tab" disabled>FITNESS</button>
+  <button class="tab" disabled>CUSTOMIZE</button>
+</nav>
+
+<main class="ops-grid">
+  <section class="panel calendar-panel">
+    <div class="panel-head calendar-panel-head">
+      <div>
+        <span class="kicker">OPS // 01</span>
+        <h2>Operational Calendar</h2>
+      </div>
+      <div class="actions">
+        <button id="syncGoogleBtn" class="ghost">SYNC NOW</button>
+        <button id="calendarDisplayBtn" class="ghost">DISPLAY</button>
+        <button id="todayBtn" class="ghost">TODAY</button>
+        <button id="newEventBtn" class="primary">+ EVENT</button>
+      </div>
+    </div>
+
+    <div class="calendar-commandbar">
+      <div class="calendar-nav">
+        <button id="calPrev" class="hud-icon" aria-label="Previous period">←</button>
+        <button id="calNext" class="hud-icon" aria-label="Next period">→</button>
+        <div class="calendar-period">
+          <span class="kicker">WINDOW</span>
+          <strong id="calendarPeriod">—</strong>
+        </div>
+      </div>
+      <div class="calendar-view-switch" role="group" aria-label="Calendar view">
+        <button class="calendar-view active" data-view="week">WEEK</button>
+        <button class="calendar-view" data-view="day">DAY</button>
+        <button class="calendar-view" data-view="month">MONTH</button>
+        <button class="calendar-view" data-view="agenda">AGENDA</button>
+      </div>
+    </div>
+
+    <div id="calendar" class="scheduler" aria-label="Operational calendar"></div>
+  </section>
+
+  <aside class="right-rail">
+    <section class="panel nexus-card">
+      <div class="panel-head compact">
+        <div><span class="kicker">NEXUS</span><h2>Workload State</h2></div>
+        <span id="nexusMood" class="mood">RELAXED</span>
+      </div>
+      <div class="nexus-core">
+        <div class="avatar-placeholder">N8</div>
+        <div><strong id="taskPressure">0 ACTIVE</strong><p id="pressureText">No urgent objectives detected.</p></div>
+      </div>
+    </section>
+
+    <section class="panel tasks-panel">
+      <div class="panel-head compact">
+        <div><span class="kicker">OBJECTIVES</span><h2>Tasks</h2></div>
+        <button id="newTaskBtn" class="primary small">+ TASK</button>
+      </div>
+      <div class="task-filters">
+        <button data-filter="active" class="filter active">ACTIVE</button>
+        <button data-filter="completed" class="filter">DONE</button>
+        <button data-filter="all" class="filter">ALL</button>
+      </div>
+      <div id="taskList" class="task-list"></div>
+    </section>
+
+    <section class="panel brief-card">
+      <span class="kicker">PHASE 2C STATUS</span>
+      <div class="status-grid">
+        <span>AUTH</span><b id="statusAuth">—</b>
+        <span>D1 EVENTS</span><b id="statusEvents">0</b>
+        <span>D1 TASKS</span><b id="statusTasks">0</b>
+        <span>GOOGLE</span><b id="statusGoogle">—</b>
+        <span>LAST SYNC</span><b id="statusSync">NOT YET</b>
+      </div>
+    </section>
+  </aside>
+</main>
+
+<dialog id="eventDialog" class="modal">
+<form id="eventForm" method="dialog">
+  <input type="hidden" id="eventId">
+  <div class="modal-head">
+    <div><span class="kicker">CALENDAR RECORD</span><h2 id="eventModalTitle">New Event</h2></div>
+    <button type="button" class="x" data-close="eventDialog">×</button>
+  </div>
+
+  <label>Title<input id="eventTitle" maxlength="240" required></label>
+
+  <div class="two">
+    <label>Start<input id="eventStart" type="datetime-local" required></label>
+    <label>End<input id="eventEnd" type="datetime-local" required></label>
+  </div>
+
+  <div class="two">
+    <label>Type
+      <select id="eventCategory">
+        <option value="OPERATIONAL">OPERATIONAL</option>
+        <option value="DUTY">DUTY</option>
+        <option value="FITNESS">FITNESS</option>
+        <option value="STUDY">STUDY</option>
+        <option value="FINANCE">FINANCE</option>
+        <option value="PERSONAL">PERSONAL</option>
+        <option value="TRAVEL">TRAVEL</option>
+        <option value="REST">REST</option>
+        <option value="MAINTENANCE">MAINTENANCE</option>
+        <option value="GOOGLE">GOOGLE</option>
+      </select>
+    </label>
+    <label>Event Color
+      <div class="color-control">
+        <input id="eventColor" type="color" value="#00d9ff">
+        <div class="color-presets" id="eventColorPresets" aria-label="Color presets">
+          <button type="button" data-color="#00d9ff" style="--swatch:#00d9ff" aria-label="Cyan"></button>
+          <button type="button" data-color="#ff3ea5" style="--swatch:#ff3ea5" aria-label="Magenta"></button>
+          <button type="button" data-color="#ff405c" style="--swatch:#ff405c" aria-label="Red"></button>
+          <button type="button" data-color="#6ee7a7" style="--swatch:#6ee7a7" aria-label="Green"></button>
+          <button type="button" data-color="#ffba4a" style="--swatch:#ffba4a" aria-label="Amber"></button>
+          <button type="button" data-color="#8b6cff" style="--swatch:#8b6cff" aria-label="Violet"></button>
+        </div>
+      </div>
+    </label>
+  </div>
+
+  <fieldset class="repeat-box">
+    <legend>Repeat</legend>
+    <div class="repeat-grid">
+      <label>Frequency
+        <select id="eventRepeat">
+          <option value="none">DOES NOT REPEAT</option>
+          <option value="daily">DAILY</option>
+          <option value="weekdays">WEEKDAYS</option>
+          <option value="weekly">WEEKLY</option>
+          <option value="biweekly">EVERY 2 WEEKS</option>
+          <option value="monthly">MONTHLY</option>
+          <option value="custom">CUSTOM</option>
+        </select>
+      </label>
+      <label id="repeatIntervalWrap" class="repeat-custom hidden">Every
+        <div class="inline-field"><input id="repeatInterval" type="number" min="1" max="52" value="1"><select id="repeatUnit"><option value="DAILY">DAYS</option><option value="WEEKLY">WEEKS</option><option value="MONTHLY">MONTHS</option></select></div>
+      </label>
+    </div>
+    <div id="repeatDaysWrap" class="repeat-days hidden" aria-label="Repeat on days">
+      <button type="button" data-day="MO">M</button><button type="button" data-day="TU">T</button><button type="button" data-day="WE">W</button><button type="button" data-day="TH">T</button><button type="button" data-day="FR">F</button><button type="button" data-day="SA">S</button><button type="button" data-day="SU">S</button>
+    </div>
+    <div id="repeatEndsWrap" class="repeat-ends hidden">
+      <label>Ends
+        <select id="repeatEndMode">
+          <option value="never">NEVER</option>
+          <option value="date">ON DATE</option>
+          <option value="count">AFTER OCCURRENCES</option>
+        </select>
+      </label>
+      <label id="repeatEndDateWrap" class="hidden">End date<input id="repeatEndDate" type="date"></label>
+      <label id="repeatCountWrap" class="hidden">Occurrences<input id="repeatCount" type="number" min="1" max="999" value="10"></label>
+    </div>
+    <div id="repeatSummary" class="repeat-summary">ONE-TIME EVENT</div>
+  </fieldset>
+
+  <label>Location<input id="eventLocation" maxlength="300"></label>
+  <label>Notes<textarea id="eventNotes" rows="4"></textarea></label>
+
+  <div class="modal-actions">
+    <button type="button" id="deleteEventBtn" class="danger hidden">DELETE</button>
+    <span></span>
+    <button type="button" class="ghost" data-close="eventDialog">CANCEL</button>
+    <button type="submit" class="primary">SAVE</button>
+  </div>
+</form>
+</dialog>
+
+<dialog id="calendarDisplayDialog" class="modal narrow">
+<form id="calendarDisplayForm" method="dialog">
+  <div class="modal-head">
+    <div><span class="kicker">CALENDAR DISPLAY</span><h2>Comfort & Density</h2></div>
+    <button type="button" class="x" data-close="calendarDisplayDialog">×</button>
+  </div>
+
+  <label>Hour height <span id="hourHeightValue" class="field-value">64 px</span>
+    <input id="hourHeight" type="range" min="44" max="96" step="2" value="64">
+  </label>
+  <label>Visible day starts
+    <select id="dayStartHour">
+      <option value="0">00:00</option><option value="4">04:00</option><option value="5">05:00</option>
+      <option value="6" selected>06:00</option><option value="7">07:00</option><option value="8">08:00</option>
+    </select>
+  </label>
+  <label>Visible day ends
+    <select id="dayEndHour">
+      <option value="18">18:00</option><option value="20">20:00</option><option value="22">22:00</option>
+      <option value="24" selected>24:00</option>
+    </select>
+  </label>
+  <label>Time format
+    <select id="timeFormat"><option value="24" selected>24-HOUR</option><option value="12">12-HOUR</option></select>
+  </label>
+  <label>Event opacity <span id="eventOpacityValue" class="field-value">82%</span>
+    <input id="eventOpacity" type="range" min="55" max="100" step="1" value="82">
+  </label>
+  <label>Corner radius <span id="eventRadiusValue" class="field-value">8 px</span>
+    <input id="eventRadius" type="range" min="0" max="18" step="1" value="8">
+  </label>
+
+  <div class="modal-actions">
+    <button type="button" id="resetCalendarDisplay" class="ghost">RESET</button>
+    <span></span><span></span>
+    <button type="submit" class="primary">APPLY</button>
+  </div>
+</form>
+</dialog>
+
+<dialog id="taskDialog" class="modal">
+<form id="taskForm" method="dialog">
+  <input type="hidden" id="taskId">
+  <div class="modal-head">
+    <div><span class="kicker">OBJECTIVE RECORD</span><h2 id="taskModalTitle">New Task</h2></div>
+    <button type="button" class="x" data-close="taskDialog">×</button>
+  </div>
+  <label>Title<input id="taskTitle" maxlength="240" required></label>
+  <div class="two">
+    <label>Priority<select id="taskPriority"><option value="low">LOW</option><option value="medium" selected>MEDIUM</option><option value="high">HIGH</option><option value="critical">CRITICAL</option></select></label>
+    <label>Due<input id="taskDue" type="datetime-local"></label>
+  </div>
+  <label>Category<select id="taskCategory"><option>DAILY</option><option>OPERATIONAL</option><option>MAINTENANCE</option><option>PERSONAL</option><option>FOLLOW-UP</option><option>GOOGLE</option></select></label>
+  <label>Notes<textarea id="taskNotes" rows="4"></textarea></label>
+  <div class="modal-actions">
+    <button type="button" id="deleteTaskBtn" class="danger hidden">DELETE</button>
+    <span></span>
+    <button type="button" class="ghost" data-close="taskDialog">CANCEL</button>
+    <button type="submit" class="primary">SAVE</button>
+  </div>
+</form>
+</dialog>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
