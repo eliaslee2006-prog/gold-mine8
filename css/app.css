@@ -383,3 +383,29 @@ body{padding-bottom:0}
 .spotify-playlist-embed{display:block;width:min(100%,760px);height:430px;margin:18px auto 8px;border:0;border-radius:14px;background:#0b0b0f;overflow:hidden}
 .playlist-embed-note{max-width:760px;margin:8px auto 0;text-align:center}
 @media(max-width:700px){.spotify-playlist-embed{height:390px;border-radius:10px}}
+
+
+/* =========================================================
+   PHASE 8B.2 // REMINDER PAGINATION + HOLD-TO-TALK
+   ========================================================= */
+.reminder-center-list{max-height:none;overflow:visible;scrollbar-gutter:auto}
+.reminder-center-item{min-height:76px;border-left:3px solid transparent;transition:border-color .16s ease,background .16s ease}
+.reminder-center-item.priority-critical{border-left-color:var(--accent-danger);background:linear-gradient(90deg,color-mix(in srgb,var(--accent-danger) 8%,transparent),#0d0e13 34%)}
+.reminder-center-item.priority-high{border-left-color:var(--accent-warning);background:linear-gradient(90deg,color-mix(in srgb,var(--accent-warning) 6%,transparent),#0d0e13 34%)}
+.reminder-center-item.priority-medium{border-left-color:var(--accent-primary);background:linear-gradient(90deg,color-mix(in srgb,var(--accent-primary) 4%,transparent),#0d0e13 34%)}
+.reminder-center-item.priority-low{border-left-color:var(--cyan);background:linear-gradient(90deg,color-mix(in srgb,var(--cyan) 4%,transparent),#0d0e13 34%)}
+.reminder-center-item.priority-future{border-left-color:var(--accent-secondary);background:linear-gradient(90deg,color-mix(in srgb,var(--accent-secondary) 4%,transparent),#0d0e13 34%)}
+.reminder-center-item.priority-critical .reminder-timing b{color:var(--accent-danger)}
+.reminder-center-item.priority-high .reminder-timing b{color:var(--accent-warning)}
+.reminder-center-item.priority-medium .reminder-timing b{color:var(--accent-primary)}
+.reminder-center-item.priority-low .reminder-timing b{color:var(--cyan)}
+.reminder-center-item.priority-future .reminder-timing b{color:var(--accent-secondary)}
+.reminder-copy-head{display:flex;align-items:center;gap:7px;min-width:0}.reminder-copy-head strong{flex:1;min-width:0}.reminder-copy-head em{flex:0 0 auto;padding:3px 5px;border:1px solid currentColor;border-radius:999px;font:600 5.5px var(--telemetry);font-style:normal;letter-spacing:.08em;opacity:.78}
+.priority-critical .reminder-copy-head em{color:var(--accent-danger)}.priority-high .reminder-copy-head em{color:var(--accent-warning)}.priority-medium .reminder-copy-head em{color:var(--accent-primary)}.priority-low .reminder-copy-head em{color:var(--cyan)}.priority-future .reminder-copy-head em{color:var(--accent-secondary)}
+.reminder-pager{display:grid;grid-template-columns:34px 1fr auto 34px;align-items:center;gap:8px;padding:8px 10px;border-top:1px solid var(--line-soft);background:#0a0b0f}.reminder-pager[hidden]{display:none}.reminder-pager button{width:34px;height:30px;padding:0;border:1px solid var(--line);border-radius:7px;background:#101116;color:var(--accent-primary);font:700 16px var(--telemetry)}.reminder-pager button:disabled{opacity:.25;cursor:not-allowed}.reminder-pager span,.reminder-pager b{font:6.5px var(--telemetry);letter-spacing:.08em;color:var(--muted)}.reminder-pager b{color:var(--accent-primary);font-weight:600}
+.nxc-mic{position:relative;width:52px;min-width:52px;height:52px;padding:0;display:grid;place-items:center;border:1px solid color-mix(in srgb,var(--accent-primary) 46%,var(--line));border-radius:12px;background:color-mix(in srgb,var(--accent-primary) 4%,#090a0e);color:var(--accent-primary);touch-action:none;user-select:none;-webkit-user-select:none;overflow:hidden}
+.nxc-mic svg{width:22px;height:22px;pointer-events:none}.nxc-mic:hover{border-color:color-mix(in srgb,var(--accent-primary) 72%,transparent);background:color-mix(in srgb,var(--accent-primary) 8%,#090a0e)}
+.nxc-mic.recording,.nxc-mic.arming{color:var(--accent-primary);border-color:var(--accent-primary);background:color-mix(in srgb,var(--accent-primary) 14%,#090a0e);animation:nxcCustomPulse .9s ease-in-out infinite}.nxc-mic.recording::after{content:'';position:absolute;inset:5px;border:1px solid color-mix(in srgb,var(--accent-primary) 50%,transparent);border-radius:8px;pointer-events:none}
+@keyframes nxcCustomPulse{50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--accent-primary) 9%,transparent),0 0 18px color-mix(in srgb,var(--accent-primary) 16%,transparent)}}
+@media(max-width:520px){.reminder-center-item{min-height:84px}.reminder-pager{grid-template-columns:38px 1fr auto 38px}.nxc-mic{width:50px;min-width:50px;height:50px}}
+@media(prefers-reduced-motion:reduce){.nxc-mic.recording,.nxc-mic.arming{animation:none}}
