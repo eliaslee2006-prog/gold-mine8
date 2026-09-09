@@ -2,7 +2,7 @@ import { api,API_BASE } from './api.js';
 import { state } from './state.js';
 
 const $=s=>document.querySelector(s);
-let toast=()=>{},refreshTimer=null,progressTimer=null,lastPaintAt=0,seekBusy=false;
+let toast=()=>{},refreshTimer=null,progressTimer=null,lastPaintAt=0,seekBusy=false,refreshInFlight=false,spotifyCooldownUntil=0,lastLikeHydrateAt=0,lastLikeHydrateKey='',lastRecentLoadAt=0;
 let sdkPlayer=null,sdkDeviceId='',sdkReady=false,sdkLoading=null,sdkActivated=false,selectedOutputId='';
 let searchType='tracks',libraryTab='liked',likedOffset=0,likedLimit=30,playlistOffset=0,playlistLimit=24;
 let lastLyricsKey='',lyricsRequestSeq=0;
@@ -38,26 +38,34 @@ export function initMedia(t){
   $('#spotifyProgress').onchange=e=>seekTo(Number(e.target.value));
   $('#spotifySearchForm').onsubmit=e=>{e.preventDefault();runSearch($('#spotifySearchInput').value);};
   document.querySelectorAll('[data-search-type]').forEach(b=>b.onclick=()=>{searchType=b.dataset.searchType;document.querySelectorAll('[data-search-type]').forEach(x=>x.classList.toggle('active',x===b));renderSearch();});
-  document.querySelectorAll('[data-library-tab]').forEach(b=>b.onclick=()=>{libraryTab=b.dataset.libraryTab;document.querySelectorAll('[data-library-tab]').forEach(x=>x.classList.toggle('active',x===b));loadLibrary(true);});
+  document.querySelectorAll('[data-library-tab]').forEach(b=>b.onclick=()=>{libraryTab=b.dataset.libraryTab;document.querySelectorAll('[data-library-tab]').forEach(x=>x.classList.toggle('active',x===b));if(libraryTab==='recent'){if(Date.now()-lastRecentLoadAt>120000)refreshMedia(false,{includeRecent:true});else renderLibrary();}else loadLibrary(true);});
   $('#spotifyLibraryPrev').onclick=()=>pageLibrary(-1);
   $('#spotifyLibraryNext').onclick=()=>pageLibrary(1);
   if(!progressTimer)progressTimer=setInterval(tickProgress,500);
-  if(!refreshTimer)refreshTimer=setInterval(()=>{if($('#pageMedia')?.classList.contains('active'))refreshMedia(false);},12000);
+  if(!refreshTimer)refreshTimer=setInterval(()=>{if($('#pageMedia')?.classList.contains('active'))refreshMedia(false);},30000);
   renderShell();
 }
 
-export async function refreshMedia(showToast=false){
+export async function refreshMedia(showToast=false,{includeRecent=false}={}){
   renderShell();
   if(!connected()){state.media={overview:null,loaded:true};render();return;}
-  const btn=$('#spotifyRefreshBtn');if(btn)btn.disabled=true;
+  if(refreshInFlight)return;
+  const now=Date.now();if(now<spotifyCooldownUntil){if(showToast)toast(`SPOTIFY COOLDOWN // ${Math.ceil((spotifyCooldownUntil-now)/1000)}s`,true);return;}
+  refreshInFlight=true;const btn=$('#spotifyRefreshBtn');if(btn)btn.disabled=true;
   try{
-    const o=await api('/api/v8/spotify/overview');
-    state.media={...(state.media||{}),overview:o,loaded:true};lastPaintAt=Date.now();render();
+    const needRecent=includeRecent||(!state.media?.overview?.recent&&libraryTab==='recent');
+    const o=await api(`/api/v8/spotify/overview${needRecent?'?include=recent':''}`),prev=state.media?.overview||{};
+    state.media={...(state.media||{}),overview:{...prev,...o,recent:o.recent??prev.recent},loaded:true};lastPaintAt=Date.now();render();
     if(o.nativeReady)ensureSdkPlayer().catch(e=>setNativeState(`SDK // ${e.message}`,'danger'));
+    if(needRecent)lastRecentLoadAt=Date.now();
     if(libraryTab==='recent')renderLibrary();else if(!state.media?.libraryLoaded)loadLibrary(false);
     hydrateLikes();
     if(showToast)toast('SPOTIFY REFRESHED');
-  }catch(e){renderError(e.message);if(showToast)toast(e.message,true);}finally{if(btn)btn.disabled=false;}
+  }catch(e){
+    const m=String(e?.message||'');const retry=(m.match(/Retry after (\d+)s/i)||[])[1];
+    if(e?.status===429||/rate limit|too many requests|quota exceeded/i.test(m))spotifyCooldownUntil=Date.now()+Math.max(30,Number(retry)||60)*1000;
+    renderError(m);if(showToast)toast(m,true);
+  }finally{refreshInFlight=false;if(btn)btn.disabled=false;}
 }
 
 function renderShell(){
@@ -182,11 +190,11 @@ function trackRow(t,i,{queue=false,like=false,source=false,added=false}={}){cons
 
 function renderQueue(q){const list=q&&!q._error?q.items||[]:[];$('#spotifyQueueCount').textContent=`${list.length} ITEMS`;$('#spotifyQueue').innerHTML=list.length?list.map((t,i)=>trackRow(t,i,{like:true,source:true})).join(''):'<div class="media-empty">QUEUE EMPTY / UNAVAILABLE</div>';bindMediaActions($('#spotifyQueue'));}
 
-async function loadLibrary(reset=false){if(!connected())return;if(reset){likedOffset=0;playlistOffset=0;}const box=$('#spotifyLibrary');box.innerHTML='<div class="media-empty">LOADING LIBRARY…</div>';try{
+async function loadLibrary(reset=false){if(!connected())return;if(reset){likedOffset=0;playlistOffset=0;}const box=$('#spotifyLibrary');if(Date.now()<spotifyCooldownUntil){if((libraryTab==='liked'&&state.media?.liked)||(libraryTab==='playlists'&&state.media?.playlistPage)){renderLibrary();return;}box.innerHTML=`<div class="media-empty">SPOTIFY COOLDOWN // RETRY IN ${Math.ceil((spotifyCooldownUntil-Date.now())/1000)}s</div>`;return;}box.innerHTML='<div class="media-empty">LOADING LIBRARY…</div>';try{
   if(libraryTab==='liked'){const r=await api(`/api/v8/spotify/liked?limit=${likedLimit}&offset=${likedOffset}`);state.media.liked=r;(r.items||[]).forEach(t=>t.uri&&likedMap.set(t.uri,true));}
   else if(libraryTab==='playlists'){state.media.playlistPage=await api(`/api/v8/spotify/playlists?limit=${playlistLimit}&offset=${playlistOffset}`);}
   state.media.libraryLoaded=true;renderLibrary();
-}catch(e){box.innerHTML=`<div class="media-empty">${escapeHtml(e.message)}</div>`;toast(e.message,true);}}
+}catch(e){const m=String(e?.message||'');const retry=(m.match(/Retry after (\d+)s/i)||[])[1];if(e?.status===429||/rate limit|too many requests|quota exceeded/i.test(m))spotifyCooldownUntil=Date.now()+Math.max(30,Number(retry)||60)*1000;if((libraryTab==='liked'&&state.media?.liked)||(libraryTab==='playlists'&&state.media?.playlistPage)){renderLibrary();}else box.innerHTML=`<div class="media-empty">${escapeHtml(m)}</div>`;toast(m,true);}}
 
 function renderLibrary(){const box=$('#spotifyLibrary'),pager=$('#spotifyLibraryPager'),meta=$('#spotifyLibraryMeta');if(!box)return;
   if(libraryTab==='liked'){const r=state.media?.liked;if(!r){box.innerHTML='<div class="media-empty">LIKED SONGS NOT LOADED</div>';pager.classList.add('hidden');return;}meta.textContent=`${r.total||0} LIKED`;box.innerHTML=(r.items||[]).length?`<div class="media-list">${r.items.map((t,i)=>trackRow(t,i,{queue:true,like:true,source:true,added:true})).join('')}</div>`:'<div class="media-empty">NO LIKED SONGS RETURNED</div>';pager.classList.remove('hidden');const a=r.total?Math.floor(r.offset/r.limit)+1:0,b=r.total?Math.ceil(r.total/r.limit):0;$('#spotifyLibraryPage').textContent=`PAGE ${a} / ${b}`;$('#spotifyLibraryPrev').disabled=!r.previous;$('#spotifyLibraryNext').disabled=!r.next;bindMediaActions(box);return;}
@@ -204,7 +212,7 @@ async function ensureNativeForSelected(){if(selectedOutputId===sdkDeviceId&&sdkP
 
 async function toggleLike(uri){const current=!!likedMap.get(uri);try{await api('/api/v8/spotify/library',{method:'POST',body:{action:current?'remove':'save',uris:[uri]}});likedMap.set(uri,!current);syncLikedLocal(uri,!current);render();renderSearch();renderLibrary();toast(current?'REMOVED FROM LIKED SONGS':'ADDED TO LIKED SONGS');}catch(e){toast(e.message,true);}}
 function syncLikedLocal(uri,value){const sets=[state.media?.search?.tracks,state.media?.liked?.items,state.media?.overview?.recent,state.media?.overview?.queue?.items];for(const list of sets){if(!Array.isArray(list))continue;const t=list.find(x=>x.uri===uri);if(t)t.liked=value;}if(!value&&libraryTab==='liked'&&Array.isArray(state.media?.liked?.items))state.media.liked.items=state.media.liked.items.filter(x=>x.uri!==uri);}
-async function hydrateLikes(){const o=state.media?.overview,uris=[];const add=t=>{if(t?.uri&&!uris.includes(t.uri))uris.push(t.uri);};add(o?.playback?.item);(o?.queue?.items||[]).forEach(add);(o?.recent||[]).forEach(add);(state.media?.search?.tracks||[]).forEach(add);if(!uris.length)return;try{const r=await api(`/api/v8/spotify/library/contains?uris=${encodeURIComponent(uris.slice(0,40).join(','))}`);Object.entries(r.contains||{}).forEach(([u,v])=>likedMap.set(u,!!v));renderLikeSurfaces();}catch{}}
+async function hydrateLikes(){const o=state.media?.overview,uris=[];const add=t=>{if(t?.uri&&!uris.includes(t.uri))uris.push(t.uri);};add(o?.playback?.item);(o?.queue?.items||[]).forEach(add);(o?.recent||[]).forEach(add);(state.media?.search?.tracks||[]).forEach(add);if(!uris.length)return;const key=uris.slice(0,40).join(',');if(key===lastLikeHydrateKey&&Date.now()-lastLikeHydrateAt<120000)return;if(Date.now()<spotifyCooldownUntil)return;lastLikeHydrateKey=key;lastLikeHydrateAt=Date.now();try{const r=await api(`/api/v8/spotify/library/contains?uris=${encodeURIComponent(key)}`);Object.entries(r.contains||{}).forEach(([u,v])=>likedMap.set(u,!!v));renderLikeSurfaces();}catch(e){const m=String(e?.message||'');if(e?.status===429||/rate limit|too many requests|quota exceeded/i.test(m))spotifyCooldownUntil=Date.now()+60000;}}
 function renderLikeSurfaces(){const t=state.media?.overview?.playback?.item,liked=t?.uri?!!likedMap.get(t.uri):false;$('#spotifyNowLiked').textContent=liked?'♥':'♡';$('#spotifyNowLiked').classList.toggle('liked',liked);renderQueue(state.media?.overview?.queue);if(state.media?.search)renderSearch();if(libraryTab==='recent'||libraryTab==='liked')renderLibrary();}
 
 function paintProgress(forceValue=null){const p=state.media?.overview?.playback,item=p?.item;if(!item?.durationMs){$('#spotifyProgress').value=0;$('#spotifyElapsed').textContent='0:00';$('#spotifyDuration').textContent='0:00';return;}let ms=p.progressMs||0;if(forceValue==null&&p.isPlaying)ms+=Math.max(0,Date.now()-lastPaintAt);ms=Math.min(item.durationMs,ms);const ratio=forceValue==null?ms/item.durationMs:Number(forceValue)/1000;$('#spotifyProgress').value=Math.round(ratio*1000);$('#spotifyElapsed').textContent=fmtMs(ratio*item.durationMs);$('#spotifyDuration').textContent=fmtMs(item.durationMs);}
