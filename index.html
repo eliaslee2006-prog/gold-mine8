@@ -103,6 +103,21 @@
       </div>
     </section>
 
+    <section class="panel reminder-center-panel">
+      <div class="panel-head compact">
+        <div><span class="kicker">ALERTS // 08A</span><h2>Reminder Center</h2></div>
+        <button id="newReminderBtn" class="primary small">+ REMINDER</button>
+      </div>
+      <div class="reminder-center-toolbar">
+        <div><span>ACTIVE</span><b id="reminderCenterCount">0 ACTIVE</b></div>
+        <div><span>DUE</span><b id="reminderDueSoon">0 / 24H</b></div>
+        <button id="reminderEnableAlerts" class="ghost small" type="button">ENABLE ALERTS</button>
+        <button id="reminderRefreshBtn" class="ghost small" type="button">↻</button>
+      </div>
+      <div id="reminderAlertState" class="reminder-alert-state">IN-APP ACTIVE</div>
+      <div id="reminderCenterList" class="reminder-center-list"><div class="reminder-empty">LOADING REMINDERS…</div></div>
+    </section>
+
     <section class="panel tasks-panel">
       <div class="panel-head compact">
         <div><span class="kicker">OBJECTIVES</span><h2>Tasks</h2></div>
@@ -117,11 +132,12 @@
     </section>
 
     <section class="panel brief-card">
-      <span class="kicker">PHASE 5A STATUS</span>
+      <span class="kicker">PHASE 8A STATUS</span>
       <div class="status-grid">
         <span>AUTH</span><b id="statusAuth">—</b>
         <span>D1 EVENTS</span><b id="statusEvents">0</b>
         <span>D1 TASKS</span><b id="statusTasks">0</b>
+        <span>REMINDERS</span><b id="statusReminders">0</b>
         <span>GOOGLE</span><b id="statusGoogle">—</b>
         <span>LAST SYNC</span><b id="statusSync">NOT YET</b>
       </div>
@@ -433,7 +449,7 @@
   <section class="media-native-grid">
     <section class="panel media-player-panel">
       <div class="panel-head media-head">
-        <div><span class="kicker">MEDIA // 07E</span><h2>Native Spotify Player + Lyrics</h2></div>
+        <div><span class="kicker">MEDIA // 08A</span><h2>Native Spotify Player + Lyrics</h2></div>
         <div class="actions">
           <span id="spotifyStatus" class="media-status">NOT CONNECTED</span>
           <button id="spotifyRefreshBtn" class="ghost">REFRESH</button>
@@ -478,7 +494,7 @@
             <span id="lyricsStatus" class="media-status">NO TRACK</span>
           </div>
           <div id="lyricsBody" class="media-lyrics-body">PLAY A TRACK TO LOAD LYRICS</div>
-          <div class="media-lyrics-foot">Lyrics are retrieved separately from Spotify playback. Synced karaoke mode is not enabled.</div>
+          <div class="media-lyrics-foot">Lyrics use a separate provider. Timed lines follow the current player position when available; highlight color inherits Customize.</div>
         </section>
       </div>
     </section>
@@ -904,7 +920,17 @@
 </form>
 </dialog>
 
-
+<dialog id="reminderDialog" class="modal narrow">
+<form id="reminderForm" method="dialog">
+  <div class="modal-head"><div><span class="kicker">UNIFIED ALERT</span><h2>New Reminder</h2></div><button type="button" class="x" data-close="reminderDialog">×</button></div>
+  <label>Reminder title<input id="reminderTitleInput" maxlength="240" required placeholder="Follow up with Sam"></label>
+  <label>Notify at<input id="reminderTimeInput" type="datetime-local" required></label>
+  <label>Delivery<select id="reminderChannelInput"><option value="both">BROWSER + IN-APP</option><option value="in_app">IN-APP ONLY</option><option value="browser">BROWSER PREFERRED</option></select></label>
+  <label>Notes<textarea id="reminderNotesInput" rows="3" maxlength="2000"></textarea></label>
+  <div class="reminder-modal-note">Browser alerts require permission and an active Neon Ops session. Google Calendar remains the background-delivery path for Event/Task reminders created through NEXUS.</div>
+  <div class="modal-actions"><span></span><span></span><button type="button" class="ghost" data-close="reminderDialog">CANCEL</button><button type="submit" class="primary">ARM REMINDER</button></div>
+</form>
+</dialog>
 
 <dialog id="movementDialog" class="modal">
 <form id="movementForm" method="dialog">
