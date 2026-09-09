@@ -8,6 +8,7 @@ let notify=()=>{};
 let hooks={navigate:()=>{},refreshDomains:async()=>{}};
 let busy=false;
 let recorder=null,recordStream=null,recordChunks=[],recordTimer=null;let messageStickToBottom=true;
+let voiceHoldActive=false,voicePointerId=null,voiceStarting=false;
 
 function ensureState(){
   state.nexus=state.nexus||{threads:[],messages:[],currentThreadId:null,settings:{thinkingMode:'auto',voiceReply:false,voiceWriteConfirm:true,maxContextMessages:12,freeTierGuard:true,startingCreditUsd:5,creditBaselineAt:null},models:{chat:'gemini-3.8-flash',fast:'gemini-3.5-flash-lite',transcribe:'gemini-3.5-transcribe',transcribeFallback:'gemini-3.5-flash-lite'},usage:null,configured:false};
@@ -145,16 +146,30 @@ async function actionOp(id,op){if(busy)return;setBusy(true,op==='confirm'?'EXECU
 async function confirmAll(){const ids=pendingActions().filter(x=>x.status==='pending').map(x=>x.id);if(!ids.length)return;if(!confirm(`Confirm ${ids.length} pending NEXUS actions? They will execute sequentially.`))return;for(const id of ids){await actionOp(id,'confirm');if(busy)break;}}
 
 function bestRecorderMime(){const choices=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg;codecs=opus'];return choices.find(x=>window.MediaRecorder?.isTypeSupported?.(x))||'';}
-async function toggleVoice(){
-  if(recorder&&recorder.state==='recording'){recorder.stop();return;}
-  if(busy)return;if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){notify('VOICE INPUT IS NOT SUPPORTED BY THIS BROWSER',true);return;}
+function micIcon(){return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 0 0 3.5-3.5V6a3.5 3.5 0 1 0-7 0v6a3.5 3.5 0 0 0 3.5 3.5Zm-1-9.5a1 1 0 1 1 2 0v6a1 1 0 1 1-2 0V6Zm-5 5a1 1 0 0 1 1 1 5 5 0 0 0 10 0 1 1 0 1 1 2 0 7.01 7.01 0 0 1-6 6.92V21h3a1 1 0 1 1 0 2H8a1 1 0 1 1 0-2h3v-2.08A7.01 7.01 0 0 1 5 12a1 1 0 0 1 1-1Z" fill="currentColor"/></svg>';}
+async function startVoiceHold(){
+  if(voiceStarting||recorder?.state==='recording'||busy)return;if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){notify('VOICE INPUT IS NOT SUPPORTED BY THIS BROWSER',true);return;}
+  voiceHoldActive=true;voiceStarting=true;setVoiceUi(true,'arming');
   try{
-    recordStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1}});recordChunks=[];const mime=bestRecorderMime(),recorderOptions={audioBitsPerSecond:48000,...(mime?{mimeType:mime}:{})};recorder=new MediaRecorder(recordStream,recorderOptions);
-    recorder.ondataavailable=e=>{if(e.data?.size)recordChunks.push(e.data);};recorder.onerror=()=>stopVoiceUi();recorder.onstop=finishVoice;recorder.start();setVoiceUi(true);recordTimer=setTimeout(()=>{if(recorder?.state==='recording')recorder.stop();},25000);
-  }catch(e){stopVoiceUi();notify(e?.name==='NotAllowedError'?'MICROPHONE PERMISSION WAS DENIED':'MICROPHONE COULD NOT START',true);}
+    const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1}});
+    if(!voiceHoldActive){stream.getTracks().forEach(t=>t.stop());setVoiceUi(false);return;}
+    recordStream=stream;recordChunks=[];const mime=bestRecorderMime(),recorderOptions={audioBitsPerSecond:48000,...(mime?{mimeType:mime}:{})};recorder=new MediaRecorder(recordStream,recorderOptions);
+    recorder.ondataavailable=e=>{if(e.data?.size)recordChunks.push(e.data);};recorder.onerror=()=>stopVoiceUi();recorder.onstop=finishVoice;recorder.start();setVoiceUi(true,'recording');recordTimer=setTimeout(()=>stopVoiceHold(),25000);
+  }catch(e){voiceHoldActive=false;stopVoiceUi();notify(e?.name==='NotAllowedError'?'MICROPHONE PERMISSION WAS DENIED':'MICROPHONE COULD NOT START',true);}
+  finally{voiceStarting=false;}
 }
-function setVoiceUi(active){for(const id of ['#nexusVoiceBtn']){const e=$(id);if(e){e.classList.toggle('recording',active);e.textContent=active?'STOP':'MIC';}}setStatus(active?'LISTENING':'READY',active?'listening':'ready');if(active)setAvatarTransientState('FOCUSED',0,'NEXUS LISTENING');else if(!busy)clearAvatarTransientState();}
-function stopVoiceUi(){clearTimeout(recordTimer);recordTimer=null;setVoiceUi(false);try{recordStream?.getTracks().forEach(t=>t.stop());}catch{}recordStream=null;recorder=null;}
+function stopVoiceHold(){voiceHoldActive=false;clearTimeout(recordTimer);recordTimer=null;if(recorder?.state==='recording'){recorder.stop();return;}if(!voiceStarting)setVoiceUi(false);}
+function setVoiceUi(active,phase='recording'){const e=$('#nexusVoiceBtn');if(e){e.classList.toggle('recording',active);e.classList.toggle('arming',active&&phase==='arming');e.innerHTML=micIcon();e.setAttribute('aria-label',active?(phase==='arming'?'Preparing microphone':'Release to send voice command'):'Hold to talk');e.title=active?'RELEASE TO SEND':'HOLD TO TALK';}setStatus(active?(phase==='arming'?'MIC READY':'LISTENING'):'READY',active?'listening':'ready');if(active)setAvatarTransientState('FOCUSED',0,'NEXUS LISTENING');else if(!busy)clearAvatarTransientState();}
+function stopVoiceUi(){voiceHoldActive=false;voiceStarting=false;clearTimeout(recordTimer);recordTimer=null;setVoiceUi(false);try{recordStream?.getTracks().forEach(t=>t.stop());}catch{}recordStream=null;recorder=null;}
+function bindHoldToTalk(){
+  const mic=$('#nexusVoiceBtn');if(!mic)return;mic.innerHTML=micIcon();mic.setAttribute('aria-label','Hold to talk');mic.title='HOLD TO TALK';
+  mic.addEventListener('pointerdown',e=>{if(e.button!==undefined&&e.button!==0)return;e.preventDefault();voicePointerId=e.pointerId;try{mic.setPointerCapture(e.pointerId);}catch{}startVoiceHold();});
+  const release=e=>{if(voicePointerId!==null&&e.pointerId!==undefined&&e.pointerId!==voicePointerId)return;e.preventDefault();voicePointerId=null;stopVoiceHold();};
+  mic.addEventListener('pointerup',release);mic.addEventListener('pointercancel',release);mic.addEventListener('lostpointercapture',()=>{voicePointerId=null;stopVoiceHold();});
+  mic.addEventListener('contextmenu',e=>e.preventDefault());
+  mic.addEventListener('keydown',e=>{if((e.key===' '||e.key==='Enter')&&!e.repeat){e.preventDefault();startVoiceHold();}});
+  mic.addEventListener('keyup',e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();stopVoiceHold();}});
+}
 async function finishVoice(){
   clearTimeout(recordTimer);recordTimer=null;const chunks=recordChunks.slice(),mime=recorder?.mimeType||chunks[0]?.type||'audio/webm';try{recordStream?.getTracks().forEach(t=>t.stop());}catch{}recordStream=null;recorder=null;setVoiceUi(false);if(!chunks.length){notify('NO VOICE AUDIO CAPTURED',true);return;}
   setBusy(true,'TRANSCRIBING');try{const blob=new Blob(chunks,{type:mime});const form=new FormData();const ext=mime.includes('mp4')?'m4a':mime.includes('ogg')?'ogg':'webm';form.append('audio',blob,`nexus-command.${ext}`);const d=await apiForm('/api/v8/nexus/transcribe',form);const transcript=String(d.transcript||'').trim();if(!transcript)throw new Error('No speech was detected.');if($('#nexusInput'))$('#nexusInput').value=transcript;if(Number.isFinite(Number(d.latencyMs)))notify(`VOICE TRANSCRIBED // ${(Number(d.latencyMs)/1000).toFixed(1)}S`);setBusy(false);messageStickToBottom=true;await submitMessage(transcript,'voice');}catch(e){notify(e.message,true);setBusy(false);}}
@@ -172,7 +187,7 @@ function bind(){
   $('#nexusComposer')?.addEventListener('submit',e=>{e.preventDefault();const input=$('#nexusInput'),v=input?.value||'';if(input)input.value='';messageStickToBottom=true;submitMessage(v,'text');});
   $('#nexusInput')?.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();$('#nexusComposer')?.requestSubmit();}});
   $('#nexusMessages')?.addEventListener('scroll',e=>{messageStickToBottom=nearBottom(e.currentTarget);},{passive:true});
-  $('#nexusNewThread')?.addEventListener('click',newThread);$('#nexusVoiceBtn')?.addEventListener('click',toggleVoice);$('#nexusClearThread')?.addEventListener('click',clearCurrentThread);$('#nexusWipeHistory')?.addEventListener('click',wipeHistory);$('#nexusResetCreditBaseline')?.addEventListener('click',resetCreditBaseline);
+  $('#nexusNewThread')?.addEventListener('click',newThread);bindHoldToTalk();$('#nexusClearThread')?.addEventListener('click',clearCurrentThread);$('#nexusWipeHistory')?.addEventListener('click',wipeHistory);$('#nexusResetCreditBaseline')?.addEventListener('click',resetCreditBaseline);
   $('#aiAskNexusBtn')?.addEventListener('click',()=>hooks.navigate('NEXUS'));
   $$('#nexusSuggestions [data-nexus-prompt]').forEach(b=>b.onclick=()=>{const input=$('#nexusInput');if(input){input.value=b.dataset.nexusPrompt||'';input.focus();}});
   $('#nexusSettingsForm')?.addEventListener('submit',saveSettings);$('#nexusPrivacyBtn')?.addEventListener('click',openPrivacy);
