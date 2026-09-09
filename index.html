@@ -27,7 +27,7 @@
 <nav class="tabs" aria-label="Primary">
   <button class="tab active" data-page="pageOps">OPS</button>
   <button class="tab" data-page="pageFinance">FINANCE</button>
-  <button class="tab" disabled>MEDIA</button>
+  <button class="tab" data-page="pageMedia">MEDIA</button>
   <button class="tab" data-page="pageFitness">FITNESS</button>
   <button class="tab" data-page="pageCustomize">CUSTOMIZE</button>
 </nav>
@@ -316,6 +316,79 @@
       </div>
       <div id="journalList"></div>
       <div class="finance-section-head journal-pager"><span></span><div class="pager"><button id="journalPrevPage">←</button><span id="journalPager">0 / 0</span><button id="journalNextPage">→</button></div></div>
+    </section>
+  </section>
+</main>
+
+
+<main class="page media-page" id="pageMedia">
+  <section class="media-grid">
+    <section class="panel media-player-panel">
+      <div class="panel-head media-head">
+        <div><span class="kicker">MEDIA // 07A</span><h2>Spotify Intelligence</h2></div>
+        <div class="actions">
+          <span id="spotifyStatus" class="media-status">NOT CONNECTED</span>
+          <button id="spotifyRefreshBtn" class="ghost">REFRESH</button>
+          <button id="spotifyConnectBtn" class="primary">CONNECT SPOTIFY</button>
+          <button id="spotifyDisconnectBtn" class="danger hidden">DISCONNECT</button>
+        </div>
+      </div>
+      <div id="spotifyDisconnected" class="media-disconnected">
+        <div class="media-sigil">SP</div>
+        <div><span class="kicker">SPOTIFY WEB API</span><h3>Connect your playback environment</h3><p>Current track, devices, queue, recent listening and private playlists can be surfaced here without changing the Neon Ops visual language.</p></div>
+      </div>
+      <div id="spotifyConnected" class="hidden">
+        <div class="now-playing">
+          <div class="album-art-shell"><img id="spotifyArt" alt="Current Spotify artwork"><div id="spotifyArtFallback" class="album-art-fallback">NO SIGNAL</div></div>
+          <div class="now-playing-copy">
+            <span class="kicker" id="spotifyPlaybackState">PLAYBACK // IDLE</span>
+            <h3 id="spotifyTrack">Nothing playing</h3>
+            <p id="spotifyArtist">—</p>
+            <a id="spotifyOpenTrack" class="spotify-open hidden" target="_blank" rel="noopener">OPEN IN SPOTIFY ↗</a>
+            <div class="media-progress-row"><span id="spotifyElapsed">0:00</span><input id="spotifyProgress" type="range" min="0" max="1000" value="0"><span id="spotifyDuration">0:00</span></div>
+            <div class="player-controls" aria-label="Spotify playback controls">
+              <button id="spotifyShuffle" class="hud-icon" title="Shuffle">⇄</button>
+              <button id="spotifyPrev" class="hud-icon" title="Previous">◀◀</button>
+              <button id="spotifyPlayPause" class="media-play" title="Play / Pause">▶</button>
+              <button id="spotifyNext" class="hud-icon" title="Next">▶▶</button>
+              <button id="spotifyRepeat" class="hud-icon" title="Repeat">↻</button>
+            </div>
+          </div>
+          <div class="media-device-card">
+            <span class="kicker">SPOTIFY CONNECT</span>
+            <label>Device<select id="spotifyDevice"></select></label>
+            <label>Volume <span id="spotifyVolumeValue" class="field-value">—</span><input id="spotifyVolume" type="range" min="0" max="100" step="1" value="50"></label>
+            <div id="spotifyDeviceMeta" class="media-device-meta">NO ACTIVE DEVICE</div>
+            <div class="media-premium-note">PLAYER COMMANDS REQUIRE A SPOTIFY PREMIUM ACCOUNT AND A CONTROLLABLE ACTIVE DEVICE.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel media-queue-panel">
+      <div class="panel-head compact"><div><span class="kicker">UP NEXT</span><h2>Queue</h2></div><span id="spotifyQueueCount" class="media-status">0 ITEMS</span></div>
+      <div id="spotifyQueue" class="media-list"><div class="media-empty">CONNECT SPOTIFY TO LOAD QUEUE</div></div>
+    </section>
+
+    <section class="panel media-recent-panel">
+      <div class="panel-head compact"><div><span class="kicker">LISTENING HISTORY</span><h2>Recently Played</h2></div><span id="spotifyRecentCount" class="media-status">0 ITEMS</span></div>
+      <div id="spotifyRecent" class="media-list media-list-grid"><div class="media-empty">NO RECENT SIGNAL</div></div>
+    </section>
+
+    <section class="panel media-playlists-panel">
+      <div class="panel-head compact"><div><span class="kicker">LIBRARY</span><h2>Playlists</h2></div><span id="spotifyPlaylistCount" class="media-status">0 LISTS</span></div>
+      <div id="spotifyPlaylists" class="playlist-grid"><div class="media-empty">NO PLAYLISTS LOADED</div></div>
+    </section>
+
+    <section class="panel media-profile-panel">
+      <div class="panel-head compact"><div><span class="kicker">INTEGRATION STATUS</span><h2>Spotify Link</h2></div></div>
+      <div class="media-profile-body">
+        <div><span>ACCOUNT</span><b id="spotifyProfileName">—</b></div>
+        <div><span>PLAN</span><b id="spotifyPlan">—</b></div>
+        <div><span>DEVICE</span><b id="spotifyActiveDevice">—</b></div>
+        <div><span>SYNC</span><b id="spotifyLastRefresh">NOT YET</b></div>
+      </div>
+      <div class="spotify-attribution">Powered by Spotify Web API. Spotify content remains controlled by Spotify and opens in Spotify where linked.</div>
     </section>
   </section>
 </main>
