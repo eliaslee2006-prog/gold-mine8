@@ -31,7 +31,10 @@ function applyAppearance(a){
   const d=densityMult(a.density),m=densityMult(a.mobileDensity),p=a.palette||DEFAULT_APPEARANCE.palette;
   setVar('--hud-max-width',`${a.hudMaxWidth}px`);setVar('--panel-gap-effective',`${Math.max(5,a.panelGap*d).toFixed(1)}px`);setVar('--panel-padding-effective',`${Math.max(8,a.panelPadding*d).toFixed(1)}px`);setVar('--panel-gap-mobile',`${Math.max(5,a.panelGap*m).toFixed(1)}px`);setVar('--panel-padding-mobile',`${Math.max(8,a.panelPadding*m).toFixed(1)}px`);setVar('--radius',`${a.radius}px`);
   setVar('--interface-scale',a.interfaceScale);setVar('--heading-scale',a.headingScale);setVar('--telemetry-scale',a.telemetryScale);setVar('--line',alphaHex('#555865',a.borderOpacity));setVar('--line-soft',alphaHex('#555865',Math.max(.10,a.borderOpacity*.52)));setVar('--shadow',`0 18px 70px rgba(0,0,0,${a.shadowIntensity})`);
-  for(const k of ['cyan','mag','red','amber','green','violet'])setVar(`--${k}`,p[k]);document.documentElement.dataset.density=a.density;document.documentElement.dataset.mobileDensity=a.mobileDensity;
+  for(const k of ['cyan','mag','red','amber','green','violet'])setVar(`--${k}`,p[k]);
+  setVar('--accent-primary',p.cyan);setVar('--accent-selected',p.mag);setVar('--accent-danger',p.red);setVar('--accent-warning',p.amber);setVar('--accent-success',p.green);setVar('--accent-secondary',p.violet);
+  document.documentElement.dataset.density=a.density;document.documentElement.dataset.mobileDensity=a.mobileDensity;
+  window.dispatchEvent(new CustomEvent('neon:themechange',{detail:{palette:p}}));
 }
 function applyDefaultFonts(){for(const [section,varName] of Object.entries(CSS_VARS))setVar(varName,DEFAULT_FONT_VARS[section]);setVar('--calendar-time-font','var(--font-calendar)');setVar('--font-panel','var(--editorial)');}
 async function loadFontAsset(asset){if(!asset)return null;if(loadedFonts.has(asset.id))return loadedFonts.get(asset.id);const family=asset.metadata?.fontFamily||`NeonFont_${asset.id.replace(/[^a-zA-Z0-9]/g,'').slice(0,18)}`;const blob=await apiBlob(`/api/v8/assets/${encodeURIComponent(asset.id)}`);const url=URL.createObjectURL(blob);const face=new FontFace(family,`url(${JSON.stringify(url)})`);await face.load();document.fonts.add(face);const record={family,face,url};loadedFonts.set(asset.id,record);return record;}
