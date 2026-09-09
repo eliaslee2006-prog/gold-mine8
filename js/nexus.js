@@ -162,7 +162,7 @@ function stopVoiceHold(){voiceHoldActive=false;clearTimeout(recordTimer);recordT
 function setVoiceUi(active,phase='recording'){const e=$('#nexusVoiceBtn');if(e){e.classList.toggle('recording',active);e.classList.toggle('arming',active&&phase==='arming');e.innerHTML=micIcon();e.setAttribute('aria-label',active?(phase==='arming'?'Preparing microphone':'Release to send voice command'):'Hold to talk');e.title=active?'RELEASE TO SEND':'HOLD TO TALK';}setStatus(active?(phase==='arming'?'MIC READY':'LISTENING'):'READY',active?'listening':'ready');if(active)setAvatarTransientState('FOCUSED',0,'NEXUS LISTENING');else if(!busy)clearAvatarTransientState();}
 function stopVoiceUi(){voiceHoldActive=false;voiceStarting=false;clearTimeout(recordTimer);recordTimer=null;setVoiceUi(false);try{recordStream?.getTracks().forEach(t=>t.stop());}catch{}recordStream=null;recorder=null;}
 function bindHoldToTalk(){
-  const mic=$('#nexusVoiceBtn');if(!mic)return;mic.innerHTML=micIcon();mic.setAttribute('aria-label','Hold to talk');mic.title='HOLD TO TALK';
+  const mic=$('#nexusVoiceBtn');if(!mic)return;mic.classList.add('nxc-mic');mic.innerHTML=micIcon();mic.setAttribute('aria-label','Hold to talk');mic.title='HOLD TO TALK';
   mic.addEventListener('pointerdown',e=>{if(e.button!==undefined&&e.button!==0)return;e.preventDefault();voicePointerId=e.pointerId;try{mic.setPointerCapture(e.pointerId);}catch{}startVoiceHold();});
   const release=e=>{if(voicePointerId!==null&&e.pointerId!==undefined&&e.pointerId!==voicePointerId)return;e.preventDefault();voicePointerId=null;stopVoiceHold();};
   mic.addEventListener('pointerup',release);mic.addEventListener('pointercancel',release);mic.addEventListener('lostpointercapture',()=>{voicePointerId=null;stopVoiceHold();});
