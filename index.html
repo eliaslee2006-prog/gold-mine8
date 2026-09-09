@@ -26,6 +26,7 @@
 
 <nav class="tabs" aria-label="Primary">
   <button class="tab active" data-page="pageOps">OPS</button>
+  <button class="tab" data-page="pageNexus">NEXUS</button>
   <button class="tab" data-page="pageFinance">FINANCE</button>
   <button class="tab" data-page="pageMedia">MEDIA</button>
   <button class="tab" data-page="pageFitness">FITNESS</button>
@@ -98,7 +99,7 @@
         <h3 id="aiHeadline">No intelligence report yet.</h3>
         <p id="aiSummary">Generate a DAILY or WEEKLY brief from your current Neon Ops data.</p>
         <div class="ai-brief-meta"><span id="aiBriefModel">GEMINI 3.8 FLASH</span><span id="aiGenerated">NOT YET</span></div>
-        <div class="ai-brief-actions"><button id="aiOpenBtn" class="ghost small">OPEN REPORT</button><button id="aiHistoryBtn" class="ghost small">HISTORY</button></div>
+        <div class="ai-brief-actions"><button id="aiOpenBtn" class="ghost small">OPEN REPORT</button><button id="aiHistoryBtn" class="ghost small">HISTORY</button><button id="aiAskNexusBtn" class="ghost small">ASK NEXUS</button></div>
       </div>
     </section>
 
@@ -126,6 +127,84 @@
       </div>
     </section>
   </aside>
+</main>
+
+<main class="page nexus-page" id="pageNexus">
+  <section class="nxc-workspace">
+    <aside class="panel nxc-threads-panel">
+      <div class="panel-head compact">
+        <div><span class="kicker">NEXUS // MEMORY</span><h2>Threads</h2></div>
+        <button id="nexusNewThread" class="primary small" type="button">+ NEW</button>
+      </div>
+      <div id="nexusThreadList" class="nxc-thread-list" aria-label="NEXUS conversations"></div>
+      <div class="nxc-thread-foot">
+        <span>CONVERSATIONS ARE STORED IN D1</span>
+        <span id="nexusContextThread">NO THREAD</span>
+      </div>
+    </aside>
+
+    <section class="panel nxc-chat-panel">
+      <div class="panel-head nxc-chat-head">
+        <div>
+          <span class="kicker">NEXUS // COMMAND CORE</span>
+          <h2>Intelligence Workspace</h2>
+        </div>
+        <div class="nxc-head-status">
+          <span id="nexusContextPage">CONTEXT // OPS</span>
+          <b id="nexusStatus" data-state="ready">READY</b>
+        </div>
+      </div>
+      <div id="nexusMessages" class="nxc-messages" aria-live="polite">
+        <div class="nxc-welcome">
+          <span class="kicker">OPEN CHANNEL</span>
+          <h3>Ask, analyse or command.</h3>
+          <p>NEXUS can interrogate your dashboard data and execute supported actions through Neon Ops. Write actions are validated by the server; destructive and voice write actions require confirmation.</p>
+        </div>
+      </div>
+      <div id="nexusSuggestions" class="nxc-suggestions" aria-label="Suggested NEXUS prompts">
+        <button type="button" data-nexus-prompt="What should I prioritise tomorrow?">PRIORITISE TOMORROW</button>
+        <button type="button" data-nexus-prompt="What changed in my workload this week?">WORKLOAD CHANGE</button>
+        <button type="button" data-nexus-prompt="Analyse my spending this month.">ANALYSE SPENDING</button>
+        <button type="button" data-nexus-prompt="Why is my current NEXUS mood elevated?">EXPLAIN MOOD</button>
+      </div>
+      <form id="nexusComposer" class="nxc-composer">
+        <button id="nexusVoiceBtn" type="button" class="nxc-mic" aria-label="Start voice command">MIC</button>
+        <textarea id="nexusInput" rows="2" maxlength="6000" placeholder="Ask NEXUS or issue a command…" aria-label="Message NEXUS"></textarea>
+        <button id="nexusSendBtn" type="submit" class="primary">SEND</button>
+      </form>
+      <div class="nxc-composer-meta"><span>PUSH-TO-TALK // TAP MIC</span><span>ENTER // SEND &nbsp; SHIFT+ENTER // NEW LINE</span></div>
+    </section>
+
+    <aside class="nxc-side-stack">
+      <section class="panel nxc-actions-panel">
+        <div class="panel-head compact"><div><span class="kicker">COMMAND CONTROL</span><h2>Action Queue</h2></div><span class="nxc-risk-badge">SERVER VALIDATED</span></div>
+        <div id="nexusPendingList" class="nxc-pending-list"><div class="nxc-empty">NO PENDING CONFIRMATIONS</div></div>
+        <div class="nxc-protocol">
+          <div><b>L1</b><span>READ / NAV / MEDIA</span><small>Immediate</small></div>
+          <div><b>L2</b><span>CREATE / UPDATE</span><small>Execute + 5 min undo</small></div>
+          <div><b>L3</b><span>DELETE / VOICE WRITE / BATCH</span><small>Confirmation required</small></div>
+        </div>
+      </section>
+
+      <section class="panel nxc-runtime-panel">
+        <div class="panel-head compact"><div><span class="kicker">GEMINI // LOCAL TELEMETRY</span><h2>AI Runtime</h2></div><span id="nexusUsageModel" class="nxc-model">—</span></div>
+        <div class="nxc-usage-grid">
+          <div><span>REQUESTS // 24H</span><b id="nexusUsageRequests">0</b></div>
+          <div><span>TOKENS // 24H</span><b id="nexusUsageTokens">0</b></div>
+          <div><span>FAILURES // 24H</span><b id="nexusUsageFailures">0</b></div>
+          <div><span>VOICE MODEL</span><b id="nexusVoiceModel">—</b></div>
+        </div>
+        <form id="nexusSettingsForm" class="nxc-settings-form">
+          <label>THINKING MODE<select id="nexusThinkingMode"><option value="auto">AUTO</option><option value="low">LOW</option><option value="medium">MEDIUM</option><option value="high">HIGH</option></select></label>
+          <label>CONTEXT MESSAGES<input id="nexusContextMessages" type="number" min="4" max="24" step="1" value="12"></label>
+          <label class="nxc-check"><input id="nexusVoiceReply" type="checkbox"> SPEAK NEXUS REPLIES</label>
+          <label class="nxc-check"><input id="nexusVoiceConfirm" type="checkbox" checked> CONFIRM VOICE WRITE ACTIONS</label>
+          <label class="nxc-check"><input id="nexusFreeGuard" type="checkbox" checked> FREE-TIER GUARD / LOCAL FAST COMMANDS</label>
+          <div class="nxc-settings-actions"><button id="nexusPrivacyBtn" type="button" class="ghost small">AI PRIVACY</button><button id="nexusSettingsSave" type="submit" class="primary small">SAVE</button></div>
+        </form>
+      </section>
+    </aside>
+  </section>
 </main>
 
 <main class="page fitness-page" id="pageFitness">
@@ -963,6 +1042,13 @@
   <div id="aiHistoryList" class="ai-history-list"></div>
   <div class="ai-history-footer"><button id="aiHistoryPrev" class="ghost">← PREV</button><span id="aiHistoryPager">0 / 0</span><button id="aiHistoryNext" class="ghost">NEXT →</button></div>
 </dialog>
+
+<div id="nexusDock" class="nexus-dock" role="region" aria-label="Global NEXUS command bar">
+  <button id="nexusDockOpen" type="button" class="nexus-dock-brand"><span>NX</span><b>NEXUS</b></button>
+  <input id="nexusDockInput" maxlength="6000" autocomplete="off" placeholder="Ask or command NEXUS…" aria-label="Global NEXUS command">
+  <button id="nexusDockVoice" type="button" class="nexus-dock-mic" aria-label="Start NEXUS voice command">MIC</button>
+  <button id="nexusDockRun" type="button" class="primary small">RUN</button>
+</div>
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 </body>
