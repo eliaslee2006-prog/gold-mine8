@@ -1,54 +1,201 @@
+import { api, apiForm } from './api.js';
 import { state } from './state.js';
-import { setAvatarTransientState } from './avatar.js';
-import { futuresSnapshot,futuresSummary } from './phase9a-futures.js';
-import { activeOccurrences,occurrences } from './phase9a-calendar.js';
-import { listEventAvatars,objectUrl } from './phase9a-store.js';
+import { beginAvatarAnalyzing, endAvatarAnalyzing, setAvatarTransientState, clearAvatarTransientState } from './avatar.js';
 
-const KEY='neon_phase9a_nexus_context_v1';
-const DEFAULTS={bubbleEnabled:true,bubbleMaxChars:180,bubbleOpacity:88,bubbleScale:100,avatarCycleSeconds:6};
 const $=s=>document.querySelector(s);
-let notify=()=>{},settings=load(),timer=null,cycleTimer=null,cycleIndex=0,currentUrl=null;
-const sgKey=v=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Singapore',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(v));
-const clamp=(n,a,b)=>Math.min(b,Math.max(a,Number(n)||0));
-function load(){try{return{...DEFAULTS,...JSON.parse(localStorage.getItem(KEY)||'{}')}}catch{return{...DEFAULTS}}}
-function save(){localStorage.setItem(KEY,JSON.stringify(settings));applySettings();window.dispatchEvent(new CustomEvent('neon:phase9a-contextchange'));}
-function priorityReminder(r){const ms=new Date(r.scheduledAt).getTime()-Date.now();if(!Number.isFinite(ms))return 0;if(ms<0)return 4;if(ms<=6*3600000)return 3;if(ms<=24*3600000)return 2;if(ms<=72*3600000)return 1;return 0;}
-function highKeyEvent(ev){const cat=String(ev.category||'').toUpperCase(),title=String(ev.title||'').toLowerCase();const category=['OPERATIONAL','DUTY','TRAVEL','FINANCE'].includes(cat);const keyword=/birthday|exam|test|meeting|appointment|flight|operation|duty|deadline|launch|interview|medical|parade|ceremony|brief|review/.test(title);return category||keyword;}
-function portfolioPressure(){const f=state.finance||{},pos=f.positions||[];let entry=0,current=0;for(const p of pos){const q=Math.abs(Number(p.quantity??p.qty)||0),e=Number(p.entryPrice??p.entry)||0,c=Number(p.currentPrice??p.current??e)||e;entry+=q*e;current+=q*c;}const pnlPct=entry?((current-entry)/entry)*100:0;return{pnlPct,negative:pnlPct<=-5,critical:pnlPct<=-10};}
-export function contextSnapshot(){
-  const now=Date.now(),tasks=state.tasks||[],active=tasks.filter(t=>!['completed','cancelled'].includes(String(t.status||'').toLowerCase())),overdue=active.filter(t=>t.dueAt&&new Date(t.dueAt).getTime()<now),highOverdue=overdue.filter(t=>['high','critical'].includes(String(t.priority||'').toLowerCase())),today=sgKey(new Date()),completedToday=tasks.filter(t=>String(t.status).toLowerCase()==='completed'&&t.completedAt&&sgKey(t.completedAt)===today);
-  const next24=occurrences(new Date(now),new Date(now+24*3600000)).filter(highKeyEvent),next6=next24.filter(e=>e.occurrenceStart.getTime()-now<=6*3600000);
-  const rem=(state.reminders||[]).filter(r=>['scheduled','snoozed'].includes(r.status)),criticalRem=rem.filter(r=>priorityReminder(r)>=3),highRem=rem.filter(r=>priorityReminder(r)>=2),future=futuresSnapshot(),portfolio=portfolioPressure();
-  let mood='RELAXED',reason='LOW CROSS-DOMAIN PRESSURE';
-  if(highOverdue.length>=2||future.projectedRemaining<0||criticalRem.length>=2||portfolio.critical){mood='PANIC';reason=highOverdue.length>=2?'HIGH-PRIORITY OVERDUE TASKS':future.projectedRemaining<0?'ALLOWANCE FUTURES NEGATIVE':criticalRem.length>=2?'MULTIPLE CRITICAL REMINDERS':'PORTFOLIO DRAWDOWN';}
-  else if(overdue.length||next6.length||criticalRem.length||portfolio.negative||(future.next7DaysExpected>Math.max(1,future.spotRemaining)*.4)){mood='ANXIOUS';reason=overdue.length?'OVERDUE WORKLOAD':next6.length?'HIGH-KEY EVENT APPROACHING':criticalRem.length?'CRITICAL REMINDER':'NEAR-TERM FINANCIAL PRESSURE';}
-  else if(completedToday.length>=3&&future.projectedRemaining>=0){mood='SUCCESS';reason='STRONG DAILY COMPLETION';}
-  else if(active.length||next24.length||highRem.length){mood='FOCUSED';reason=next24.length?'UPCOMING HIGH-KEY EVENT':highRem.length?'PRIORITY REMINDER':'ACTIVE WORKLOAD';}
-  return{mood,reason,tasks:{active:active.length,overdue:overdue.length,highOverdue:highOverdue.length,completedToday:completedToday.length},events:{highKey24h:next24.length,highKey6h:next6.length},reminders:{high:highRem.length,critical:criticalRem.length},finance:{...future,portfolioPnlPct:portfolio.pnlPct},generatedAt:new Date().toISOString()};
+const $$=s=>[...document.querySelectorAll(s)];
+let notify=()=>{};
+let hooks={navigate:()=>{},refreshDomains:async()=>{}};
+let busy=false;
+let recorder=null,recordStream=null,recordChunks=[],recordTimer=null;let messageStickToBottom=true;
+let voiceHoldActive=false,voicePointerId=null,voiceStarting=false;
+
+function ensureState(){
+  state.nexus=state.nexus||{threads:[],messages:[],currentThreadId:null,settings:{thinkingMode:'auto',voiceReply:false,voiceWriteConfirm:true,maxContextMessages:12,freeTierGuard:true,startingCreditUsd:5,creditBaselineAt:null},models:{chat:'gemini-3.8-flash',fast:'gemini-3.5-flash-lite',transcribe:'gemini-3.5-transcribe',transcribeFallback:'gemini-3.5-flash-lite'},usage:null,configured:false};
+  return state.nexus;
 }
-function deterministicSummary(x=contextSnapshot()){const bits=[];if(x.events.highKey6h)bits.push(`${x.events.highKey6h} high-key event${x.events.highKey6h>1?'s':''} within 6h`);if(x.reminders.critical)bits.push(`${x.reminders.critical} critical reminder${x.reminders.critical>1?'s':''}`);if(x.tasks.overdue)bits.push(`${x.tasks.overdue} overdue objective${x.tasks.overdue>1?'s':''}`);if(x.finance.projectedRemaining<0)bits.push('allowance forecast is negative');else if(x.finance.expectedFutureOutflow)bits.push(futuresSummary().replace(/\.$/,''));return bits.length?`${x.reason}. ${bits.join('; ')}.`:`${x.reason}. ${futuresSummary()}`;}
-function latestAiSummary(){const rows=[...(state.ai?.reports||[])].sort((a,b)=>String(b.generatedAt).localeCompare(String(a.generatedAt)));return String(rows[0]?.summary||'').trim();}
-function bubbleText(){return latestAiSummary()||deterministicSummary();}
-function truncate(s,n){s=String(s||'');return s.length<=n?s:`${s.slice(0,Math.max(1,n-1)).trimEnd()}…`;}
-function injectBubble(){
-  const card=$('.nexus-card'),core=card?.querySelector('.nexus-core'),copy=core?.querySelector(':scope > div:last-child');
-  if(copy&&!$('#phase9aSpeechBubble'))copy.insertAdjacentHTML('beforeend',`<div id="phase9aSpeechBubble" class="phase9a-speech-bubble" role="status" aria-live="polite"><span>NEXUS // CONTEXT</span><p id="phase9aSpeechText">—</p></div>`);
-  const stage=$('#nexusStage');if(stage&&!$('#phase9aAvatarMedia'))stage.insertAdjacentHTML('beforeend',`<div id="phase9aAvatarMedia" class="phase9a-avatar-media hidden" aria-hidden="true"></div><div id="phase9aAvatarPager" class="phase9a-avatar-pager hidden"><button type="button" data-avatar-dir="-1" aria-label="Previous NEXUS avatar">‹</button><span id="phase9aAvatarPage">BASE</span><button type="button" data-avatar-dir="1" aria-label="Next NEXUS avatar">›</button></div>`);
+function escText(v){return v==null?'':String(v);}
+function fmtTime(v){if(!v)return'—';try{return new Date(v).toLocaleString('en-SG',{timeZone:'Asia/Singapore',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});}catch{return String(v);}}
+function currentPage(){return document.querySelector('.page.active')?.id||'pageOps';}
+function setStatus(text,mode='ready'){
+  const el=$('#nexusStatus');if(el){el.textContent=text;el.dataset.state=mode;}
 }
-function injectCustomize(){
-  const host=$('.avatar-system-body');if(!host||$('#phase9aNexusSettings'))return;
-  host.insertAdjacentHTML('beforeend',`<details class="p9-context-settings" id="phase9aNexusSettings"><summary><div><span>NEXUS // CONTEXT UI</span><b>Speech brief + event avatar</b></div></summary><form id="phase9aNexusForm" class="phase9a-settings-grid"><label class="toggle-card"><input id="p9BubbleEnabled" type="checkbox"><span>SPEECH BRIEF</span><small>Show a compact contextual summary inside the NEXUS card.</small></label><label>Summary length <span id="p9BubbleCharsV"></span><input id="p9BubbleChars" type="range" min="70" max="300" step="10"></label><label>Text scale <span id="p9BubbleScaleV"></span><input id="p9BubbleScale" type="range" min="80" max="125" step="5"></label><label>Brief opacity <span id="p9BubbleOpacityV"></span><input id="p9BubbleOpacity" type="range" min="45" max="100" step="5"></label><label>Avatar cycle <span id="p9AvatarCycleV"></span><input id="p9AvatarCycle" type="range" min="3" max="20" step="1"></label><div class="modal-actions"><span></span><span></span><span></span><button class="primary" type="submit">SAVE CONTEXT UI</button></div></form></details>`);
+function setBusy(v,label='ANALYZING'){
+  busy=!!v;
+  for(const el of ['#nexusSendBtn','#nexusNewThread','#nexusClearThread','#nexusWipeHistory'])if($(el))$(el).disabled=busy;
+  if(busy){setStatus(label,'busy');beginAvatarAnalyzing(`NEXUS ${label}`);}else{setStatus('READY','ready');endAvatarAnalyzing();}
 }
-function fillSettings(){if(!$('#phase9aNexusForm'))return;$('#p9BubbleEnabled').checked=settings.bubbleEnabled;$('#p9BubbleOpacity').value=settings.bubbleOpacity;$('#p9BubbleScale').value=settings.bubbleScale;$('#p9BubbleChars').value=settings.bubbleMaxChars;$('#p9AvatarCycle').value=settings.avatarCycleSeconds;updateLabels();}
-function updateLabels(){if(!$('#phase9aNexusForm'))return;$('#p9BubbleOpacityV').textContent=`${$('#p9BubbleOpacity').value}%`;$('#p9BubbleScaleV').textContent=`${$('#p9BubbleScale').value}%`;$('#p9BubbleCharsV').textContent=$('#p9BubbleChars').value;$('#p9AvatarCycleV').textContent=`${$('#p9AvatarCycle').value}s`;}
-function applySettings(){const b=$('#phase9aSpeechBubble');if(b){b.classList.toggle('hidden',!settings.bubbleEnabled);b.style.setProperty('--p9-bubble-opacity',String(settings.bubbleOpacity/100));b.style.setProperty('--p9-bubble-scale',String(settings.bubbleScale/100));}restartCycle();}
-function updateContext(){const x=contextSnapshot(),bubble=$('#phase9aSpeechText');if(bubble)bubble.textContent=truncate(bubbleText(),settings.bubbleMaxChars);const current=$('#nexusMood')?.textContent?.trim().toUpperCase();if(navigator.onLine&&!['OFFLINE','ANALYZING'].includes(current)){const rank={RELAXED:0,FOCUSED:1,SUCCESS:1,ANXIOUS:2,PANIC:3};if((rank[x.mood]||0)>(rank[current]||0))setAvatarTransientState(x.mood,18000,`CONTEXT // ${x.reason}`);}window.dispatchEvent(new CustomEvent('neon:phase9a-snapshot',{detail:x}));updateEventAvatar().catch(()=>{});}
-async function activeAvatarRecords(){const active=activeOccurrences(new Date()),assets=await listEventAvatars();const by=new Map(assets.map(a=>[String(a.eventId),a]));return active.map(ev=>({ev,asset:by.get(String(ev.id))})).filter(x=>x.asset).sort((a,b)=>(Number(b.asset.priority)||0)-(Number(a.asset.priority)||0));}
-async function updateEventAvatar(){const list=await activeAvatarRecords(),pager=$('#phase9aAvatarPager'),media=$('#phase9aAvatarMedia');if(!pager||!media)return;const total=1+list.length;if(cycleIndex>=total)cycleIndex=0;pager.classList.toggle('hidden',total<=1);$('#phase9aAvatarPage').textContent=cycleIndex===0?'BASE':`${cycleIndex}/${total-1}`;if(currentUrl){URL.revokeObjectURL(currentUrl);currentUrl=null;}media.replaceChildren();if(cycleIndex===0||!list.length){media.classList.add('hidden');return;}const item=list[cycleIndex-1];currentUrl=objectUrl(item.asset);const el=item.asset.type.startsWith('video/')?document.createElement('video'):document.createElement('img');el.src=currentUrl;el.className='phase9a-avatar-override';if(el.tagName==='VIDEO'){el.muted=true;el.autoplay=true;el.loop=true;el.playsInline=true;}else el.alt=`Event avatar: ${item.ev.title}`;media.append(el);media.classList.remove('hidden');media.setAttribute('aria-label',`Event avatar override for ${item.ev.title}`);}
-function restartCycle(){clearInterval(cycleTimer);cycleTimer=setInterval(async()=>{const n=1+(await activeAvatarRecords()).length;if(n<=1){cycleIndex=0;return updateEventAvatar();}cycleIndex=(cycleIndex+1)%n;updateEventAvatar();},Math.max(3,Number(settings.avatarCycleSeconds)||6)*1000);}
+function nearBottom(root){return !root||root.scrollHeight-root.scrollTop-root.clientHeight<90;}
+function scrollMessages(force=false){const root=$('#nexusMessages');if(root&&(force||messageStickToBottom))requestAnimationFrame(()=>{root.scrollTop=root.scrollHeight;});}
+function isoToSgInput(v){
+  if(!v)return'';try{const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Singapore',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(new Date(v));const get=t=>parts.find(x=>x.type===t)?.value||'';return `${get('year')}-${get('month')}-${get('day')}T${get('hour')}:${get('minute')}`;}catch{return'';}
+}
+function sgInputToIso(v){if(!v)return null;const d=new Date(`${v}:00+08:00`);return Number.isFinite(d.getTime())?d.toISOString():null;}
+function speak(text){
+  const nx=ensureState();if(!nx.settings?.voiceReply||!('speechSynthesis'in window)||!text)return;
+  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(String(text).slice(0,1800));u.lang='en-SG';u.rate=1;u.pitch=1;speechSynthesis.speak(u);}catch{}
+}
+function button(label,cls,fn){const b=document.createElement('button');b.type='button';b.className=cls||'ghost small';b.textContent=label;b.onclick=fn;return b;}
+function renderThreads(){
+  const nx=ensureState(),root=$('#nexusThreadList');if(!root)return;root.replaceChildren();
+  if(!nx.threads.length){const e=document.createElement('div');e.className='nxc-empty';e.textContent='NO SAVED THREADS';root.append(e);return;}
+  for(const t of nx.threads){
+    const row=document.createElement('div');row.className='nxc-thread'+(t.id===nx.currentThreadId?' active':'');
+    const open=document.createElement('button');open.type='button';open.className='nxc-thread-open';
+    const title=document.createElement('b');title.textContent=t.title||'Conversation';const stamp=document.createElement('small');stamp.textContent=fmtTime(t.updatedAt);open.append(title,stamp);open.onclick=()=>selectThread(t.id);
+    const del=button('×','nxc-thread-delete',()=>deleteThread(t.id,t.title));del.setAttribute('aria-label','Delete conversation');row.append(open,del);root.append(row);
+  }
+}
+function actionCard(action,context='message'){
+  const wrap=document.createElement('div');wrap.className=`nxc-action-card risk-${action.riskLevel||1}`;wrap.dataset.status=action.status||'unknown';
+  const head=document.createElement('div');head.className='nxc-action-head';const left=document.createElement('span');left.textContent=`L${action.riskLevel||1} // ${String(action.tool||'ACTION').replaceAll('_',' ').toUpperCase()}`;const st=document.createElement('b');st.textContent=String(action.status||'').toUpperCase();head.append(left,st);
+  const desc=document.createElement('p');desc.textContent=action.summary||action.tool||'Proposed action';wrap.append(head,desc);
+  const editable=action.status==='pending'&&['task_create','calendar_create'].includes(action.tool);
+  if(editable){
+    const args=action.args||{},review=document.createElement('div');review.className='nxc-action-review';
+    const grid=document.createElement('div');grid.className='review-grid';
+    const typeLabel=document.createElement('label');typeLabel.textContent='LOG AS';const type=document.createElement('select');type.dataset.review='kind';type.innerHTML='<option value="event">EVENT</option><option value="task">TASK</option>';type.value=action.tool==='task_create'?'task':'event';typeLabel.append(type);
+    const titleLabel=document.createElement('label');titleLabel.textContent='TITLE';const title=document.createElement('input');title.dataset.review='title';title.value=args.title||'';title.maxLength=240;titleLabel.append(title);
+    const timeLabel=document.createElement('label');timeLabel.textContent='DATE / TIME (SGT)';const time=document.createElement('input');time.type='datetime-local';time.dataset.review='time';time.value=isoToSgInput(args.dueAt||args.startAt);timeLabel.append(time);
+    const minsLabel=document.createElement('label');minsLabel.textContent='REMINDER MINUTES';const mins=document.createElement('input');mins.type='number';mins.min='0';mins.max='40320';mins.step='1';mins.dataset.review='minutes';mins.value=String(args.reminderMinutes??10);minsLabel.append(mins);
+    const check=document.createElement('label');check.className='review-check';const cb=document.createElement('input');cb.type='checkbox';cb.dataset.review='google';cb.checked=!!args.googleReminderEnabled;check.append(cb,document.createTextNode(' GOOGLE-SYNCED REMINDER'));
+    const note=document.createElement('div');note.className='review-note';note.dataset.review='note';
+    const updateNote=()=>{mins.disabled=!cb.checked;note.textContent=type.value==='task'?'TASKS sync to Google Tasks. If reminder is enabled, NEXUS creates a 5-minute companion Google Calendar reminder at the task due time.':'EVENTS sync to Google Calendar with the selected popup reminder.';};
+    type.onchange=updateNote;cb.onchange=updateNote;updateNote();grid.append(typeLabel,titleLabel,timeLabel,minsLabel,check,note);review.append(grid);wrap.append(review);
+  }
+  const controls=document.createElement('div');controls.className='nxc-action-controls';
+  if(action.status==='pending'){
+    controls.append(button(editable?'REVIEW + CONFIRM':'CONFIRM','primary small',()=>editable?confirmReviewed(action,wrap):actionOp(action.id,'confirm')),button('CANCEL','ghost small',()=>actionOp(action.id,'cancel')));
+  }else if(action.undoAvailable){controls.append(button('UNDO','ghost small',()=>actionOp(action.id,'undo')));}
+  if(controls.childElementCount)wrap.append(controls);
+  if(context==='queue')wrap.classList.add('queue-card');return wrap;
+}
+async function confirmReviewed(action,wrap){
+  if(busy)return;const kind=wrap.querySelector('[data-review="kind"]')?.value||'event',title=wrap.querySelector('[data-review="title"]')?.value?.trim()||'',local=wrap.querySelector('[data-review="time"]')?.value||'',googleReminderEnabled=!!wrap.querySelector('[data-review="google"]')?.checked,reminderMinutes=Number(wrap.querySelector('[data-review="minutes"]')?.value||0),scheduledAt=sgInputToIso(local);
+  if(!title)return notify('VOICE REVIEW NEEDS A TITLE',true);if(kind==='event'&&!scheduledAt)return notify('EVENT REVIEW NEEDS A DATE AND TIME',true);if(googleReminderEnabled&&!scheduledAt)return notify('A GOOGLE REMINDER NEEDS A DATE AND TIME',true);
+  setBusy(true,'REVIEWING');try{await api(`/api/v8/nexus/actions/${encodeURIComponent(action.id)}`,{method:'PATCH',body:{kind,title,scheduledAt,googleReminderEnabled,reminderMinutes}});setBusy(false);await actionOp(action.id,'confirm');}catch(e){notify(e.message,true);setBusy(false);}
+}
+function renderMessage(m){
+  const box=document.createElement('article');box.className=`nxc-message ${m.role==='user'?'user':'assistant'}`;
+  const top=document.createElement('div');top.className='nxc-message-meta';const who=document.createElement('b');who.textContent=m.role==='user'?'YOU':'NEXUS';const time=document.createElement('span');time.textContent=fmtTime(m.createdAt);top.append(who,time);box.append(top);
+  const body=document.createElement('div');body.className='nxc-message-body';body.textContent=escText(m.content);box.append(body);
+  const meta=m.metadata||{};
+  if(m.role!=='user'&&(meta.model||meta.thinkingLevel||meta.confidence!==undefined)){
+    const telemetry=document.createElement('div');telemetry.className='nxc-message-telemetry';
+    if(meta.model){const x=document.createElement('span');x.textContent=String(meta.model).toUpperCase();telemetry.append(x);}if(meta.thinkingLevel){const x=document.createElement('span');x.textContent=`THINK // ${String(meta.thinkingLevel).toUpperCase()}`;telemetry.append(x);}if(meta.confidence!==undefined){const x=document.createElement('span');x.textContent=`CONF // ${Math.round(Number(meta.confidence)||0)}%`;telemetry.append(x);}box.append(telemetry);
+  }
+  if(Array.isArray(meta.evidence)&&meta.evidence.length){const ev=document.createElement('details');ev.className='nxc-evidence';const s=document.createElement('summary');s.textContent=`EVIDENCE // ${meta.evidence.length}`;const list=document.createElement('ul');for(const x of meta.evidence){const li=document.createElement('li');li.textContent=x;list.append(li);}ev.append(s,list);box.append(ev);}
+  const actions=[...(meta.pendingActions||[]),...(meta.executedActions||[])];if(actions.length){const ar=document.createElement('div');ar.className='nxc-message-actions';for(const a of actions)ar.append(actionCard(a));box.append(ar);}
+  return box;
+}
+function renderMessages(){
+  const nx=ensureState(),root=$('#nexusMessages');if(!root)return;const stick=messageStickToBottom||nearBottom(root);root.replaceChildren();
+  if(!nx.messages.length){const w=document.createElement('div');w.className='nxc-welcome';w.innerHTML='<span class="kicker">OPEN CHANNEL</span><h3>Ask, analyse or command.</h3><p>NEXUS can interrogate dashboard data and execute supported actions through the server command gate. Voice writes appear as editable Event / Task review cards before confirmation.</p>';root.append(w);}
+  else for(const m of nx.messages)root.append(renderMessage(m));
+  renderPending();messageStickToBottom=stick;scrollMessages();
+}
+function pendingActions(){
+  const seen=new Map();for(const m of ensureState().messages){for(const a of [...(m.metadata?.pendingActions||[]),...(m.metadata?.executedActions||[])])seen.set(a.id,a);}return[...seen.values()].filter(a=>a.status==='pending'||a.undoAvailable).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));
+}
+function renderPending(){
+  const root=$('#nexusPendingList');if(!root)return;root.replaceChildren();const rows=pendingActions();
+  if(!rows.length){const e=document.createElement('div');e.className='nxc-empty';e.textContent='NO PENDING CONFIRMATIONS';root.append(e);return;}
+  if(rows.filter(x=>x.status==='pending').length>1){const all=button('CONFIRM ALL PENDING','primary small',confirmAll);all.classList.add('nxc-confirm-all');root.append(all);}
+  for(const a of rows)root.append(actionCard(a,'queue'));
+}
+function renderRuntime(){
+  const nx=ensureState(),u=nx.usage?.today||{},c=nx.usage?.cost||{},m=nx.usage?.month||{},d7=nx.usage?.sevenDays||{};const set=(id,v)=>{const e=$(id);if(e)e.textContent=v;},money=v=>`$${Number(v||0).toFixed(Number(v||0)<.1?4:2)}`;
+  set('#nexusUsageRequests',Number(u.requests||0).toLocaleString());set('#nexusUsageInput',Number(u.inputTokens||0).toLocaleString());set('#nexusUsageOutput',Number(u.outputTokens||0).toLocaleString());set('#nexusUsageThinking',Number(u.thoughtTokens||0).toLocaleString());set('#nexusUsageFailures',Number((u.failures||0)+(u.empty||0)).toLocaleString());
+  set('#nexusCostToday',money(u.costUsd));set('#nexusCost7d',money(d7.costUsd));set('#nexusCostMonth',money(m.costUsd));set('#nexusCreditRemaining',money(c.estimatedRemainingUsd));
+  const credit=$('#nexusCreditState');if(credit){const w=String(c.warning||'NORMAL').toLowerCase();credit.dataset.state=w;credit.textContent=`CREDIT // ${String(c.warning||'NORMAL').toUpperCase()}`;}const base=$('#nexusCreditBaseline');if(base)base.textContent=c.creditBaselineAt?`BASELINE // ${fmtTime(c.creditBaselineAt)}`:'BASELINE // ALL TRACKED USAGE';
+  const recent=nx.usage?.recent||[];set('#nexusUsageModel',String(recent[0]?.model||nx.models?.chat||'—').toUpperCase());set('#nexusVoiceModel',String(nx.models?.transcribe||'—').toUpperCase());
+  if($('#nexusThinkingMode'))$('#nexusThinkingMode').value=nx.settings?.thinkingMode||'auto';if($('#nexusContextMessages'))$('#nexusContextMessages').value=nx.settings?.maxContextMessages||12;if($('#nexusStartingCredit'))$('#nexusStartingCredit').value=Number(nx.settings?.startingCreditUsd??5).toFixed(2);if($('#nexusVoiceReply'))$('#nexusVoiceReply').checked=!!nx.settings?.voiceReply;if($('#nexusVoiceConfirm'))$('#nexusVoiceConfirm').checked=nx.settings?.voiceWriteConfirm!==false;if($('#nexusFreeGuard'))$('#nexusFreeGuard').checked=nx.settings?.freeTierGuard!==false;
+}
+function renderContext(){const nx=ensureState(),t=nx.threads.find(x=>x.id===nx.currentThreadId);if($('#nexusContextThread'))$('#nexusContextThread').textContent=t?String(t.title||'THREAD').toUpperCase():'NO THREAD';if($('#nexusContextPage'))$('#nexusContextPage').textContent=`CONTEXT // ${currentPage().replace(/^page/,'').toUpperCase()}`;}
+
+async function loadSettings(){const nx=ensureState();const d=await api('/api/v8/nexus/settings');nx.settings={...nx.settings,...(d.settings||{})};nx.models={...nx.models,...(d.models||{})};nx.configured=!!d.configured;renderRuntime();}
+async function loadUsage(){try{ensureState().usage=await api('/api/v8/nexus/usage');renderRuntime();}catch(e){console.warn('NEXUS usage unavailable',e);}}
+async function loadThreads(select=true){const nx=ensureState(),d=await api('/api/v8/nexus/threads?limit=40');nx.threads=d.threads||[];if(select&&!nx.currentThreadId&&nx.threads[0])nx.currentThreadId=nx.threads[0].id;if(nx.currentThreadId&&!nx.threads.some(x=>x.id===nx.currentThreadId))nx.currentThreadId=nx.threads[0]?.id||null;renderThreads();renderContext();if(select&&nx.currentThreadId)await loadMessages(nx.currentThreadId);else{nx.messages=[];renderMessages();}}
+async function loadMessages(threadId){const nx=ensureState();if(!threadId){nx.messages=[];renderMessages();return;}const d=await api(`/api/v8/nexus/threads/${encodeURIComponent(threadId)}/messages?limit=180`);nx.messages=d.messages||[];renderMessages();}
+async function selectThread(id){if(busy)return;ensureState().currentThreadId=id;renderThreads();renderContext();setStatus('LOADING','busy');try{await loadMessages(id);}catch(e){notify(e.message,true);}finally{setStatus('READY','ready');}}
+async function newThread(){if(busy)return;try{const d=await api('/api/v8/nexus/threads',{method:'POST',body:{title:'New conversation'}});ensureState().currentThreadId=d.thread.id;ensureState().messages=[];await loadThreads(false);renderMessages();$('#nexusInput')?.focus();}catch(e){notify(e.message,true);}}
+async function deleteThread(id,title){if(!confirm(`Delete NEXUS thread “${title||'Conversation'}”? This removes its messages and action history.`))return;try{await api(`/api/v8/nexus/threads/${encodeURIComponent(id)}`,{method:'DELETE'});const nx=ensureState();if(nx.currentThreadId===id)nx.currentThreadId=null;await loadThreads(true);notify('NEXUS THREAD DELETED');}catch(e){notify(e.message,true);}}
+
+async function clearCurrentThread(){
+  const nx=ensureState();if(!nx.currentThreadId)return notify('NO ACTIVE NEXUS THREAD',true);if(!confirm('Clear every message and action in the current NEXUS thread? Gemini usage/cost history will be preserved.'))return;
+  try{await api(`/api/v8/nexus/threads/${encodeURIComponent(nx.currentThreadId)}/messages`,{method:'DELETE'});nx.messages=[];renderMessages();await loadThreads(false);notify('CURRENT NEXUS THREAD CLEARED');}catch(e){notify(e.message,true);}
+}
+async function wipeHistory(){
+  if(!confirm('WIPE ALL NEXUS CHAT HISTORY? This deletes every NEXUS thread, message and action. Calendar, Tasks, Finance, Fitness and Gemini usage telemetry are preserved.'))return;
+  if(!confirm('Final confirmation: permanently wipe all NEXUS chat history?'))return;
+  try{const d=await api('/api/v8/nexus/threads',{method:'DELETE'});const nx=ensureState();nx.threads=[];nx.messages=[];nx.currentThreadId=null;renderThreads();renderMessages();renderContext();notify(`NEXUS HISTORY WIPED // ${d.wiped?.messages||0} MESSAGES`);}catch(e){notify(e.message,true);}
+}
+
+async function refreshAfter(domains){if(Array.isArray(domains)&&domains.length)await hooks.refreshDomains([...new Set(domains)]);}
+async function submitMessage(raw,source='text',{fromPalette=false}={}){
+  const text=String(raw||'').trim();if(!text||busy)return null;const nx=ensureState();setBusy(true,source==='voice'?'VOICE COMMAND':'ANALYZING');
+  try{
+    const d=await api('/api/v8/nexus/chat',{method:'POST',body:{threadId:nx.currentThreadId||null,message:text,source,currentPage:currentPage()}});nx.currentThreadId=d.thread?.id||nx.currentThreadId;
+    await loadThreads(false);await loadMessages(nx.currentThreadId);await refreshAfter(d.changedDomains);await loadUsage();renderContext();
+    if(d.navigation&&d.navigation!=='NONE')hooks.navigate(d.navigation);const response=d.assistant?.content||'';speak(response);
+    if(fromPalette&&(!d.navigation||d.navigation==='NONE')){const intent=d.assistant?.metadata?.intent||'';const commandOnly=intent==='COMMAND'&&(d.pendingActions?.length||d.executedActions?.length);if(!commandOnly)hooks.navigate('NEXUS');}
+    return d;
+  }catch(e){notify(e.message,true);return null;}finally{setBusy(false);}
+}
+async function actionOp(id,op){if(busy)return;setBusy(true,op==='confirm'?'EXECUTING':op==='undo'?'UNDOING':'CANCELLING');try{const d=await api(`/api/v8/nexus/actions/${encodeURIComponent(id)}/${op}`,{method:'POST',body:{}});if(ensureState().currentThreadId)await loadMessages(ensureState().currentThreadId);await refreshAfter(d.changedDomains);await loadUsage();notify(op==='confirm'?'NEXUS ACTION CONFIRMED':op==='undo'?'NEXUS ACTION UNDONE':'NEXUS ACTION CANCELLED');}catch(e){notify(e.message,true);}finally{setBusy(false);}}
+async function confirmAll(){const ids=pendingActions().filter(x=>x.status==='pending').map(x=>x.id);if(!ids.length)return;if(!confirm(`Confirm ${ids.length} pending NEXUS actions? They will execute sequentially.`))return;for(const id of ids){await actionOp(id,'confirm');if(busy)break;}}
+
+function bestRecorderMime(){const choices=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg;codecs=opus'];return choices.find(x=>window.MediaRecorder?.isTypeSupported?.(x))||'';}
+function micIcon(){return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 0 0 3.5-3.5V6a3.5 3.5 0 1 0-7 0v6a3.5 3.5 0 0 0 3.5 3.5Zm-1-9.5a1 1 0 1 1 2 0v6a1 1 0 1 1-2 0V6Zm-5 5a1 1 0 0 1 1 1 5 5 0 0 0 10 0 1 1 0 1 1 2 0 7.01 7.01 0 0 1-6 6.92V21h3a1 1 0 1 1 0 2H8a1 1 0 1 1 0-2h3v-2.08A7.01 7.01 0 0 1 5 12a1 1 0 0 1 1-1Z" fill="currentColor"/></svg>';}
+async function startVoiceHold(){
+  if(voiceStarting||recorder?.state==='recording'||busy)return;if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){notify('VOICE INPUT IS NOT SUPPORTED BY THIS BROWSER',true);return;}
+  voiceHoldActive=true;voiceStarting=true;setVoiceUi(true,'arming');
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1}});
+    if(!voiceHoldActive){stream.getTracks().forEach(t=>t.stop());setVoiceUi(false);return;}
+    recordStream=stream;recordChunks=[];const mime=bestRecorderMime(),recorderOptions={audioBitsPerSecond:48000,...(mime?{mimeType:mime}:{})};recorder=new MediaRecorder(recordStream,recorderOptions);
+    recorder.ondataavailable=e=>{if(e.data?.size)recordChunks.push(e.data);};recorder.onerror=()=>stopVoiceUi();recorder.onstop=finishVoice;recorder.start();setVoiceUi(true,'recording');recordTimer=setTimeout(()=>stopVoiceHold(),25000);
+  }catch(e){voiceHoldActive=false;stopVoiceUi();notify(e?.name==='NotAllowedError'?'MICROPHONE PERMISSION WAS DENIED':'MICROPHONE COULD NOT START',true);}
+  finally{voiceStarting=false;}
+}
+function stopVoiceHold(){voiceHoldActive=false;clearTimeout(recordTimer);recordTimer=null;if(recorder?.state==='recording'){recorder.stop();return;}if(!voiceStarting)setVoiceUi(false);}
+function setVoiceUi(active,phase='recording'){const e=$('#nexusVoiceBtn');if(e){e.classList.toggle('recording',active);e.classList.toggle('arming',active&&phase==='arming');e.innerHTML=micIcon();e.setAttribute('aria-label',active?(phase==='arming'?'Preparing microphone':'Release to send voice command'):'Hold to talk');e.title=active?'RELEASE TO SEND':'HOLD TO TALK';}setStatus(active?(phase==='arming'?'MIC READY':'LISTENING'):'READY',active?'listening':'ready');if(active)setAvatarTransientState('FOCUSED',0,'NEXUS LISTENING');else if(!busy)clearAvatarTransientState();}
+function stopVoiceUi(){voiceHoldActive=false;voiceStarting=false;clearTimeout(recordTimer);recordTimer=null;setVoiceUi(false);try{recordStream?.getTracks().forEach(t=>t.stop());}catch{}recordStream=null;recorder=null;}
+function bindHoldToTalk(){
+  const mic=$('#nexusVoiceBtn');if(!mic)return;mic.classList.add('nxc-mic');mic.innerHTML=micIcon();mic.setAttribute('aria-label','Hold to talk');mic.title='HOLD TO TALK';
+  mic.addEventListener('pointerdown',e=>{if(e.button!==undefined&&e.button!==0)return;e.preventDefault();voicePointerId=e.pointerId;try{mic.setPointerCapture(e.pointerId);}catch{}startVoiceHold();});
+  const release=e=>{if(voicePointerId!==null&&e.pointerId!==undefined&&e.pointerId!==voicePointerId)return;e.preventDefault();voicePointerId=null;stopVoiceHold();};
+  mic.addEventListener('pointerup',release);mic.addEventListener('pointercancel',release);mic.addEventListener('lostpointercapture',()=>{voicePointerId=null;stopVoiceHold();});
+  mic.addEventListener('contextmenu',e=>e.preventDefault());
+  mic.addEventListener('keydown',e=>{if((e.key===' '||e.key==='Enter')&&!e.repeat){e.preventDefault();startVoiceHold();}});
+  mic.addEventListener('keyup',e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();stopVoiceHold();}});
+}
+async function finishVoice(){
+  clearTimeout(recordTimer);recordTimer=null;const chunks=recordChunks.slice(),mime=recorder?.mimeType||chunks[0]?.type||'audio/webm';try{recordStream?.getTracks().forEach(t=>t.stop());}catch{}recordStream=null;recorder=null;setVoiceUi(false);if(!chunks.length){notify('NO VOICE AUDIO CAPTURED',true);return;}
+  setBusy(true,'TRANSCRIBING');try{const blob=new Blob(chunks,{type:mime});const form=new FormData();const ext=mime.includes('mp4')?'m4a':mime.includes('ogg')?'ogg':'webm';form.append('audio',blob,`nexus-command.${ext}`);const d=await apiForm('/api/v8/nexus/transcribe',form);const transcript=String(d.transcript||'').trim();if(!transcript)throw new Error('No speech was detected.');if($('#nexusInput'))$('#nexusInput').value=transcript;if(Number.isFinite(Number(d.latencyMs)))notify(`VOICE TRANSCRIBED // ${(Number(d.latencyMs)/1000).toFixed(1)}S`);setBusy(false);messageStickToBottom=true;await submitMessage(transcript,'voice');}catch(e){notify(e.message,true);setBusy(false);}}
+
+async function saveSettings(e){e?.preventDefault();const body={settings:{thinkingMode:$('#nexusThinkingMode')?.value||'auto',maxContextMessages:Number($('#nexusContextMessages')?.value)||12,startingCreditUsd:Number($('#nexusStartingCredit')?.value)||0,voiceReply:!!$('#nexusVoiceReply')?.checked,voiceWriteConfirm:!!$('#nexusVoiceConfirm')?.checked,freeTierGuard:!!$('#nexusFreeGuard')?.checked}};try{const d=await api('/api/v8/nexus/settings',{method:'PATCH',body});ensureState().settings=d.settings||body.settings;await loadUsage();renderRuntime();notify('NEXUS SETTINGS SAVED');}catch(err){notify(err.message,true);}}
+
+async function resetCreditBaseline(){
+  if(!confirm('Set the Gemini credit baseline to now? Estimated remaining credit will subtract only usage recorded after this moment.'))return;
+  try{const nx=ensureState(),settings={...nx.settings,creditBaselineAt:new Date().toISOString()};const d=await api('/api/v8/nexus/settings',{method:'PATCH',body:{settings}});nx.settings={...nx.settings,...(d.settings||settings)};await loadUsage();renderRuntime();notify('GEMINI CREDIT BASELINE SET');}catch(e){notify(e.message,true);}
+}
+function openPrivacy(){const d=$('#aiDialog');if(d&&!d.open)d.showModal();const details=d?.querySelector('.ai-privacy');if(details)details.open=true;}
+function openPalette(){const p=$('#nexusCommandPalette');if(!p)return;p.classList.remove('hidden');setTimeout(()=>$('#nexusCommandInput')?.focus(),0);}
+function closePalette(){const p=$('#nexusCommandPalette');if(p)p.classList.add('hidden');}
 function bind(){
-  $('#phase9aAvatarPager')?.querySelectorAll('button').forEach(b=>b.onclick=async e=>{e.stopPropagation();const n=1+(await activeAvatarRecords()).length;cycleIndex=(cycleIndex+Number(b.dataset.avatarDir)+n)%n;updateEventAvatar();});
-  const form=$('#phase9aNexusForm');if(form){for(const id of ['p9BubbleOpacity','p9BubbleScale','p9BubbleChars','p9AvatarCycle'])$('#'+id).oninput=updateLabels;form.onsubmit=e=>{e.preventDefault();settings={...settings,bubbleEnabled:$('#p9BubbleEnabled').checked,bubbleOpacity:Number($('#p9BubbleOpacity').value),bubbleScale:Number($('#p9BubbleScale').value),bubbleMaxChars:Number($('#p9BubbleChars').value),avatarCycleSeconds:Number($('#p9AvatarCycle').value)};save();notify('NEXUS CONTEXT UI SAVED');};}
-  window.addEventListener('neon:phase9a-contextchange',updateContext);window.addEventListener('neon:themechange',applySettings);
+  $('#nexusComposer')?.addEventListener('submit',e=>{e.preventDefault();const input=$('#nexusInput'),v=input?.value||'';if(input)input.value='';messageStickToBottom=true;submitMessage(v,'text');});
+  $('#nexusInput')?.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();$('#nexusComposer')?.requestSubmit();}});
+  $('#nexusMessages')?.addEventListener('scroll',e=>{messageStickToBottom=nearBottom(e.currentTarget);},{passive:true});
+  $('#nexusNewThread')?.addEventListener('click',newThread);bindHoldToTalk();$('#nexusClearThread')?.addEventListener('click',clearCurrentThread);$('#nexusWipeHistory')?.addEventListener('click',wipeHistory);$('#nexusResetCreditBaseline')?.addEventListener('click',resetCreditBaseline);
+  $('#aiAskNexusBtn')?.addEventListener('click',()=>hooks.navigate('NEXUS'));
+  $$('#nexusSuggestions [data-nexus-prompt]').forEach(b=>b.onclick=()=>{const input=$('#nexusInput');if(input){input.value=b.dataset.nexusPrompt||'';input.focus();}});
+  $('#nexusSettingsForm')?.addEventListener('submit',saveSettings);$('#nexusPrivacyBtn')?.addEventListener('click',openPrivacy);
+  $('#nexusCommandForm')?.addEventListener('submit',e=>{e.preventDefault();const i=$('#nexusCommandInput'),v=i?.value||'';if(i)i.value='';closePalette();submitMessage(v,'text',{fromPalette:true});});
+  $('#nexusCommandPalette')?.addEventListener('click',e=>{if(e.target===e.currentTarget)closePalette();});
+  window.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.shiftKey&&String(e.key).toLowerCase()==='k'){e.preventDefault();openPalette();return;}if(e.key==='Escape'&&!$('#nexusCommandPalette')?.classList.contains('hidden'))closePalette();});
 }
-export function initPhase9Nexus(onNotify){notify=onNotify||notify;injectBubble();injectCustomize();fillSettings();applySettings();bind();updateContext();clearInterval(timer);timer=setInterval(updateContext,15000);return{snapshot:contextSnapshot,update:updateContext};}
+
+export async function initNexus(toast,callbacks={}){notify=toast||notify;hooks={...hooks,...callbacks};ensureState();bind();try{await Promise.all([loadSettings(),loadUsage()]);await loadThreads(true);renderContext();}catch(e){notify(e.message,true);}}
+export async function refreshNexus(){if(!state.user)return;try{await Promise.all([loadUsage(),loadThreads(false)]);if(ensureState().currentThreadId)await loadMessages(ensureState().currentThreadId);renderContext();}catch(e){console.warn('NEXUS refresh failed',e);}}
+export function updateNexusContext(){renderContext();}
