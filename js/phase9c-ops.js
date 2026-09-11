@@ -1,0 +1,2 @@
+const $=s=>document.querySelector(s);
+export function initPhase9COps(){const page=$('#pageOps'),rail=page?.querySelector('.right-rail'),calendar=page?.querySelector('.calendar-panel');if(page)page.classList.add('p9c-ops');if(rail)rail.classList.add('p9c-right-rail');if(calendar)calendar.classList.add('p9c-calendar-panel');return{refresh(){rail?.style.removeProperty('min-height');requestAnimationFrame(()=>{if(rail&&calendar&&matchMedia('(min-width:1101px)').matches)rail.style.minHeight=`${Math.max(0,calendar.getBoundingClientRect().height)}px`;});}};}
