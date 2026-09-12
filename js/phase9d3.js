@@ -1,4 +1,4 @@
-﻿import { api, apiForm, API_BASE } from './api.js';
+import { api, apiForm, API_BASE } from './api.js';
 import { state } from './state.js';
 
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -21,90 +21,71 @@ function fmtMoney(v,currency='SGD'){try{return new Intl.NumberFormat('en-SG',{st
 function isStandalone(){return window.matchMedia?.('(display-mode: standalone)').matches||window.navigator.standalone===true;}
 function currentPageId(){return document.querySelector('.page.active')?.id||'pageOps';}
 function navigate(page){
-  if(page==='pageHome'){activateHome();return;}
-  const btn=document.querySelector(`.tab[data-page="${CSS.escape(page)}"]`);if(btn){btn.click();localStorage.setItem('neon9d3:lastPage',page);return;}
+  if(page==='pageHome')page='pageOps';
+  const btn=document.querySelector(`.tab[data-page="${CSS.escape(page)}"]`);
+  if(btn){btn.click();return;}
   const el=document.getElementById(page);if(!el)return;
   $$('.page').forEach(p=>p.classList.toggle('active',p===el));
+  $$('.tab[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===page));
 }
-function activateHome(){
-  $$('.page').forEach(p=>p.classList.toggle('active',p.id==='pageHome'));
-  $$('.tab[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page==='pageHome'));
-  localStorage.setItem('neon9d3:lastPage','pageHome');
-  renderHome();
+function activateDefaultPage(){
+  localStorage.removeItem('neon9d3:lastPage');
+  document.getElementById('pageHome')?.remove();
+  document.querySelector('.tab[data-page="pageHome"]')?.remove();
+  const btn=document.querySelector('.tab[data-page="pageOps"]');
+  if(btn){btn.click();return;}
+  const ops=document.getElementById('pageOps');
+  if(ops){$$('.page').forEach(p=>p.classList.toggle('active',p===ops));}
+  $$('.tab[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page==='pageOps'));
 }
 function installPwaMeta(){
   if(!document.querySelector('meta[name="mobile-web-app-capable"]')){const m=document.createElement('meta');m.name='mobile-web-app-capable';m.content='yes';document.head.append(m);}
   document.documentElement.classList.toggle('p9d3-standalone',isStandalone());
 }
 
-// ---------------- HOME / NAV ----------------
+// ---------------- NAV / BROWSER SHELL ----------------
+function navGlyph(label){
+  const v='viewBox="0 0 24 24" aria-hidden="true" focusable="false"';
+  const icons={
+    CALENDAR:`<svg ${v}><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 9h16M8 13h2M12 13h2M16 13h1M8 17h2M12 17h2"/></svg>`,
+    TASKS:`<svg ${v}><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>`,
+    FINANCE:`<svg ${v}><circle cx="12" cy="12" r="8"/><path d="M15.5 8.5c-.8-1-2-1.5-3.5-1.5-2 0-3.5 1-3.5 2.5S10 12 12 12s3.5 1 3.5 2.5S14 17 12 17c-1.5 0-2.8-.5-3.6-1.5M12 5v14"/></svg>`,
+    PORTFOLIO:`<svg ${v}><path d="M4 19V10M10 19V5M16 19v-7M22 19V8"/><path d="M3 19h20"/></svg>`,
+    SIGNALS:`<svg ${v}><path d="M4 18V10M9 18V6M14 18v-9M19 18V3"/></svg>`,
+    SOURCES:`<svg ${v}><path d="M12 3l7 5v8l-7 5-7-5V8z"/><path d="M5 8l7 5 7-5M12 13v8"/></svg>`,
+    MAIL:`<svg ${v}><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M4 7l8 6 8-6"/></svg>`,
+    NEXUS:`<svg ${v}><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3"/></svg>`,
+    PINBOARD:`<svg ${v}><path d="M7 4h10l1 6-4 2v7l-2 2-2-2v-7l-4-2z"/></svg>`,
+    MEDIA:`<svg ${v}><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M10 9l6 3-6 3z"/></svg>`,
+    WEB:`<svg ${v}><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 4 6 4 9s-1 6-4 9M12 3c-3 3-4 6-4 9s1 6 4 9"/></svg>`,
+    RUNNING:`<svg ${v}><circle cx="14" cy="5" r="2"/><path d="M11 9l3 2 2 4M14 11l-3 4-4 1M11 15l2 5M7 16l-3 4"/></svg>`,
+    GOALS:`<svg ${v}><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/></svg>`,
+    CUSTOMIZE:`<svg ${v}><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>`,
+    DEFAULT:`<svg ${v}><circle cx="12" cy="12" r="7"/><path d="M8 12h8"/></svg>`
+  };
+  return icons[label]||icons.DEFAULT;
+}
 function ensureSideNav(){
   const nav=$('.tabs');if(!nav)return;
-  if(!nav.querySelector('.p9d3-brand')){const brand=document.createElement('div');brand.className='p9d3-brand';brand.innerHTML='<strong>NEON</strong><span>OPERATIONS CENTER</span><small>IN WORD AND DEED</small>';nav.prepend(brand);}
-  if(!nav.querySelector('[data-page="pageHome"]')){
-    const home=document.createElement('button');home.type='button';home.className='tab p9d3-home-tab';home.dataset.page='pageHome';home.innerHTML='<span class="p9d3-nav-icon">âŒ‚</span><span>HOME</span>';home.onclick=activateHome;
-    nav.querySelector('.p9d3-brand')?.insertAdjacentElement('afterend',home);
+  document.getElementById('pageHome')?.remove();
+  nav.querySelector('[data-page="pageHome"]')?.remove();
+  if(!nav.querySelector('.p9d3-brand')){
+    const brand=document.createElement('div');brand.className='p9d3-brand';brand.innerHTML='<strong>NEON</strong><span>OPERATIONS CENTER</span><small>IN WORD AND DEED</small>';nav.prepend(brand);
   }
-  const labels={pageOps:'CALENDAR',pageNexus:'NEXUS',pageFinance:'FINANCE',pageMedia:'MEDIA',pageFitness:'RUNNING',pageCustomize:'CUSTOMIZE',pageSignals:'SIGNALS',pageMail:'MAIL'};
+  const labels={pageOps:'CALENDAR',pageTasks:'TASKS',pageFinance:'FINANCE',pagePortfolio:'PORTFOLIO',pageSignals:'SIGNALS',pageSources:'SOURCES',pageMail:'MAIL',pageNexus:'NEXUS',pagePinboard:'PINBOARD',pageMedia:'MEDIA',pageWeb:'WEB',pageFitness:'RUNNING',pageGoals:'GOALS',pageCustomize:'CUSTOMIZE'};
   $$('.tab[data-page]').forEach(b=>{
-    if(b.dataset.page==='pageHome')return;
-    const label=labels[b.dataset.page]||b.textContent.trim().toUpperCase();
-    if(!b.querySelector('.p9d3-nav-label'))b.innerHTML=`<span class="p9d3-nav-icon">${navGlyph(label)}</span><span class="p9d3-nav-label">${esc(label)}</span>`;
-    b.addEventListener('click',()=>localStorage.setItem('neon9d3:lastPage',b.dataset.page),{passive:true});
+    if(b.dataset.page==='pageHome'){b.remove();return;}
+    const label=labels[b.dataset.page]||(b.dataset.navLabel||b.textContent||b.dataset.page.replace(/^page/,'')).trim().toUpperCase();
+    b.dataset.navLabel=label;
+    b.innerHTML=`<span class="p9d3-nav-icon p9d31-nav-svg">${navGlyph(label)}</span><span class="p9d3-nav-label">${esc(label)}</span>`;
   });
-  if(!nav.querySelector('.p9d3-nav-footer')){const foot=document.createElement('div');foot.className='p9d3-nav-footer';foot.innerHTML='<span>OPS // 01</span><span>LOCAL // SGT</span><span>SYNC // ONLINE <i></i></span>';nav.append(foot);}
-  const mo=new MutationObserver(()=>ensureSideNav());mo.observe(nav,{childList:true});
+  let foot=nav.querySelector('.p9d3-nav-footer');
+  if(!foot){foot=document.createElement('div');foot.className='p9d3-nav-footer';foot.innerHTML='<span>OPS // 01</span><span>LOCAL // SGT</span><span>SYNC // ONLINE <i></i></span>';nav.append(foot);}
+  if(!nav.dataset.p9d31Observed){
+    nav.dataset.p9d31Observed='1';let queued=false;
+    new MutationObserver(()=>{if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;ensureSideNav();});}).observe(nav,{childList:true});
+  }
 }
-function navGlyph(label){return ({HOME:'âŒ‚',CALENDAR:'â–¦',TASKS:'â˜·',FINANCE:'â—‰',PORTFOLIO:'â–¥',SIGNALS:'â‰‹',SOURCES:'â—‡',MAIL:'âœ‰',NEXUS:'â—‰',PINBOARD:'âŒ‘',MEDIA:'â–£',WEB:'â—Ž',RUNNING:'âŒ',GOALS:'âŠ™',CUSTOMIZE:'âš™'})[label]||'Â·';}
-function ensureHome(){
-  if($('#pageHome'))return;
-  const home=document.createElement('main');home.id='pageHome';home.className='page p9d3-home';home.innerHTML=`
-    <section class="p9d3-home-hero">
-      <div><span id="p9d3HomeDate" class="kicker">â€”</span><h2 id="p9d3HomeMotto">DISCIPLINE BUILDS FREEDOM.</h2></div>
-      <div class="p9d3-home-status"><span>V9D.3</span><span>WORKSPACE</span><span>NEXUS</span><span>INTELLIGENCE</span></div>
-    </section>
-    <div class="p9d3-home-grid">
-      <section class="panel p9d3-home-calendar"><div class="panel-head compact"><div><span class="kicker">OPERATIONS</span><h2 id="p9d3HomeMonth">Calendar</h2></div><button class="ghost small" data-open="pageOps">OPEN CALENDAR</button></div><div id="p9d3Week" class="p9d3-week"></div></section>
-      <section class="panel p9d3-home-nexus"><div class="panel-head compact"><div><span class="kicker">NEXUS</span><h2>Voice / Command</h2></div><button class="ghost small" data-open="pageNexus">OPEN</button></div><div class="p9d3-nexus-orb"><span></span><b>SPACE // START RECORDING</b><small>Press Space again to end & transcribe</small></div><div class="p9d3-nexus-prompts"><button data-prompt="Create a multi-day event">CREATE MULTI-DAY EVENT</button><button data-prompt="Summarise my portfolio performance">PORTFOLIO SUMMARY</button><button data-prompt="Find latest intelligence from my sources">SOURCE RESEARCH</button></div></section>
-      <section class="panel p9d3-home-pin"><div class="p9d3-home-pin-head"><div><span class="kicker">PINBOARD</span><b id="p9d3HomeBoardName">OPS // 01</b></div><button class="ghost small" data-open="pageOps" data-scroll-pin>OPEN BOARD</button></div><div id="p9d3PinPreview" class="p9d3-pin-preview"></div></section>
-      <section class="panel p9d3-home-cass"><div class="panel-head compact"><div><span class="kicker">ARCHIVE</span><h2>Cassette Shelf</h2></div><button class="ghost small" data-open="pageOps" data-scroll-cass>OPEN SHELF</button></div><div id="p9d3CassPreview" class="p9d3-cass-preview"></div></section>
-      <section class="panel p9d3-home-futures"><div class="panel-head compact"><div><span class="kicker">FUTURES</span><h2>Forward Cashflow</h2></div><button class="ghost small" data-open="pageFinance">DETAILS</button></div><div id="p9d3FutureHome" class="p9d3-home-metrics"></div></section>
-      <section class="panel p9d3-home-portfolio"><div class="panel-head compact"><div><span class="kicker">PORTFOLIO</span><h2 id="p9d3PortfolioValue">â€”</h2></div><button class="ghost small" data-open="pageFinance">VIEW</button></div><div id="p9d3PortfolioMeta" class="p9d3-portfolio-home"></div></section>
-      <section class="panel p9d3-home-tasks"><div class="panel-head compact"><div><span class="kicker">TASKS</span><h2>Priority Stack</h2></div><button class="ghost small" data-open="pageOps">OPEN</button></div><div id="p9d3TasksHome"></div></section>
-      <section class="panel p9d3-home-custom"><div class="panel-head compact"><div><span class="kicker">CUSTOMIZE</span><h2>Interface</h2></div><button class="ghost small" data-open="pageCustomize">OPEN</button></div><div class="p9d3-custom-preview"><span style="--c:var(--p9d2-heading)">Aa</span><div><b>Neon Interface Preview</b><small>Typography // colour // density</small></div></div></section>
-      <section class="panel p9d3-home-web"><div class="panel-head compact"><div><span class="kicker">WEB</span><h2>Browse Further</h2></div></div><img src="./assets/neon-web-512.png" alt="NEON red planet web icon"><small>ADD TO HOME SCREEN // SAFARI iOS</small></section>
-    </div>
-    <footer class="p9d3-home-footer"><span>NEON OPERATIONS CENTER</span><span>V9D.3 // FINAL PHASE 9</span><span>KNOW WHAT'S ABOVE. RISE BEYOND LIMITS.</span></footer>`;
-  const anchor=$('#pageOps');anchor?.insertAdjacentElement('beforebegin',home);
-  home.addEventListener('click',e=>{
-    const o=e.target.closest('[data-open]');if(o){navigate(o.dataset.open);setTimeout(()=>{if(o.hasAttribute('data-scroll-pin'))$('#p9d3Pinboard')?.scrollIntoView({behavior:'smooth'});if(o.hasAttribute('data-scroll-cass'))$('#p9d3CassetteShelf')?.scrollIntoView({behavior:'smooth'});},100);}
-    const p=e.target.closest('[data-prompt]');if(p){navigate('pageNexus');setTimeout(()=>{const ta=$('#nexusComposer');if(ta){ta.value=p.dataset.prompt;ta.focus();}},150);}
-  });
-}
-function sgDateKey(d){return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Singapore',year:'numeric',month:'2-digit',day:'2-digit'}).format(d)}
-function eventDateKey(e){if(e.allDay&&/^\d{4}-\d{2}-\d{2}$/.test(e.start||''))return e.start;try{return sgDateKey(new Date(e.start||e.startAt));}catch{return''}}
-function renderHomeWeek(){
-  const root=$('#p9d3Week');if(!root)return;
-  const now=new Date(),start=new Date(now);start.setHours(0,0,0,0);start.setDate(start.getDate()-((start.getDay()+6)%7));
-  const days=Array.from({length:7},(_,i)=>{const d=new Date(start);d.setDate(d.getDate()+i);return d;});
-  root.innerHTML=days.map(d=>{const key=sgDateKey(d),ev=(state.events||[]).filter(x=>eventDateKey(x)===key).slice(0,4);return `<article class="${key===sgDateKey(now)?'today':''}"><header><span>${d.toLocaleDateString('en-SG',{weekday:'short',timeZone:'Asia/Singapore'}).toUpperCase()}</span><b>${d.getDate()}</b></header><div>${ev.map(x=>`<button data-open="pageOps"><strong>${esc(x.title||'EVENT')}</strong><small>${x.allDay?'ALL DAY':new Date(x.start||x.startAt).toLocaleTimeString('en-SG',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Singapore'})}</small></button>`).join('')||'<em>â€”</em>'}</div></article>`}).join('');
-  $('#p9d3HomeMonth').textContent=now.toLocaleDateString('en-SG',{month:'long',year:'numeric',timeZone:'Asia/Singapore'}).toUpperCase();
-}
-async function renderHome(){
-  if(!$('#pageHome'))return;
-  $('#p9d3HomeDate').textContent=new Date().toLocaleDateString('en-SG',{weekday:'short',day:'2-digit',month:'short',year:'numeric',timeZone:'Asia/Singapore'}).toUpperCase();
-  renderHomeWeek();
-  const tasks=[...(state.tasks||[])].filter(t=>t.status!=='completed'&&t.status!=='cancelled').sort((a,b)=>({high:0,medium:1,low:2}[a.priority]??3)-({high:0,medium:1,low:2}[b.priority]??3)).slice(0,5);
-  $('#p9d3TasksHome').innerHTML=tasks.length?tasks.map(t=>`<button class="p9d3-home-task" data-open="pageOps"><span></span><b>${esc(t.title)}</b><small>${esc((t.priority||'').toUpperCase())}</small></button>`).join(''):'<div class="p9d3-home-empty">NO ACTIVE TASKS</div>';
-  const f=state.finance||{},settings=f.settings||{},currency=settings.currency||'SGD',positions=f.positions||[];
-  const market=positions.reduce((s,p)=>s+(Number(p.currentPrice??p.entryPrice)||0)*(Number(p.quantity)||0),0),cash=Number(settings.portfolioCash)||0,entry=positions.reduce((s,p)=>s+(Number(p.entryPrice)||0)*(Number(p.quantity)||0),0),pnl=market-entry;
-  $('#p9d3PortfolioValue').textContent=fmtMoney(market+cash,currency);$('#p9d3PortfolioMeta').innerHTML=`<b data-sign="${pnl>0?'positive':pnl<0?'negative':'neutral'}">${pnl>=0?'+':''}${fmtMoney(pnl,currency)}</b><span>${positions.length} POSITIONS</span><span>CASH ${fmtMoney(cash,currency)}</span>`;
-  const tx=f.transactions||[],inflow=tx.filter(x=>x.direction==='inflow').reduce((s,x)=>s+Math.abs(Number(x.amount)||0),0),out=tx.filter(x=>x.direction==='expense').reduce((s,x)=>s+Math.abs(Number(x.amount)||0),0),remain=(Number(settings.startingBalance)||0)+inflow-out;
-  $('#p9d3FutureHome').innerHTML=`<article><span>INCOMING</span><b data-sign="positive">+${fmtMoney(inflow,currency)}</b></article><article><span>OUTGOING</span><b data-sign="negative">-${fmtMoney(out,currency)}</b></article><article><span>NET</span><b data-sign="${remain>0?'positive':remain<0?'negative':'neutral'}">${fmtMoney(remain,currency)}</b></article>`;
-  try{const [pb,aud]=await Promise.all([api(PB_URL),api(AUDIO_URL)]);renderHomePin(pb);renderHomeCass(aud.items||[]);}catch{}
-}
-function renderHomePin(d){const board=migrateBoard(d),p=board.pages.find(x=>x.id===board.currentPageId)||board.pages[0],root=$('#p9d3PinPreview');if(!root||!p)return;root.style.background=p.background||'#171321';root.innerHTML=(p.items||[]).filter(x=>!x.hidden).slice(0,7).map((i,n)=>`<div style="left:${10+(n*13)%72}%;top:${12+(n*17)%60}%;background:${i.style?.fill||PRESET_FILL[n%PRESET_FILL.length]};color:${i.style?.text||'#fff'};opacity:${i.style?.opacity??.92}">${esc((i.text||i.fileName||'PIN').slice(0,70))}</div>`).join('')||'<span class="p9d3-home-empty">EMPTY BOARD</span>';$('#p9d3HomeBoardName').textContent=(p.name||'OPS // 01').toUpperCase();}
-function renderHomeCass(items){const root=$('#p9d3CassPreview');if(!root)return;root.innerHTML=items.length?items.slice(0,14).map(a=>`<button data-open="pageOps" data-scroll-cass><span>${esc((a.label||a.taskTitle||'AUDIO').slice(0,18))}</span></button>`).join(''):'<div class="p9d3-home-empty">NO TASK AUDIO</div>';}
 
 // ---------------- PINBOARD V3 ----------------
 let boardState=null,selectedId=null,drawMode=false,drawTool='pen',drawColor='#ff315c',drawWidth=4,drawAlpha=1,saveTimer=null,longPressTimer=null;
@@ -127,11 +108,11 @@ function queueBoardSave(){clearTimeout(saveTimer);saveTimer=setTimeout(saveBoard
 function buildPinboard(){
   const old=$('#p9d2Pinboard')||$('#p9d3Pinboard');if(!old)return false;
   const sec=document.createElement('section');sec.id='p9d3Pinboard';sec.className='panel p9d3-pinboard-panel';sec.innerHTML=`
-    <div class="p9d3-pin-top"><div><span class="kicker">OPS // PINBOARD</span><h2>Workspace Board</h2></div><div class="p9d3-pagebar"><button id="p9d3PrevPage">â€¹</button><b id="p9d3PageCounter">01 / 01</b><button id="p9d3NextPage">â€º</button><button id="p9d3AddPage">+ PAGE</button></div><div class="p9d3-pin-actions"><button data-add="note">NOTE</button><button data-add="text">TEXT</button><button data-add="shape">SHAPE</button><button id="p9d3Draw">DRAW</button><button id="p9d3Upload">FILE</button><input id="p9d3UploadInput" type="file" hidden><button id="p9d3LayersBtn">LAYERS</button><button id="p9d3BgBtn">BACKGROUND</button><button id="p9d3Delete" class="danger">DELETE</button></div></div>
+    <div class="p9d3-pin-top"><div><span class="kicker">OPS // PINBOARD</span><h2>Workspace Board</h2></div><div class="p9d3-pagebar"><button id="p9d3PrevPage">‹</button><b id="p9d3PageCounter">01 / 01</b><button id="p9d3NextPage">›</button><button id="p9d3AddPage">+ PAGE</button></div><div class="p9d3-pin-actions"><button data-add="note">NOTE</button><button data-add="text">TEXT</button><button data-add="shape">SHAPE</button><button id="p9d3Draw">DRAW</button><button id="p9d3Upload">FILE</button><input id="p9d3UploadInput" type="file" hidden><button id="p9d3LayersBtn">LAYERS</button><button id="p9d3BgBtn">BACKGROUND</button><button id="p9d3Delete" class="danger">DELETE</button></div></div>
     <div id="p9d3DrawTools" class="p9d3-drawbar hidden"><button data-draw="pen" class="active">PEN</button><button data-draw="brush">BRUSH</button><button data-draw="smudge">SMUDGE</button><button data-draw="eraser">ERASER</button><label>SIZE <input id="p9d3BrushSize" type="range" min="1" max="40" value="4"></label><label>OPACITY <input id="p9d3BrushOpacity" type="range" min="10" max="100" value="100"></label><input id="p9d3BrushColor" type="color" value="#ff315c"><button id="p9d3UndoStroke">UNDO</button><button id="p9d3DoneDraw">DONE</button></div>
-    <div class="p9d3-pin-workspace"><div id="p9d3Board" class="p9d3-board"><canvas id="p9d3Canvas"></canvas><div id="p9d3Items"></div></div><aside id="p9d3Layers" class="p9d3-layers hidden"><header><b>LAYERS</b><button id="p9d3CloseLayers">Ã—</button></header><div id="p9d3LayerList"></div></aside></div>
+    <div class="p9d3-pin-workspace"><div id="p9d3Board" class="p9d3-board"><canvas id="p9d3Canvas"></canvas><div id="p9d3Items"></div></div><aside id="p9d3Layers" class="p9d3-layers hidden"><header><b>LAYERS</b><button id="p9d3CloseLayers">×</button></header><div id="p9d3LayerList"></div></aside></div>
     <div id="p9d3ObjectInspector" class="p9d3-inspector hidden"></div>
-    <div id="p9d3BgPalette" class="p9d3-bg-palette hidden"><header><b>BOARD BACKGROUND</b><button data-close-bg>Ã—</button></header><div>${PRESET_BG.map(c=>`<button data-bg="${c}" style="--sw:${c}" aria-label="${c}"></button>`).join('')}</div><label>CUSTOM <input id="p9d3BgCustom" type="color" value="#171321"></label></div>
+    <div id="p9d3BgPalette" class="p9d3-bg-palette hidden"><header><b>BOARD BACKGROUND</b><button data-close-bg>×</button></header><div>${PRESET_BG.map(c=>`<button data-bg="${c}" style="--sw:${c}" aria-label="${c}"></button>`).join('')}</div><label>CUSTOM <input id="p9d3BgCustom" type="color" value="#171321"></label></div>
     <section id="p9d3CassetteShelf" class="p9d3-cassette-shelf"><div class="p9d3-shelf-head"><div><span class="kicker">AUDIO MEMORY</span><h3>Cassette Shelf</h3></div><small>CLICK / TAP A SPINE TO OPEN</small></div><div id="p9d3CassetteSpines" class="p9d3-cassette-spines"></div></section>
     <div id="p9d3CassetteStage" class="p9d3-cassette-stage hidden"></div>`;
   old.classList.add('p9d3-legacy-pinboard-host');old.setAttribute('aria-hidden','true');old.insertAdjacentElement('afterend',sec);bindPinboard();return true;
@@ -139,7 +120,7 @@ function buildPinboard(){
 async function loadBoard(){try{const d=await api(PB_URL);boardState=migrateBoard(d);renderBoard();}catch(e){toast(`PINBOARD // ${e.message}`,true)}}
 function renderBoard(){const p=activePage(),b=$('#p9d3Board');if(!p||!b)return;b.style.background=p.background;$('#p9d3BgCustom').value=p.background;const idx=boardState.pages.indexOf(p);$('#p9d3PageCounter').textContent=`${String(idx+1).padStart(2,'0')} / ${String(boardState.pages.length).padStart(2,'0')}`;const root=$('#p9d3Items');root.replaceChildren();const rect=b.getBoundingClientRect();for(const i of p.items){if(i.hidden)continue;const w=Math.min(i.w||220,Math.max(110,rect.width||1200)),h=Math.min(i.h||140,Math.max(70,rect.height||520));i.x=clamp(i.x,0,Math.max(0,(rect.width||1200)-w));i.y=clamp(i.y,0,Math.max(0,(rect.height||520)-h));const el=document.createElement('article');el.className=`p9d3-pin-item type-${i.type||'note'} ${selectedId===i.id?'selected':''} ${i.locked?'locked':''}`;el.dataset.id=i.id;el.style.cssText=`left:${i.x}px;top:${i.y}px;width:${w}px;height:${h}px;z-index:${i.z};--fill:${i.style.fill};--txt:${i.style.text};--border:${i.style.border};--alpha:${i.style.opacity};--radius:${i.style.radius}px;--glow:${i.style.glow}px;--font:${i.style.fontSize}px`;
     el.innerHTML=itemMarkup(i);bindItem(el,i);root.append(el);}renderDrawing();renderLayers();}
-function itemMarkup(i){if(i.type==='file')return `<div class="p9d3-item-grip">â‹®â‹®</div><div class="p9d3-file"><b>${esc(i.fileName||'FILE')}</b><small>${esc(i.mimeType||'')}</small><a href="${API_BASE}/api/v8/phase9d2/pinboard/files/${encodeURIComponent(i.fileId)}" target="_blank" rel="noopener">OPEN â†—</a></div><span class="p9d3-resize"></span>`;return `<div class="p9d3-item-grip">â‹®â‹®</div><div class="p9d3-item-text" contenteditable="${i.locked?'false':'true'}" spellcheck="false">${esc(i.text||'')}</div><span class="p9d3-resize"></span>`;}
+function itemMarkup(i){if(i.type==='file')return `<div class="p9d3-item-grip">⋮⋮</div><div class="p9d3-file"><b>${esc(i.fileName||'FILE')}</b><small>${esc(i.mimeType||'')}</small><a href="${API_BASE}/api/v8/phase9d2/pinboard/files/${encodeURIComponent(i.fileId)}" target="_blank" rel="noopener">OPEN ↗</a></div><span class="p9d3-resize"></span>`;return `<div class="p9d3-item-grip">⋮⋮</div><div class="p9d3-item-text" contenteditable="${i.locked?'false':'true'}" spellcheck="false">${esc(i.text||'')}</div><span class="p9d3-resize"></span>`;}
 function bindItem(el,i){
   el.onclick=e=>{selectedId=i.id;renderSelection();if(!e.target.closest('[contenteditable],a'))e.preventDefault();};
   el.oncontextmenu=e=>{e.preventDefault();selectedId=i.id;renderSelection();openInspector(i,e.clientX,e.clientY);};
@@ -153,14 +134,14 @@ function startItemDrag(e,i,el){if(i.locked||drawMode)return;e.preventDefault();s
 function startResize(e,i,el){if(i.locked)return;e.preventDefault();e.stopPropagation();const b=$('#p9d3Board'),r=b.getBoundingClientRect(),sx=e.clientX,sy=e.clientY,ow=i.w,oh=i.h;el.setPointerCapture?.(e.pointerId);const move=ev=>{i.w=clamp(ow+ev.clientX-sx,110,Math.max(110,r.width-i.x));i.h=clamp(oh+ev.clientY-sy,70,Math.max(70,r.height-i.y));el.style.width=`${i.w}px`;el.style.height=`${i.h}px`;};const end=()=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',end);el.removeEventListener('pointercancel',end);queueBoardSave();};el.addEventListener('pointermove',move);el.addEventListener('pointerup',end);el.addEventListener('pointercancel',end);}
 function renderSelection(){$$('#p9d3Items .p9d3-pin-item').forEach(e=>e.classList.toggle('selected',e.dataset.id===selectedId));}
 function selectedItem(){return activePage()?.items.find(i=>i.id===selectedId)||null;}
-function openInspector(i,x,y){const box=$('#p9d3ObjectInspector');if(!box)return;box.innerHTML=`<header><b>OBJECT // ${esc((i.type||'NOTE').toUpperCase())}</b><button data-ins-close>Ã—</button></header><label>FILL <input data-style="fill" type="color" value="${i.style.fill}"></label><div class="p9d3-swatches">${PRESET_FILL.map(c=>`<button data-fill="${c}" style="--sw:${c}"></button>`).join('')}</div><label>TEXT <input data-style="text" type="color" value="${i.style.text}"></label><label>BORDER <input data-style="border" type="color" value="${i.style.border}"></label><label>OPACITY <input data-style="opacity" type="range" min="10" max="100" value="${Math.round(i.style.opacity*100)}"><b>${Math.round(i.style.opacity*100)}%</b></label><label>ROUNDING <input data-style="radius" type="range" min="0" max="60" value="${i.style.radius}"></label><label>GLOW <input data-style="glow" type="range" min="0" max="40" value="${i.style.glow}"></label><label>TEXT SIZE <input data-style="fontSize" type="range" min="10" max="32" value="${i.style.fontSize}"></label><div class="p9d3-ins-actions"><button data-ins="front">FRONT</button><button data-ins="back">BACK</button><button data-ins="duplicate">DUPLICATE</button><button data-ins="lock">${i.locked?'UNLOCK':'LOCK'}</button><button data-ins="delete" class="danger">DELETE</button></div>`;
+function openInspector(i,x,y){const box=$('#p9d3ObjectInspector');if(!box)return;box.innerHTML=`<header><b>OBJECT // ${esc((i.type||'NOTE').toUpperCase())}</b><button data-ins-close>×</button></header><label>FILL <input data-style="fill" type="color" value="${i.style.fill}"></label><div class="p9d3-swatches">${PRESET_FILL.map(c=>`<button data-fill="${c}" style="--sw:${c}"></button>`).join('')}</div><label>TEXT <input data-style="text" type="color" value="${i.style.text}"></label><label>BORDER <input data-style="border" type="color" value="${i.style.border}"></label><label>OPACITY <input data-style="opacity" type="range" min="10" max="100" value="${Math.round(i.style.opacity*100)}"><b>${Math.round(i.style.opacity*100)}%</b></label><label>ROUNDING <input data-style="radius" type="range" min="0" max="60" value="${i.style.radius}"></label><label>GLOW <input data-style="glow" type="range" min="0" max="40" value="${i.style.glow}"></label><label>TEXT SIZE <input data-style="fontSize" type="range" min="10" max="32" value="${i.style.fontSize}"></label><div class="p9d3-ins-actions"><button data-ins="front">FRONT</button><button data-ins="back">BACK</button><button data-ins="duplicate">DUPLICATE</button><button data-ins="lock">${i.locked?'UNLOCK':'LOCK'}</button><button data-ins="delete" class="danger">DELETE</button></div>`;
   box.classList.remove('hidden');const bw=285,bh=370;box.style.left=`${clamp(x+8,8,innerWidth-bw-8)}px`;box.style.top=`${clamp(y+8,8,innerHeight-bh-8)}px`;
   box.querySelector('[data-ins-close]').onclick=()=>box.classList.add('hidden');box.querySelectorAll('[data-fill]').forEach(b=>b.onclick=()=>{i.style.fill=b.dataset.fill;renderBoard();queueBoardSave();openInspector(i,x,y)});
   box.querySelectorAll('[data-style]').forEach(inp=>inp.oninput=()=>{const k=inp.dataset.style;i.style[k]=k==='opacity'?Number(inp.value)/100:k==='radius'||k==='glow'||k==='fontSize'?Number(inp.value):inp.value;renderBoard();queueBoardSave();if(k==='opacity')inp.nextElementSibling.textContent=`${inp.value}%`;});
   box.querySelectorAll('[data-ins]').forEach(b=>b.onclick=()=>inspectorAction(i,b.dataset.ins));
 }
 function inspectorAction(i,act){const p=activePage();if(act==='front')i.z=Math.max(...p.items.map(x=>Number(x.z)||1),1)+1;if(act==='back')i.z=Math.min(...p.items.map(x=>Number(x.z)||1),1)-1;if(act==='lock')i.locked=!i.locked;if(act==='duplicate'){const c=structuredClone(i);c.id=uid('pin');c.x=clamp(i.x+24,0,1000);c.y=clamp(i.y+24,0,500);c.z=Date.now();p.items.push(c);selectedId=c.id;}if(act==='delete'){p.items=p.items.filter(x=>x.id!==i.id);selectedId=null;$('#p9d3ObjectInspector').classList.add('hidden');}renderBoard();queueBoardSave();}
-function renderLayers(){const root=$('#p9d3LayerList'),p=activePage();if(!root||!p)return;root.innerHTML=[...p.items].sort((a,b)=>b.z-a.z).map(i=>`<div class="p9d3-layer ${i.id===selectedId?'selected':''}" data-layer="${i.id}"><button data-lact="select">${i.hidden?'â—Œ':'â—'}</button><b>${esc((i.text||i.fileName||i.type||'ITEM').slice(0,24))}</b><button data-lact="up">â†‘</button><button data-lact="down">â†“</button><button data-lact="hide">${i.hidden?'SHOW':'HIDE'}</button><button data-lact="lock">${i.locked?'UNLOCK':'LOCK'}</button></div>`).join('')||'<div class="p9d3-home-empty">NO LAYERS</div>';root.querySelectorAll('[data-layer]').forEach(row=>row.onclick=e=>{const i=p.items.find(x=>x.id===row.dataset.layer),a=e.target.closest('[data-lact]')?.dataset.lact;if(!i)return;if(a==='select'||!a)selectedId=i.id;if(a==='up')i.z++;if(a==='down')i.z--;if(a==='hide')i.hidden=!i.hidden;if(a==='lock')i.locked=!i.locked;renderBoard();queueBoardSave();});}
+function renderLayers(){const root=$('#p9d3LayerList'),p=activePage();if(!root||!p)return;root.innerHTML=[...p.items].sort((a,b)=>b.z-a.z).map(i=>`<div class="p9d3-layer ${i.id===selectedId?'selected':''}" data-layer="${i.id}"><button data-lact="select">${i.hidden?'◌':'●'}</button><b>${esc((i.text||i.fileName||i.type||'ITEM').slice(0,24))}</b><button data-lact="up">↑</button><button data-lact="down">↓</button><button data-lact="hide">${i.hidden?'SHOW':'HIDE'}</button><button data-lact="lock">${i.locked?'UNLOCK':'LOCK'}</button></div>`).join('')||'<div class="p9d3-home-empty">NO LAYERS</div>';root.querySelectorAll('[data-layer]').forEach(row=>row.onclick=e=>{const i=p.items.find(x=>x.id===row.dataset.layer),a=e.target.closest('[data-lact]')?.dataset.lact;if(!i)return;if(a==='select'||!a)selectedId=i.id;if(a==='up')i.z++;if(a==='down')i.z--;if(a==='hide')i.hidden=!i.hidden;if(a==='lock')i.locked=!i.locked;renderBoard();queueBoardSave();});}
 function addItem(type){const p=activePage(),count=p.items.length,item=normalizeItem({id:uid('pin'),type,x:30+(count%6)*36,y:30+(count%5)*28,w:type==='text'?280:220,h:type==='shape'?120:150,text:type==='note'?'New note':type==='text'?'Text box':type==='shape'?'LABEL':'',z:Math.max(...p.items.map(x=>Number(x.z)||1),1)+1},count);p.items.push(item);selectedId=item.id;renderBoard();queueBoardSave();}
 async function uploadPin(file){try{const fd=new FormData();fd.append('file',file);const d=await apiForm('/api/v8/phase9d2/pinboard/files',fd),f=d.item,p=activePage();p.items.push(normalizeItem({id:uid('pin'),type:'file',x:42,y:42,w:270,h:130,fileId:f.id,fileName:f.name,mimeType:f.mimeType,z:Date.now()},p.items.length));renderBoard();queueBoardSave();toast('FILE PINNED');}catch(e){toast(`FILE // ${e.message}`,true)}}
 function changePage(delta){const pages=boardState.pages,i=pages.findIndex(p=>p.id===boardState.currentPageId),n=clamp(i+delta,0,pages.length-1);boardState.currentPageId=pages[n].id;selectedId=null;renderBoard();queueBoardSave();}
@@ -188,7 +169,7 @@ async function fetchAudioBlob(a){try{const r=await fetch(`${API_BASE}${a.url}`,{
 function cassetteSvg(label,pref={}){const shell=pref.shell||'#3a141a',accent=pref.accent||'#ff315c',paper=pref.labelColor||'#d7c5b6';return `<div class="p9d3-cassette-object" style="--shell:${shell};--accent:${accent};--paper:${paper}"><div class="p9d3-cassette-shell"><div class="p9d3-cassette-label"><span>A</span><b>${esc(label)}</b><span>90</span></div><div class="p9d3-tape-window"><div class="p9d3-reel left"><i></i></div><div class="p9d3-tape-strip"><span></span></div><div class="p9d3-reel right"><i></i></div></div><div class="p9d3-cassette-foot"><i></i><i></i><i></i><i></i></div></div></div>`;}
 async function openCassette(a,spine){
   closeCassette(true);const pref=cassettePrefs(a.id),stage=$('#p9d3CassetteStage'),label=pref.label||a.label||a.taskTitle||'TASK AUDIO';cassette={item:a,pref,player:null,direction:1,playing:false,blob:null,duration:0,current:0,speed:1,volume:.85,segments:[]};
-  stage.classList.remove('hidden');stage.innerHTML=`<div class="p9d3-cassette-backdrop"></div><div class="p9d3-cassette-float"><div class="p9d3-cassette-visual">${cassetteSvg(label,pref)}</div><div class="p9d3-player-panel"><header><div><span class="kicker">CASSETTE // TASK AUDIO</span><input id="p9d3CassLabel" value="${esc(label)}" maxlength="120"></div><button id="p9d3CassClose">Ã—</button></header><div class="p9d3-player-time"><b id="p9d3Time">00:00</b><input id="p9d3Seek" type="range" min="0" max="1000" value="0"><b id="p9d3Duration">00:00</b></div><div class="p9d3-player-main"><button data-cass="back">âˆ’10</button><button data-cass="replay">â†¶</button><button data-cass="play" class="primary">â–¶</button><button data-cass="forward">+10</button><button data-cass="reverse">â‡† REVERSE</button></div><div class="p9d3-player-secondary"><label>SPEED <select id="p9d3CassSpeed"><option value=".5">0.5Ã—</option><option value=".75">0.75Ã—</option><option value="1" selected>1Ã—</option><option value="1.25">1.25Ã—</option><option value="1.5">1.5Ã—</option><option value="2">2Ã—</option></select></label><label>VOLUME <input id="p9d3CassVolume" type="range" min="0" max="100" value="85"></label><label>STYLE <select id="p9d3CassStyle"><option>FIELD</option><option>TACTICAL</option><option>ARCHIVE</option><option>TRANSPARENT</option><option>NEON</option></select></label><label>SHELL <input id="p9d3CassShell" type="color" value="${pref.shell||'#3a141a'}"></label><label>ACCENT <input id="p9d3CassAccent" type="color" value="${pref.accent||'#ff315c'}"></label><button data-cass="transcribe">NEXUS TRANSCRIBE</button></div><audio id="p9d3Audio" preload="metadata"></audio><div class="p9d3-transcript"><header><b>TRANSCRIPT / SUBTITLES</b><span id="p9d3AudioState">LOADING AUDIOâ€¦</span></header><div id="p9d3SubtitleNow">${esc(a.transcript||'NO TRANSCRIPT // USE NEXUS TRANSCRIBE')}</div><div id="p9d3TranscriptLines"></div></div></div></div>`;
+  stage.classList.remove('hidden');stage.innerHTML=`<div class="p9d3-cassette-backdrop"></div><div class="p9d3-cassette-float"><div class="p9d3-cassette-visual">${cassetteSvg(label,pref)}</div><div class="p9d3-player-panel"><header><div><span class="kicker">CASSETTE // TASK AUDIO</span><input id="p9d3CassLabel" value="${esc(label)}" maxlength="120"></div><button id="p9d3CassClose">×</button></header><div class="p9d3-player-time"><b id="p9d3Time">00:00</b><input id="p9d3Seek" type="range" min="0" max="1000" value="0"><b id="p9d3Duration">00:00</b></div><div class="p9d3-player-main"><button data-cass="back">−10</button><button data-cass="replay">↶</button><button data-cass="play" class="primary">▶</button><button data-cass="forward">+10</button><button data-cass="reverse">⇆ REVERSE</button></div><div class="p9d3-player-secondary"><label>SPEED <select id="p9d3CassSpeed"><option value=".5">0.5×</option><option value=".75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label><label>VOLUME <input id="p9d3CassVolume" type="range" min="0" max="100" value="85"></label><label>STYLE <select id="p9d3CassStyle"><option>FIELD</option><option>TACTICAL</option><option>ARCHIVE</option><option>TRANSPARENT</option><option>NEON</option></select></label><label>SHELL <input id="p9d3CassShell" type="color" value="${pref.shell||'#3a141a'}"></label><label>ACCENT <input id="p9d3CassAccent" type="color" value="${pref.accent||'#ff315c'}"></label><button data-cass="transcribe">NEXUS TRANSCRIBE</button></div><audio id="p9d3Audio" preload="metadata"></audio><div class="p9d3-transcript"><header><b>TRANSCRIPT / SUBTITLES</b><span id="p9d3AudioState">LOADING AUDIO…</span></header><div id="p9d3SubtitleNow">${esc(a.transcript||'NO TRANSCRIPT // USE NEXUS TRANSCRIBE')}</div><div id="p9d3TranscriptLines"></div></div></div></div>`;
   const float=stage.querySelector('.p9d3-cassette-float'),visual=stage.querySelector('.p9d3-cassette-visual'),sr=spine.getBoundingClientRect(),target=visual.getBoundingClientRect(),dx=sr.left+sr.width/2-(target.left+target.width/2),dy=sr.top+sr.height/2-(target.top+target.height/2),sx=Math.max(.08,sr.width/Math.max(target.width,1)),sy=Math.max(.25,sr.height/Math.max(target.height,1));
   float.classList.add('preparing');visual.animate([{transform:`translate(${dx}px,${dy}px) rotateY(88deg) rotateZ(-1deg) scale(${sx},${sy})`,filter:'brightness(.75)',opacity:.82},{offset:.28,transform:`translate(${dx*.82}px,${dy-14}px) rotateY(68deg) rotateZ(-1deg) scale(${Math.max(.18,sx*2.2)},${Math.max(.38,sy*1.15)})`,filter:'brightness(1.05)',opacity:1},{offset:.62,transform:`translate(${dx*.28}px,${dy*.22}px) rotateY(28deg) rotateZ(.4deg) scale(.82)`,filter:'brightness(1.22)'},{offset:.86,transform:'translate(0,0) rotateY(-4deg) scale(1.035)',filter:'brightness(1.12)'},{transform:'translate(0,0) rotateY(0deg) scale(1)',filter:'brightness(1)'}],{duration:760,easing:'cubic-bezier(.2,.75,.2,1)',fill:'both'}).finished.finally(()=>float.classList.remove('preparing'));
   spine.classList.add('selected');stage.querySelector('#p9d3CassClose').onclick=()=>closeCassette();stage.querySelector('.p9d3-cassette-backdrop').onclick=()=>closeCassette();bindCassetteControls();
@@ -203,7 +184,7 @@ function buildSegments(a,dur){const raw=a.transcriptMeta?.segments;if(Array.isAr
 function renderTranscriptLines(){const root=$('#p9d3TranscriptLines');if(!root||!cassette)return;root.innerHTML=cassette.segments.map((s,i)=>`<button data-seg="${i}"><time>${formatTime(s.start)}</time><span>${esc(s.text)}</span></button>`).join('')||'<div class="p9d3-home-empty">NO TIMESTAMPED TRANSCRIPT YET</div>';root.querySelectorAll('[data-seg]').forEach(b=>b.onclick=()=>seekCassette(cassette.segments[Number(b.dataset.seg)].start));}
 function currentSegment(){return cassette?.segments?.findIndex(s=>cassette.current>=s.start&&cassette.current<(s.end||Infinity))??-1;}
 function updateCassetteUi(){if(!cassette)return;const d=cassette.duration||0,c=clamp(cassette.current,0,d||1);$('#p9d3Time').textContent=formatTime(c);$('#p9d3Seek').value=String(d?Math.round((c/d)*1000):0);const idx=currentSegment();$$('#p9d3TranscriptLines [data-seg]').forEach((b,i)=>b.classList.toggle('active',i===idx));const now=$('#p9d3SubtitleNow');if(idx>=0&&now)now.textContent=cassette.segments[idx].text;const left=$('.p9d3-reel.left'),right=$('.p9d3-reel.right');if(left&&right&&d){const p=c/d;left.style.setProperty('--tape',`${clamp(34-p*18,13,34)}px`);right.style.setProperty('--tape',`${clamp(16+p*18,13,34)}px`);}}
-function syncPlayButton(){const b=$('[data-cass="play"]');if(b)b.textContent=cassette?.playing?'â…¡':'â–¶';const obj=$('.p9d3-cassette-object');obj?.classList.toggle('playing',!!cassette?.playing);obj?.classList.toggle('reverse',cassette?.direction===-1);}
+function syncPlayButton(){const b=$('[data-cass="play"]');if(b)b.textContent=cassette?.playing?'Ⅱ':'▶';const obj=$('.p9d3-cassette-object');obj?.classList.toggle('playing',!!cassette?.playing);obj?.classList.toggle('reverse',cassette?.direction===-1);}
 function startReelLoop(){cancelAnimationFrame(raf);lastFrame=performance.now();const loop=t=>{if(!cassette)return;const dt=(t-lastFrame)/1000;lastFrame=t;if(cassette.playing){reelAngle+=(cassette.direction===-1?-1:1)*dt*220*cassette.speed;$$('.p9d3-reel i').forEach(x=>x.style.transform=`rotate(${reelAngle}deg)`);if(cassette.direction===-1){cassette.current=clamp(reverseStartPos-(reverseCtx.currentTime-reverseStartCtx)*cassette.speed,0,cassette.duration||Infinity);if(cassette.current<=0){stopReverse();cassette.playing=false;}updateCassetteUi();}}syncPlayButton();raf=requestAnimationFrame(loop);};raf=requestAnimationFrame(loop);}
 async function toggleCassettePlay(){if(!cassette?.player)return;if(cassette.direction===-1){if(cassette.playing){stopReverse();cassette.playing=false;}else await startReversePlayback();}else{if(cassette.player.paused)await cassette.player.play().catch(e=>toast(e.message,true));else cassette.player.pause();}}
 function seekCassette(v,drag=false){if(!cassette)return;cassette.current=clamp(v,0,cassette.duration||0);if(cassette.direction===1&&cassette.player)cassette.player.currentTime=cassette.current;if(cassette.direction===-1&&cassette.playing&&!drag)startReversePlayback();updateCassetteUi();}
@@ -211,22 +192,20 @@ async function ensureReverseBuffer(){if(reverseBuffer)return reverseBuffer;if(!c
 function stopReverse(){try{reverseSource?.stop()}catch{}reverseSource=null;}
 async function startReversePlayback(){try{cassette.player?.pause();const buf=await ensureReverseBuffer();stopReverse();reverseCtx=reverseCtx||new AudioContext();await reverseCtx.resume();reverseSource=reverseCtx.createBufferSource();reverseGain=reverseCtx.createGain();reverseGain.gain.value=cassette.volume;reverseSource.buffer=buf;reverseSource.playbackRate.value=cassette.speed;reverseSource.connect(reverseGain);reverseGain.connect(reverseCtx.destination);reverseStartPos=clamp(cassette.current||cassette.duration,cassette.duration?0:0,cassette.duration||buf.duration);reverseStartCtx=reverseCtx.currentTime;const offset=clamp((cassette.duration||buf.duration)-reverseStartPos,0,Math.max(0,buf.duration-.001));reverseSource.onended=()=>{if(cassette?.direction===-1){cassette.playing=false;syncPlayButton();}};reverseSource.start(0,offset);cassette.direction=-1;cassette.playing=true;startReelLoop();}catch(e){toast(`REVERSE // ${e.message}`,true)}}
 async function toggleReverse(){if(!cassette)return;if(cassette.direction===-1){stopReverse();cassette.direction=1;cassette.playing=false;if(cassette.player)cassette.player.currentTime=cassette.current;syncPlayButton();return;}await startReversePlayback();}
-async function transcribeOpenCassette(){if(!cassette)return;const st=$('#p9d3AudioState');st.textContent='NEXUS TRANSCRIBINGâ€¦';try{const d=await api(`/api/v8/phase9d2/task-audio/${encodeURIComponent(cassette.item.id)}/transcribe`,{method:'POST'});cassette.item.transcript=d.transcript||'';cassette.item.transcriptMeta=d.transcriptMeta||cassette.item.transcriptMeta||{};cassette.segments=buildSegments(cassette.item,cassette.duration);renderTranscriptLines();$('#p9d3SubtitleNow').textContent=cassette.item.transcript||'NO SPEECH DETECTED';st.textContent='TRANSCRIPTION READY';window.dispatchEvent(new CustomEvent('neon:phase9d2-audiochange'));}catch(e){st.textContent=`TRANSCRIPTION FAILED // ${e.message}`;st.classList.add('error')}}
+async function transcribeOpenCassette(){if(!cassette)return;const st=$('#p9d3AudioState');st.textContent='NEXUS TRANSCRIBING…';try{const d=await api(`/api/v8/phase9d2/task-audio/${encodeURIComponent(cassette.item.id)}/transcribe`,{method:'POST'});cassette.item.transcript=d.transcript||'';cassette.item.transcriptMeta=d.transcriptMeta||cassette.item.transcriptMeta||{};cassette.segments=buildSegments(cassette.item,cassette.duration);renderTranscriptLines();$('#p9d3SubtitleNow').textContent=cassette.item.transcript||'NO SPEECH DETECTED';st.textContent='TRANSCRIPTION READY';window.dispatchEvent(new CustomEvent('neon:phase9d2-audiochange'));}catch(e){st.textContent=`TRANSCRIPTION FAILED // ${e.message}`;st.classList.add('error')}}
 function closeCassette(silent=false){cancelAnimationFrame(raf);raf=0;try{cassette?.player?.pause()}catch{}stopReverse();reverseBuffer=null;const stage=$('#p9d3CassetteStage');if(stage&&!stage.classList.contains('hidden')&&!silent){const visual=stage.querySelector('.p9d3-cassette-visual');visual?.animate([{transform:'none',opacity:1},{transform:'translateY(28px) rotateY(48deg) scale(.72)',opacity:0}],{duration:260,easing:'ease-in',fill:'forwards'}).finished.finally(()=>{stage.classList.add('hidden');stage.replaceChildren();});}else if(stage){stage.classList.add('hidden');stage.replaceChildren();}$$('.p9d3-cassette-spine.selected').forEach(x=>x.classList.remove('selected'));cassette=null;}
 
 // ---------------- BOOT ----------------
 async function boot(){
-  // HOME must exist and become active before waiting for legacy Phase 9D.2.
-  // This prevents the Calendar/OPS page flashing as the initial screen.
-  installPwaMeta();ensureSideNav();ensureHome();activateHome();
   for(let i=0;i<240;i++){if(document.documentElement.dataset.phase9d2==='ready'||window.NeonPhase9D2)break;await sleep(100);}
+  installPwaMeta();
+  ensureSideNav();
+  activateDefaultPage();
   if(buildPinboard()){await loadBoard();await loadAudios();window.addEventListener('neon:phase9d2-audiochange',loadAudios);}
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&currentPageId()==='pageHome')renderHome();});window.addEventListener('neon:phase9b1-contextchange',renderHome);window.addEventListener('neon:phase9a-contextchange',renderHome);
-  setInterval(()=>{if(currentPageId()==='pageHome')renderHome();},30000);
-  document.documentElement.dataset.phase9d3='ready';window.NeonPhase9D3={version:'9D.3',workerTarget:'9.15.0',pinboard:'v3',cassette:'v3',home:true,pwaStandalone:isStandalone(),aiRouterDeferred:true,refreshHome:renderHome,refreshPinboard:loadBoard,refreshAudio:loadAudios};
-  localStorage.setItem('neon9d3:lastPage','pageHome');activateHome();
-  console.info('NEON OPS // PHASE 9D.3 READY',window.NeonPhase9D3);
+  document.documentElement.dataset.phase9d3='ready';
+  window.NeonPhase9D3={version:'9D.3.1',workerTarget:'9.15.0',pinboard:'v3',cassette:'v3',home:false,browserRouting:true,pwaStandalone:isStandalone(),aiRouterDeferred:true,refreshPinboard:loadBoard,refreshAudio:loadAudios};
+  localStorage.removeItem('neon9d3:lastPage');
+  activateDefaultPage();
+  console.info('NEON OPS // PHASE 9D.3.1 READY',window.NeonPhase9D3);
 }
-boot().catch(e=>{console.error('9D.3 boot',e);toast(`9D.3 // ${e.message}`,true)});
-
-
+boot().catch(e=>{console.error('9D.3.1 boot',e);toast(`9D.3.1 // ${e.message}`,true)});

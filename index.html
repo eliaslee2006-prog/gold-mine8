@@ -1,10 +1,10 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <meta name="theme-color" content="#09090d"/>
-  <title>NEON OPERATIONS CENTER // V9D.3</title>
+  <title>NEON OPERATIONS CENTER // V9D.3.1</title>
   <link rel="stylesheet" href="./css/app.css"/>
   <link rel="stylesheet" href="./css/phase9a.css"/>
   <link rel="stylesheet" href="./css/phase9b1.css"/>
@@ -28,7 +28,7 @@
   <meta name="apple-mobile-web-app-title" content="NEON"/>
 </head>
 <body>
-<div id="bootCover" class="boot-cover">INITIALIZING V9D.3 // HOME</div>
+<div id="bootCover" class="boot-cover">INITIALIZING V9D.3.1 // OPS</div>
 
 <header class="topbar">
   <div>
@@ -54,21 +54,21 @@
 <main class="ops-grid page active" id="pageOps">
   <section class="panel command-center" id="commandCenter">
     <div class="panel-head command-center-head">
-      <div><span class="kicker">OPS // 8B COMMAND CENTER</span><h2>Today</h2><small id="ccDate" class="cc-date">â€”</small></div>
+      <div><span class="kicker">OPS // 8B COMMAND CENTER</span><h2>Today</h2><small id="ccDate" class="cc-date">—</small></div>
       <div class="actions"><button id="ccMorningBtn" class="ghost small" type="button">MORNING BRIEF</button><button id="ccEveningBtn" class="ghost small" type="button">EVENING REVIEW</button><button id="ccFocusBtn" class="ghost small" type="button">FOCUS MODE</button><button id="ccRefreshBtn" class="ghost small" type="button">REFRESH</button></div>
     </div>
     <div class="cc-command-strip">
-      <div class="cc-readiness"><span>READINESS</span><b id="ccReadiness" data-band="good">100</b><small id="ccReadinessReason">â€”</small></div>
-      <div class="cc-nnl"><article><span>NOW</span><div id="ccNow"><b>â€”</b><span>â€”</span></div></article><article><span>NEXT</span><div id="ccNext"><b>â€”</b><span>â€”</span></div></article><article><span>LATER</span><div id="ccLater"><b>â€”</b><span>â€”</span></div></article></div>
+      <div class="cc-readiness"><span>READINESS</span><b id="ccReadiness" data-band="good">100</b><small id="ccReadinessReason">—</small></div>
+      <div class="cc-nnl"><article><span>NOW</span><div id="ccNow"><b>—</b><span>—</span></div></article><article><span>NEXT</span><div id="ccNext"><b>—</b><span>—</span></div></article><article><span>LATER</span><div id="ccLater"><b>—</b><span>—</span></div></article></div>
     </div>
     <div class="cc-grid">
       <section class="cc-card cc-timeline-card"><header><span>TODAY TIMELINE</span><b id="ccTimelineCount">0 ITEMS</b></header><div id="ccTimeline" class="cc-timeline"></div></section>
       <section class="cc-card cc-priority-card"><header><span>PRIORITY STACK</span><b>DRAG TO RANK</b></header><div id="ccPriorities" class="cc-priorities"></div></section>
       <section class="cc-card"><header><span>NEEDS ATTENTION</span><b id="ccActionCount">0 OPEN</b></header><div id="ccActions" class="cc-actions"></div></section>
-      <section class="cc-card"><header><span>FREE WINDOWS</span><b>06:00â€“23:00</b></header><div id="ccFreeWindows" class="cc-free-windows"></div></section>
+      <section class="cc-card"><header><span>FREE WINDOWS</span><b>06:00–23:00</b></header><div id="ccFreeWindows" class="cc-free-windows"></div></section>
       <section class="cc-card cc-nexus-priority-card"><header><span>NEXUS PRIORITY</span><button id="ccAskPriority" class="ghost small" type="button">ASK NEXUS</button></header><div id="ccNexusPriority" class="cc-nexus-priority">NO CACHED PRIORITY YET</div></section>
-      <section class="cc-card cc-pulse-card"><header><span>DAILY PULSES</span><b>LIVE FROM RECORDS</b></header><div class="cc-pulses"><article><span>SPEND</span><b id="ccSpend">S$0.00</b><small id="ccCashNet">NET S$0.00</small></article><article><span>PORTFOLIO</span><b id="ccPortfolio">â€”</b><small id="ccPortfolioPnl">NO POSITIONS</small></article><article><span>FITNESS</span><b id="ccFitness">NO SESSION</b><small id="ccFitnessMeta">TODAY</small></article></div></section>
-      <section class="cc-card cc-capture-card"><header><span>QUICK CAPTURE</span><b>NEXUS REVIEW</b></header><form id="ccQuickForm"><input id="ccQuickInput" maxlength="1200" placeholder="Meeting Friday 1400, remind me 30m beforeâ€¦"><button type="submit" class="primary small">SEND TO NEXUS</button></form><small id="ccSinceLast" class="cc-since">â€”</small></section>
+      <section class="cc-card cc-pulse-card"><header><span>DAILY PULSES</span><b>LIVE FROM RECORDS</b></header><div class="cc-pulses"><article><span>SPEND</span><b id="ccSpend">S$0.00</b><small id="ccCashNet">NET S$0.00</small></article><article><span>PORTFOLIO</span><b id="ccPortfolio">—</b><small id="ccPortfolioPnl">NO POSITIONS</small></article><article><span>FITNESS</span><b id="ccFitness">NO SESSION</b><small id="ccFitnessMeta">TODAY</small></article></div></section>
+      <section class="cc-card cc-capture-card"><header><span>QUICK CAPTURE</span><b>NEXUS REVIEW</b></header><form id="ccQuickForm"><input id="ccQuickInput" maxlength="1200" placeholder="Meeting Friday 1400, remind me 30m before…"><button type="submit" class="primary small">SEND TO NEXUS</button></form><small id="ccSinceLast" class="cc-since">—</small></section>
     </div>
   </section>
   <section class="panel calendar-panel">
@@ -87,11 +87,11 @@
 
     <div class="calendar-commandbar">
       <div class="calendar-nav">
-        <button id="calPrev" class="hud-icon" aria-label="Previous period">â†</button>
-        <button id="calNext" class="hud-icon" aria-label="Next period">â†’</button>
+        <button id="calPrev" class="hud-icon" aria-label="Previous period">←</button>
+        <button id="calNext" class="hud-icon" aria-label="Next period">→</button>
         <div class="calendar-period">
           <span class="kicker">WINDOW</span>
-          <strong id="calendarPeriod">â€”</strong>
+          <strong id="calendarPeriod">—</strong>
         </div>
       </div>
       <div class="calendar-view-switch" role="group" aria-label="Calendar view">
@@ -149,10 +149,10 @@
         <div><span>ACTIVE</span><b id="reminderCenterCount">0 ACTIVE</b></div>
         <div><span>DUE</span><b id="reminderDueSoon">0 / 24H</b></div>
         <button id="reminderEnableAlerts" class="ghost small" type="button">ENABLE ALERTS</button>
-        <button id="reminderRefreshBtn" class="ghost small" type="button">â†»</button>
+        <button id="reminderRefreshBtn" class="ghost small" type="button">↻</button>
       </div>
       <div id="reminderAlertState" class="reminder-alert-state">IN-APP ACTIVE</div>
-      <div id="reminderCenterList" class="reminder-center-list"><div class="reminder-empty">LOADING REMINDERSâ€¦</div></div>
+      <div id="reminderCenterList" class="reminder-center-list"><div class="reminder-empty">LOADING REMINDERS…</div></div>
     </section>
 
     <section class="panel tasks-panel">
@@ -171,11 +171,11 @@
     <section class="panel brief-card">
       <span class="kicker">PHASE 8A STATUS</span>
       <div class="status-grid">
-        <span>AUTH</span><b id="statusAuth">â€”</b>
+        <span>AUTH</span><b id="statusAuth">—</b>
         <span>D1 EVENTS</span><b id="statusEvents">0</b>
         <span>D1 TASKS</span><b id="statusTasks">0</b>
         <span>REMINDERS</span><b id="statusReminders">0</b>
-        <span>GOOGLE</span><b id="statusGoogle">â€”</b>
+        <span>GOOGLE</span><b id="statusGoogle">—</b>
         <span>LAST SYNC</span><b id="statusSync">NOT YET</b>
       </div>
     </section>
@@ -226,7 +226,7 @@
       </div>
       <form id="nexusComposer" class="nxc-composer">
         <button id="nexusVoiceBtn" type="button" class="nxc-mic" aria-label="Start voice command">MIC</button>
-        <textarea id="nexusInput" rows="2" maxlength="6000" placeholder="Ask NEXUS or issue a commandâ€¦" aria-label="Message NEXUS"></textarea>
+        <textarea id="nexusInput" rows="2" maxlength="6000" placeholder="Ask NEXUS or issue a command…" aria-label="Message NEXUS"></textarea>
         <button id="nexusSendBtn" type="submit" class="primary">SEND</button>
       </form>
       <div class="nxc-composer-meta"><span>PUSH-TO-TALK // TAP MIC</span><span>ENTER // SEND &nbsp; SHIFT+ENTER // NEW LINE</span></div>
@@ -244,7 +244,7 @@
       </section>
 
       <section class="panel nxc-runtime-panel">
-        <div class="panel-head compact"><div><span class="kicker">GEMINI // COST CONTROL</span><h2>AI Runtime</h2></div><span id="nexusUsageModel" class="nxc-model">â€”</span></div>
+        <div class="panel-head compact"><div><span class="kicker">GEMINI // COST CONTROL</span><h2>AI Runtime</h2></div><span id="nexusUsageModel" class="nxc-model">—</span></div>
         <div class="nxc-usage-grid">
           <div><span>REQUESTS // 24H</span><b id="nexusUsageRequests">0</b></div>
           <div><span>INPUT // 24H</span><b id="nexusUsageInput">0</b></div>
@@ -255,7 +255,7 @@
           <div><span>COST // MONTH</span><b id="nexusCostMonth">$0.0000</b></div>
           <div><span>EST. CREDIT LEFT</span><b id="nexusCreditRemaining">$5.00</b></div>
           <div><span>FAILURES // 24H</span><b id="nexusUsageFailures">0</b></div>
-          <div><span>VOICE MODEL</span><b id="nexusVoiceModel">â€”</b></div>
+          <div><span>VOICE MODEL</span><b id="nexusVoiceModel">—</b></div>
         </div>
         <div class="nxc-credit-line"><span id="nexusCreditState" data-state="normal">CREDIT // NORMAL</span><small id="nexusCreditBaseline">BASELINE // ALL TRACKED USAGE</small><button id="nexusResetCreditBaseline" class="ghost small" type="button">SET CREDIT BASELINE NOW</button></div>
         <form id="nexusSettingsForm" class="nxc-settings-form">
@@ -285,7 +285,7 @@
     </div>
     <div class="fitness-toolbar">
       <label class="movement-picker"><span>MOVEMENT</span><select id="movementSelect"></select></label>
-      <div class="fitness-identity"><b id="fitnessSymbol">â€”</b><span id="fitnessSchedule">SCHEDULE // NONE</span></div>
+      <div class="fitness-identity"><b id="fitnessSymbol">—</b><span id="fitnessSchedule">SCHEDULE // NONE</span></div>
       <div class="chart-range" id="fitnessRanges">
         <button data-range="1">1M</button><button class="active" data-range="3">3M</button><button data-range="6">6M</button><button data-range="12">1Y</button><button data-range="ALL">ALL</button>
         <button id="fitnessMarkersToggle" aria-pressed="true">MARKERS</button><button id="fitnessReset">LIVE</button>
@@ -304,22 +304,22 @@
         <div><span>SESSIONS // 7D</span><b id="fitnessWeekSessions">0</b></div>
         <div><span>TOTAL SESSIONS</span><b id="fitnessTotalSessions">0</b></div>
         <div><span>MISSED STREAK</span><b id="fitnessMissed">0</b></div>
-        <div><span>BEST E1RM</span><b id="fitnessBestE1rm">â€”</b></div>
+        <div><span>BEST E1RM</span><b id="fitnessBestE1rm">—</b></div>
       </div>
       <div class="fitness-chart-shell">
         <div class="fitness-readout" id="fitnessReadout">
-          <div class="readout-primary"><span id="fitnessReadoutDate">â€”</span><b id="fitnessReadoutState" data-state="closed">MARKET CLOSED</b></div>
-          <div class="ohlc"><span>O <b id="fitnessO">â€”</b></span><span>H <b id="fitnessH">â€”</b></span><span>L <b id="fitnessL">â€”</b></span><span>C <b id="fitnessC">â€”</b></span></div>
+          <div class="readout-primary"><span id="fitnessReadoutDate">—</span><b id="fitnessReadoutState" data-state="closed">MARKET CLOSED</b></div>
+          <div class="ohlc"><span>O <b id="fitnessO">—</b></span><span>H <b id="fitnessH">—</b></span><span>L <b id="fitnessL">—</b></span><span>C <b id="fitnessC">—</b></span></div>
           <div class="readout-meta" id="fitnessReadoutMeta">MOVE CROSSHAIR FOR SESSION DETAIL</div>
         </div>
         <div id="fitnessChart" class="fitness-chart"></div>
         <div class="fitness-chart-note"><span>BULLISH // COMPLETED</span><span>BEARISH // MISSED</span><span>GAPS // MARKET CLOSED</span></div>
       </div>
       <div class="fitness-records-panel">
-        <div class="fitness-records-head"><div><span class="kicker">TRAINING LEDGER</span><h3>Completed Sessions</h3></div><div class="pager"><button id="fitnessPrevPage">â†</button><span id="fitnessPager">0 / 0</span><button id="fitnessNextPage">â†’</button></div></div>
+        <div class="fitness-records-head"><div><span class="kicker">TRAINING LEDGER</span><h3>Completed Sessions</h3></div><div class="pager"><button id="fitnessPrevPage">←</button><span id="fitnessPager">0 / 0</span><button id="fitnessNextPage">→</button></div></div>
         <div id="fitnessRecords"></div>
       </div>
-      <div class="tradingview-credit">TradingView Lightweight Chartsâ„¢ â€” Copyright Â© 2025 TradingView, Inc. <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a>.</div>
+      <div class="tradingview-credit">TradingView Lightweight Charts™ — Copyright © 2025 TradingView, Inc. <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a>.</div>
     </div>
   </section>
 </main>
@@ -349,30 +349,30 @@
         <div class="replay-topline">
           <div>
             <span class="kicker">HISTORICAL CASHFLOW // REPLAY</span>
-            <strong id="replayMonthLabel">â€”</strong>
+            <strong id="replayMonthLabel">—</strong>
           </div>
           <div class="replay-month-nav">
-            <button type="button" id="replayPrevMonth" class="hud-icon" aria-label="Previous replay month">â†</button>
+            <button type="button" id="replayPrevMonth" class="hud-icon" aria-label="Previous replay month">←</button>
             <select id="replayMonthSelect" aria-label="Replay month"></select>
-            <button type="button" id="replayNextMonth" class="hud-icon" aria-label="Next replay month">â†’</button>
+            <button type="button" id="replayNextMonth" class="hud-icon" aria-label="Next replay month">→</button>
           </div>
         </div>
         <div class="replay-transport">
-          <button type="button" id="replayStepBack" class="ghost" title="Previous transaction">â† TX</button>
-          <button type="button" id="replayPlay" class="primary">â–¶ PLAY</button>
-          <button type="button" id="replayPause" class="ghost">âšâš PAUSE</button>
-          <button type="button" id="replayReset" class="ghost">â–  RESET</button>
-          <button type="button" id="replayStepForward" class="ghost" title="Next transaction">TX â†’</button>
+          <button type="button" id="replayStepBack" class="ghost" title="Previous transaction">← TX</button>
+          <button type="button" id="replayPlay" class="primary">▶ PLAY</button>
+          <button type="button" id="replayPause" class="ghost">❚❚ PAUSE</button>
+          <button type="button" id="replayReset" class="ghost">■ RESET</button>
+          <button type="button" id="replayStepForward" class="ghost" title="Next transaction">TX →</button>
         </div>
         <div class="replay-speed" role="group" aria-label="Replay speed">
           <span>SPEED</span>
-          <button type="button" data-replay-speed="0.25">0.25Ã—</button>
-          <button type="button" data-replay-speed="0.5">0.5Ã—</button>
-          <button type="button" data-replay-speed="1" class="active">1Ã—</button>
-          <button type="button" data-replay-speed="2">2Ã—</button>
-          <button type="button" data-replay-speed="4">4Ã—</button>
-          <button type="button" data-replay-speed="8">8Ã—</button>
-          <button type="button" data-replay-speed="16">16Ã—</button>
+          <button type="button" data-replay-speed="0.25">0.25×</button>
+          <button type="button" data-replay-speed="0.5">0.5×</button>
+          <button type="button" data-replay-speed="1" class="active">1×</button>
+          <button type="button" data-replay-speed="2">2×</button>
+          <button type="button" data-replay-speed="4">4×</button>
+          <button type="button" data-replay-speed="8">8×</button>
+          <button type="button" data-replay-speed="16">16×</button>
           <button type="button" data-replay-speed="max">MAX</button>
         </div>
         <div class="replay-progress-line">
@@ -385,17 +385,17 @@
       <div class="cash-chart-shell">
         <div class="fitness-readout finance-readout">
           <div class="readout-primary"><span id="cashReadoutSeq">NO TRANSACTIONS</span><b id="cashReadoutState" data-state="closed">AWAITING CASHFLOW</b></div>
-          <div class="ohlc"><span>O <b id="cashO">â€”</b></span><span>H <b id="cashH">â€”</b></span><span>L <b id="cashL">â€”</b></span><span>C <b id="cashC">â€”</b></span></div>
+          <div class="ohlc"><span>O <b id="cashO">—</b></span><span>H <b id="cashH">—</b></span><span>L <b id="cashL">—</b></span><span>C <b id="cashC">—</b></span></div>
           <div class="readout-meta" id="cashReadoutMeta">EACH TRANSACTION = ONE CANDLE</div>
         </div>
         <div id="cashChart" class="cash-chart"></div>
         <div class="finance-chart-note"><span>GREEN // INFLOW</span><span>RED // EXPENSE</span><span>X AXIS // TRANSACTION SEQUENCE</span></div>
       </div>
       <div class="finance-ledger">
-        <div class="finance-section-head"><div><span class="kicker">CASHFLOW LEDGER</span><h3>Transactions</h3></div><div class="pager"><button id="cashPrevPage">â†</button><span id="cashPager">0 / 0</span><button id="cashNextPage">â†’</button></div></div>
+        <div class="finance-section-head"><div><span class="kicker">CASHFLOW LEDGER</span><h3>Transactions</h3></div><div class="pager"><button id="cashPrevPage">←</button><span id="cashPager">0 / 0</span><button id="cashNextPage">→</button></div></div>
         <div id="cashRecords"></div>
       </div>
-      <div class="tradingview-credit">TradingView Lightweight Chartsâ„¢ â€” Copyright Â© 2025 TradingView, Inc. <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a>.</div>
+      <div class="tradingview-credit">TradingView Lightweight Charts™ — Copyright © 2025 TradingView, Inc. <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a>.</div>
     </section>
 
     <section class="panel portfolio-panel">
@@ -416,9 +416,9 @@
         <div><span>TOTAL P&amp;L</span><b id="portfolioTotalPnl">S$0.00</b></div>
         <div><span>UNREALIZED P&amp;L</span><b id="portfolioPnl">S$0.00</b></div>
         <div><span>REALIZED P&amp;L</span><b id="portfolioRealizedPnl">S$0.00</b></div>
-        <div><span>DAILY P&amp;L</span><b id="portfolioDailyPnl">â€”</b></div>
-        <div><span>WEEKLY P&amp;L</span><b id="portfolioWeeklyPnl">â€”</b></div>
-        <div><span>MONTHLY P&amp;L</span><b id="portfolioMonthlyPnl">â€”</b></div>
+        <div><span>DAILY P&amp;L</span><b id="portfolioDailyPnl">—</b></div>
+        <div><span>WEEKLY P&amp;L</span><b id="portfolioWeeklyPnl">—</b></div>
+        <div><span>MONTHLY P&amp;L</span><b id="portfolioMonthlyPnl">—</b></div>
         <div><span>GROSS EXPOSURE</span><b id="portfolioExposure">S$0.00</b></div>
         <div><span>CASH %</span><b id="portfolioCashPct">0.00%</b></div>
         <div><span>CURRENT DRAWDOWN</span><b id="portfolioDrawdown">0.00%</b></div>
@@ -457,7 +457,7 @@
           <div id="riskMonitor" class="risk-monitor"></div>
         </div>
       </div>
-      <div class="tradingview-credit">TradingView Lightweight Chartsâ„¢ â€” Copyright Â© 2025 TradingView, Inc. <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a>.</div>
+      <div class="tradingview-credit">TradingView Lightweight Charts™ — Copyright © 2025 TradingView, Inc. <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a>.</div>
     </section>
 
     <section class="panel trade-history-panel">
@@ -467,7 +467,7 @@
       </div>
       <div class="trade-table-head"><span>TIME</span><span>ACTION</span><span>SYMBOL</span><span>QTY / PRICE</span><span>REALIZED P&amp;L</span><span></span></div>
       <div id="tradeHistoryList"></div>
-      <div class="finance-section-head"><span class="finance-microcopy">HISTORY DOES NOT AUTO-MUTATE CURRENT POSITIONS.</span><div class="pager"><button id="tradePrevPage">â†</button><span id="tradePager">0 / 0</span><button id="tradeNextPage">â†’</button></div></div>
+      <div class="finance-section-head"><span class="finance-microcopy">HISTORY DOES NOT AUTO-MUTATE CURRENT POSITIONS.</span><div class="pager"><button id="tradePrevPage">←</button><span id="tradePager">0 / 0</span><button id="tradeNextPage">→</button></div></div>
     </section>
 
     <section class="panel journal-panel">
@@ -476,7 +476,7 @@
         <button id="newJournalBtn" class="ghost">+ ENTRY</button>
       </div>
       <div id="journalList"></div>
-      <div class="finance-section-head journal-pager"><span></span><div class="pager"><button id="journalPrevPage">â†</button><span id="journalPager">0 / 0</span><button id="journalNextPage">â†’</button></div></div>
+      <div class="finance-section-head journal-pager"><span></span><div class="pager"><button id="journalPrevPage">←</button><span id="journalPager">0 / 0</span><button id="journalNextPage">→</button></div></div>
     </section>
   </section>
 </main>
@@ -506,21 +506,21 @@
         <div class="native-player-shell">
           <div class="album-art-shell"><img id="spotifyArt" alt="Current Spotify artwork"><div id="spotifyArtFallback" class="album-art-fallback">NO SIGNAL</div></div>
           <div class="now-playing-copy">
-            <div class="now-playing-heading"><div><span class="kicker" id="spotifyPlaybackState">PLAYBACK // IDLE</span><h3 id="spotifyTrack">Nothing playing</h3><p id="spotifyArtist">â€”</p><a id="spotifyNowSource" class="spotify-source-link hidden" target="_blank" rel="noopener">SPOTIFY SOURCE â†—</a></div><button id="spotifyNowLiked" class="like-button" type="button" aria-label="Toggle Liked Songs">â™¡</button></div>
+            <div class="now-playing-heading"><div><span class="kicker" id="spotifyPlaybackState">PLAYBACK // IDLE</span><h3 id="spotifyTrack">Nothing playing</h3><p id="spotifyArtist">—</p><a id="spotifyNowSource" class="spotify-source-link hidden" target="_blank" rel="noopener">SPOTIFY SOURCE ↗</a></div><button id="spotifyNowLiked" class="like-button" type="button" aria-label="Toggle Liked Songs">♡</button></div>
             <div class="media-progress-row"><span id="spotifyElapsed">0:00</span><input id="spotifyProgress" type="range" min="0" max="1000" value="0"><span id="spotifyDuration">0:00</span></div>
             <div class="player-controls" aria-label="Spotify playback controls">
-              <button id="spotifyShuffle" class="hud-icon" title="Shuffle">â‡„</button>
-              <button id="spotifyPrev" class="hud-icon" title="Previous">â—€â—€</button>
-              <button id="spotifyPlayPause" class="media-play" title="Play / Pause">â–¶</button>
-              <button id="spotifyNext" class="hud-icon" title="Next">â–¶â–¶</button>
-              <button id="spotifyRepeat" class="hud-icon" title="Repeat">â†»</button>
+              <button id="spotifyShuffle" class="hud-icon" title="Shuffle">⇄</button>
+              <button id="spotifyPrev" class="hud-icon" title="Previous">◀◀</button>
+              <button id="spotifyPlayPause" class="media-play" title="Play / Pause">▶</button>
+              <button id="spotifyNext" class="hud-icon" title="Next">▶▶</button>
+              <button id="spotifyRepeat" class="hud-icon" title="Repeat">↻</button>
             </div>
           </div>
           <div class="media-output-card">
             <div class="media-output-head"><span class="kicker">AUDIO OUTPUT</span><span id="spotifyNativeState" class="media-status">SDK // STANDBY</span></div>
             <button id="spotifyActivateBtn" class="primary media-activate">ACTIVATE NEON PLAYER</button>
             <label>Output<select id="spotifyDevice"></select></label>
-            <label>Volume <span id="spotifyVolumeValue" class="field-value">â€”</span><input id="spotifyVolume" type="range" min="0" max="100" step="1" value="50"></label>
+            <label>Volume <span id="spotifyVolumeValue" class="field-value">—</span><input id="spotifyVolume" type="range" min="0" max="100" step="1" value="50"></label>
             <div id="spotifyDeviceMeta" class="media-device-meta">NO ACTIVE OUTPUT</div>
             <div class="media-premium-note">NEON OPS // WEB PLAYER streams Spotify directly in this browser. Spotify Premium is required for playback control.</div>
           </div>
@@ -532,7 +532,7 @@
           </div>
           <div class="media-lyrics-stage">
             <div id="lyricsBody" class="media-lyrics-body">PLAY A TRACK TO LOAD LYRICS</div>
-            <label class="lyric-scale-control" title="Lyric size"><span>A+</span><input id="lyricsScale" type="range" min="70" max="130" step="5" value="90" orient="vertical"><b id="lyricsScaleValue">90%</b><span>Aâˆ’</span></label>
+            <label class="lyric-scale-control" title="Lyric size"><span>A+</span><input id="lyricsScale" type="range" min="70" max="130" step="5" value="90" orient="vertical"><b id="lyricsScaleValue">90%</b><span>A−</span></label>
           </div>
           <div class="media-lyrics-foot">Lyric scrolling is contained inside this panel. Active-line color follows Customize; size is adjustable and saved locally.</div>
         </section>
@@ -542,7 +542,7 @@
     <section class="panel media-search-panel">
       <div class="panel-head compact"><div><span class="kicker">DISCOVERY</span><h2>Search Spotify</h2></div><span id="spotifySearchMeta" class="media-status">READY</span></div>
       <form id="spotifySearchForm" class="spotify-search-form">
-        <input id="spotifySearchInput" type="search" autocomplete="off" placeholder="Search tracks, artists, albums or playlistsâ€¦" aria-label="Search Spotify">
+        <input id="spotifySearchInput" type="search" autocomplete="off" placeholder="Search tracks, artists, albums or playlists…" aria-label="Search Spotify">
         <button class="primary" type="submit">SEARCH</button>
       </form>
       <div class="media-subtabs" id="spotifySearchTabs">
@@ -552,29 +552,29 @@
     </section>
 
     <section class="panel media-library-panel">
-      <div class="panel-head compact"><div><span class="kicker">YOUR LIBRARY</span><h2>Spotify Library</h2></div><div class="actions"><span id="spotifyLibraryMeta" class="media-status">â€”</span><button id="spotifyLibrarySync" type="button" class="ghost small">SYNC VIEW</button></div></div>
+      <div class="panel-head compact"><div><span class="kicker">YOUR LIBRARY</span><h2>Spotify Library</h2></div><div class="actions"><span id="spotifyLibraryMeta" class="media-status">—</span><button id="spotifyLibrarySync" type="button" class="ghost small">SYNC VIEW</button></div></div>
       <div class="media-subtabs" id="spotifyLibraryTabs">
-        <button type="button" class="active" data-library-tab="liked">â™¥ LIKED SONGS</button><button type="button" data-library-tab="playlists">PLAYLISTS</button><button type="button" data-library-tab="recent">RECENT</button>
+        <button type="button" class="active" data-library-tab="liked">♥ LIKED SONGS</button><button type="button" data-library-tab="playlists">PLAYLISTS</button><button type="button" data-library-tab="recent">RECENT</button>
       </div>
       <div id="spotifyLibraryCacheNote" class="media-cache-note">LIKED SONGS USE A MANUAL LOCAL CACHE TO CONSERVE DEVELOPMENT-MODE QUOTA.</div>
       <div id="spotifyLibrary" class="media-library-body"><div class="media-empty">CONNECT SPOTIFY TO LOAD YOUR LIBRARY</div></div>
-      <div id="spotifyLibraryPager" class="media-library-pager hidden"><button id="spotifyLibraryPrev" class="ghost" type="button">â† PREV</button><span id="spotifyLibraryPage">â€”</span><button id="spotifyLibraryNext" class="ghost" type="button">NEXT â†’</button></div>
+      <div id="spotifyLibraryPager" class="media-library-pager hidden"><button id="spotifyLibraryPrev" class="ghost" type="button">← PREV</button><span id="spotifyLibraryPage">—</span><button id="spotifyLibraryNext" class="ghost" type="button">NEXT →</button></div>
     </section>
 
     <div class="media-side-stack">
       <section class="panel media-queue-panel">
         <div class="panel-head compact"><div><span class="kicker">UP NEXT</span><h2>Queue</h2></div><span id="spotifyQueueCount" class="media-status">0 ITEMS</span></div>
         <div class="media-subtabs queue-tabs"><button type="button" data-queue-tab="neon" class="active">NEON QUEUE</button><button type="button" data-queue-tab="spotify">SPOTIFY QUEUE</button></div>
-        <div class="queue-toolbar"><button id="spotifyNeonQueueStart" type="button" class="primary small">â–¶ START NEON QUEUE</button><button id="spotifyNeonQueueClear" type="button" class="ghost small">CLEAR</button></div>
+        <div class="queue-toolbar"><button id="spotifyNeonQueueStart" type="button" class="primary small">▶ START NEON QUEUE</button><button id="spotifyNeonQueueClear" type="button" class="ghost small">CLEAR</button></div>
         <div id="spotifyQueue" class="media-list"><div class="media-empty">ADD TRACKS TO THE NEON QUEUE</div></div>
       </section>
 
       <section class="panel media-profile-panel">
         <div class="panel-head compact"><div><span class="kicker">INTEGRATION STATUS</span><h2>Spotify Link</h2></div></div>
         <div class="media-profile-body">
-          <div><span>ACCOUNT</span><b id="spotifyProfileName">â€”</b></div>
-          <div><span>PLAN</span><b id="spotifyPlan">â€”</b></div>
-          <div><span>OUTPUT</span><b id="spotifyActiveDevice">â€”</b></div>
+          <div><span>ACCOUNT</span><b id="spotifyProfileName">—</b></div>
+          <div><span>PLAN</span><b id="spotifyPlan">—</b></div>
+          <div><span>OUTPUT</span><b id="spotifyActiveDevice">—</b></div>
           <div><span>SYNC</span><b id="spotifyLastRefresh">NOT YET</b></div>
         </div>
         <div class="spotify-attribution">Powered by Spotify. Album artwork and metadata remain Spotify content. Small Spotify links are retained for attribution; playback and discovery stay inside Neon Ops.</div>
@@ -664,7 +664,7 @@
             <label>Scale <span id="effectScaleValue" class="field-value">100%</span><input id="effectScale" type="range" min="25" max="300" step="5" value="100"></label>
             <div class="two">
               <label>Playback speed <span id="effectSpeedValue" class="field-value">100%</span><input id="effectSpeed" type="range" min="25" max="300" step="5" value="100"></label>
-              <label>Rotation <span id="effectRotationValue" class="field-value">0Â°</span><input id="effectRotation" type="range" min="-180" max="180" step="5" value="0"></label>
+              <label>Rotation <span id="effectRotationValue" class="field-value">0°</span><input id="effectRotation" type="range" min="-180" max="180" step="5" value="0"></label>
             </div>
             <div class="two">
               <label>X offset <span id="effectXValue" class="field-value">0%</span><input id="effectX" type="range" min="-100" max="100" step="1" value="0"></label>
@@ -701,7 +701,7 @@
             <label>Mood hold <span id="systemMoodHoldValue" class="field-value">1.5s</span><input id="systemMoodHold" type="range" min="0" max="10" step="0.5" value="1.5"></label>
             <label>Visual transition <span id="systemTransitionValue" class="field-value">220 ms</span><input id="systemTransitionMs" type="range" min="0" max="1200" step="20" value="220"></label>
           </div>
-          <div class="system-runtime-note">TRANSIENT PRIORITY // OFFLINE â†’ SYSTEM TEST / ANALYZING â†’ TASK ENGINE</div>
+          <div class="system-runtime-note">TRANSIENT PRIORITY // OFFLINE → SYSTEM TEST / ANALYZING → TASK ENGINE</div>
           <div class="modal-actions"><span></span><span></span><span></span><button type="submit" class="primary">SAVE RUNTIME SETTINGS</button></div>
         </form>
       </div>
@@ -719,7 +719,7 @@
           <label>PANIC // high overdue<input id="logicPanicHighOverdue" type="number" min="1" max="99" value="2"></label>
           <label>SUCCESS // completed today<input id="logicSuccessCompleted" type="number" min="1" max="99" value="3"></label>
         </div>
-        <div class="logic-order"><span>STATE PRIORITY</span><b>PANIC â†’ SUCCESS â†’ ANXIOUS â†’ FOCUSED â†’ RELAXED</b></div>
+        <div class="logic-order"><span>STATE PRIORITY</span><b>PANIC → SUCCESS → ANXIOUS → FOCUSED → RELAXED</b></div>
         <div class="modal-actions"><span></span><span></span><span></span><button type="submit" class="primary">SAVE AVATAR LOGIC</button></div>
       </form>
     </section>
@@ -793,7 +793,7 @@
   <input type="hidden" id="eventId">
   <div class="modal-head">
     <div><span class="kicker">CALENDAR RECORD</span><h2 id="eventModalTitle">New Event</h2></div>
-    <button type="button" class="x" data-close="eventDialog">Ã—</button>
+    <button type="button" class="x" data-close="eventDialog">×</button>
   </div>
 
   <label>Title<input id="eventTitle" maxlength="240" required></label>
@@ -904,7 +904,7 @@
 <form id="calendarDisplayForm" method="dialog">
   <div class="modal-head">
     <div><span class="kicker">CALENDAR DISPLAY</span><h2>Comfort & Density</h2></div>
-    <button type="button" class="x" data-close="calendarDisplayDialog">Ã—</button>
+    <button type="button" class="x" data-close="calendarDisplayDialog">×</button>
   </div>
 
   <label>Hour height <span id="hourHeightValue" class="field-value">64 px</span>
@@ -945,7 +945,7 @@
   <input type="hidden" id="taskId">
   <div class="modal-head">
     <div><span class="kicker">OBJECTIVE RECORD</span><h2 id="taskModalTitle">New Task</h2></div>
-    <button type="button" class="x" data-close="taskDialog">Ã—</button>
+    <button type="button" class="x" data-close="taskDialog">×</button>
   </div>
   <label>Title<input id="taskTitle" maxlength="240" required></label>
   <div class="two">
@@ -965,7 +965,7 @@
 
 <dialog id="reminderDialog" class="modal narrow">
 <form id="reminderForm" method="dialog">
-  <div class="modal-head"><div><span class="kicker">UNIFIED ALERT</span><h2>New Reminder</h2></div><button type="button" class="x" data-close="reminderDialog">Ã—</button></div>
+  <div class="modal-head"><div><span class="kicker">UNIFIED ALERT</span><h2>New Reminder</h2></div><button type="button" class="x" data-close="reminderDialog">×</button></div>
   <label>Reminder title<input id="reminderTitleInput" maxlength="240" required placeholder="Follow up with Sam"></label>
   <label>Notify at<input id="reminderTimeInput" type="datetime-local" required></label>
   <label>Delivery<select id="reminderChannelInput"><option value="both">BROWSER + IN-APP</option><option value="in_app">IN-APP ONLY</option><option value="browser">BROWSER PREFERRED</option></select></label>
@@ -978,7 +978,7 @@
 <dialog id="movementDialog" class="modal">
 <form id="movementForm" method="dialog">
   <input type="hidden" id="movementId">
-  <div class="modal-head"><div><span class="kicker">FITNESS MARKET</span><h2 id="movementModalTitle">New Movement</h2></div><button type="button" class="x" data-close="movementDialog">Ã—</button></div>
+  <div class="modal-head"><div><span class="kicker">FITNESS MARKET</span><h2 id="movementModalTitle">New Movement</h2></div><button type="button" class="x" data-close="movementDialog">×</button></div>
   <div class="two"><label>Name<input id="movementName" maxlength="160" required placeholder="Bench Press"></label><label>Symbol<input id="movementSymbol" maxlength="12" placeholder="BENCH"></label></div>
   <div class="two"><label>Baseline Volume<input id="movementBaselineVolume" type="number" min="0" step="1" placeholder="Optional"></label><label>Baseline E1RM<input id="movementBaselineE1rm" type="number" min="0" step="0.1" placeholder="Optional"></label></div>
   <fieldset class="fitness-fieldset"><legend>Scheduled training days</legend><div id="movementDays" class="movement-days"><button type="button" data-day="1">M</button><button type="button" data-day="2">T</button><button type="button" data-day="3">W</button><button type="button" data-day="4">T</button><button type="button" data-day="5">F</button><button type="button" data-day="6">S</button><button type="button" data-day="7">S</button></div></fieldset>
@@ -991,7 +991,7 @@
 <dialog id="sessionDialog" class="modal">
 <form id="sessionForm" method="dialog">
   <input type="hidden" id="sessionId">
-  <div class="modal-head"><div><span class="kicker">COMPLETED TRAINING</span><h2 id="sessionModalTitle">Log Session</h2><div id="sessionMovementName" class="session-movement-name">â€”</div></div><button type="button" class="x" data-close="sessionDialog">Ã—</button></div>
+  <div class="modal-head"><div><span class="kicker">COMPLETED TRAINING</span><h2 id="sessionModalTitle">Log Session</h2><div id="sessionMovementName" class="session-movement-name">—</div></div><button type="button" class="x" data-close="sessionDialog">×</button></div>
   <div class="two"><label>Performed at<input id="sessionPerformedAt" type="datetime-local" required></label><label>Body weight kg<input id="sessionBodyWeight" type="number" min="0" step="0.1" placeholder="Optional"></label></div>
   <div id="sameDayNotice" class="fitness-notice hidden"></div>
   <div class="session-quickbar"><span>SETS</span><button type="button" id="copyLastSessionBtn" class="ghost small">COPY PREVIOUS SETS</button></div>
@@ -1005,7 +1005,7 @@
 <dialog id="transactionDialog" class="modal">
 <form id="transactionForm" method="dialog">
   <input type="hidden" id="transactionId">
-  <div class="modal-head"><div><span class="kicker">CASHFLOW RECORD</span><h2 id="transactionModalTitle">New Transaction</h2></div><button type="button" class="x" data-close="transactionDialog">Ã—</button></div>
+  <div class="modal-head"><div><span class="kicker">CASHFLOW RECORD</span><h2 id="transactionModalTitle">New Transaction</h2></div><button type="button" class="x" data-close="transactionDialog">×</button></div>
   <div class="two"><label>Occurred at<input id="transactionOccurredAt" type="datetime-local" required></label><label>Direction<select id="transactionDirection"><option value="expense">EXPENSE</option><option value="inflow">INFLOW</option></select></label></div>
   <div class="two"><label>Amount<input id="transactionAmount" type="number" min="0.01" step="0.01" required></label><label>Category<select id="transactionCategory"><option>Food</option><option>Transport</option><option>Entertainment</option><option>Shopping</option><option>Subscriptions</option><option>Education</option><option>Fitness</option><option>Personal</option><option>Income</option><option>Other</option></select></label></div>
   <label>Description<input id="transactionDescription" maxlength="240" placeholder="Lunch / Pay / Subscription"></label>
@@ -1016,7 +1016,7 @@
 
 <dialog id="financeSettingsDialog" class="modal narrow">
 <form id="financeSettingsForm" method="dialog">
-  <div class="modal-head"><div><span class="kicker">FINANCE CONFIGURATION</span><h2>Allowance & Portfolio</h2></div><button type="button" class="x" data-close="financeSettingsDialog">Ã—</button></div>
+  <div class="modal-head"><div><span class="kicker">FINANCE CONFIGURATION</span><h2>Allowance & Portfolio</h2></div><button type="button" class="x" data-close="financeSettingsDialog">×</button></div>
   <label>Currency<select id="financeCurrency"><option value="SGD">SGD // SINGAPORE DOLLAR</option><option value="USD">USD // US DOLLAR</option></select></label>
   <label>Starting allowance<input id="financeStartingBalance" type="number" step="0.01"></label>
   <label>Portfolio cash<input id="financePortfolioCash" type="number" step="0.01"></label>
@@ -1029,7 +1029,7 @@
 <dialog id="positionDialog" class="modal">
 <form id="positionForm" method="dialog">
   <input type="hidden" id="positionId">
-  <div class="modal-head"><div><span class="kicker">PORTFOLIO POSITION</span><h2 id="positionModalTitle">New Position</h2></div><button type="button" class="x" data-close="positionDialog">Ã—</button></div>
+  <div class="modal-head"><div><span class="kicker">PORTFOLIO POSITION</span><h2 id="positionModalTitle">New Position</h2></div><button type="button" class="x" data-close="positionDialog">×</button></div>
   <div class="two"><label>Symbol<input id="positionSymbol" maxlength="24" required placeholder="AAPL"></label><label>Asset type<select id="positionAssetType"><option>EQUITY</option><option>ETF</option><option>COMMODITY</option><option>FX</option><option>CRYPTO</option><option>BOND</option><option>OTHER</option></select></label></div>
   <div class="three"><label>Quantity<input id="positionQuantity" type="number" step="0.000001" required></label><label>Entry price<input id="positionEntryPrice" type="number" min="0" step="0.0001" required></label><label>Current price<input id="positionCurrentPrice" type="number" min="0" step="0.0001" placeholder="Manual"></label></div>
   <label>Sector / Group<input id="positionSector" maxlength="120" placeholder="Technology"></label>
@@ -1040,7 +1040,7 @@
 
 <dialog id="portfolioRiskDialog" class="modal">
 <form id="portfolioRiskForm" method="dialog">
-  <div class="modal-head"><div><span class="kicker">PORTFOLIO RISK CONTROL</span><h2>Risk Parameters</h2></div><button type="button" class="x" data-close="portfolioRiskDialog">Ã—</button></div>
+  <div class="modal-head"><div><span class="kicker">PORTFOLIO RISK CONTROL</span><h2>Risk Parameters</h2></div><button type="button" class="x" data-close="portfolioRiskDialog">×</button></div>
   <div class="risk-form-grid">
     <label>Max position size <span id="riskMaxPositionValue" class="field-value">20%</span><input id="riskMaxPosition" type="range" min="1" max="100" step="1"></label>
     <label>Max sector exposure <span id="riskMaxSectorValue" class="field-value">35%</span><input id="riskMaxSector" type="range" min="1" max="100" step="1"></label>
@@ -1058,7 +1058,7 @@
 <dialog id="tradeDialog" class="modal">
 <form id="tradeForm" method="dialog">
   <input type="hidden" id="tradeId">
-  <div class="modal-head"><div><span class="kicker">PORTFOLIO HISTORY RECORD</span><h2 id="tradeModalTitle">New History Entry</h2></div><button type="button" class="x" data-close="tradeDialog">Ã—</button></div>
+  <div class="modal-head"><div><span class="kicker">PORTFOLIO HISTORY RECORD</span><h2 id="tradeModalTitle">New History Entry</h2></div><button type="button" class="x" data-close="tradeDialog">×</button></div>
   <div class="two"><label>Occurred at<input id="tradeOccurredAt" type="datetime-local" required></label><label>Action<select id="tradeAction"><option>BUY</option><option>SELL</option><option>DIVIDEND</option><option>FEE</option><option>DEPOSIT</option><option>WITHDRAWAL</option><option>ADJUSTMENT</option></select></label></div>
   <div class="three"><label>Symbol<input id="tradeSymbol" maxlength="24" placeholder="AAPL"></label><label>Quantity<input id="tradeQuantity" type="number" step="0.000001"></label><label>Price<input id="tradePrice" type="number" min="0" step="0.0001"></label></div>
   <label>Realized P&amp;L<input id="tradeRealizedPnl" type="number" step="0.01" value="0"></label>
@@ -1069,7 +1069,7 @@
 </dialog>
 
 <dialog id="snapshotManagerDialog" class="modal snapshot-manager-modal">
-  <div class="modal-head"><div><span class="kicker">PORTFOLIO HISTORY CONTROL</span><h2>Snapshot Manager</h2></div><button type="button" class="x" data-close="snapshotManagerDialog">Ã—</button></div>
+  <div class="modal-head"><div><span class="kicker">PORTFOLIO HISTORY CONTROL</span><h2>Snapshot Manager</h2></div><button type="button" class="x" data-close="snapshotManagerDialog">×</button></div>
   <div class="snapshot-manager-toolbar">
     <label>Delete captures before<input id="snapshotDeleteBefore" type="date"></label>
     <button id="deleteSnapshotsBeforeBtn" type="button" class="ghost danger-outline">DELETE BEFORE DATE</button>
@@ -1078,13 +1078,13 @@
   <div class="snapshot-manager-note">Deleting a snapshot only removes historical chart points. Current positions, cash, transactions and trade history are not changed.</div>
   <div class="snapshot-table-head"><span>CAPTURED</span><span>SOURCE</span><span>EQUITY</span><span>DRAW</span><span></span></div>
   <div id="snapshotManagerList" class="snapshot-manager-list"></div>
-  <div class="finance-section-head"><span id="snapshotCountLabel" class="finance-microcopy">0 SNAPSHOTS</span><div class="pager"><button id="snapshotPrevPage" type="button">â†</button><span id="snapshotPager">0 / 0</span><button id="snapshotNextPage" type="button">â†’</button></div></div>
+  <div class="finance-section-head"><span id="snapshotCountLabel" class="finance-microcopy">0 SNAPSHOTS</span><div class="pager"><button id="snapshotPrevPage" type="button">←</button><span id="snapshotPager">0 / 0</span><button id="snapshotNextPage" type="button">→</button></div></div>
 </dialog>
 
 <dialog id="journalDialog" class="modal">
 <form id="journalForm" method="dialog">
   <input type="hidden" id="journalId">
-  <div class="modal-head"><div><span class="kicker">DECISION RECORD</span><h2 id="journalModalTitle">New Journal Entry</h2></div><button type="button" class="x" data-close="journalDialog">Ã—</button></div>
+  <div class="modal-head"><div><span class="kicker">DECISION RECORD</span><h2 id="journalModalTitle">New Journal Entry</h2></div><button type="button" class="x" data-close="journalDialog">×</button></div>
   <label>Entry<textarea id="journalBody" rows="8" maxlength="12000" required placeholder="Rationale, observations, rules followed, lessons..."></textarea></label>
   <div class="modal-actions"><button type="button" id="deleteJournalBtn" class="danger hidden">DELETE</button><span></span><button type="button" class="ghost" data-close="journalDialog">CANCEL</button><button type="submit" class="primary">SAVE</button></div>
 </form>
@@ -1093,14 +1093,14 @@
 <dialog id="aiDialog" class="modal ai-modal">
   <div class="modal-head">
     <div><span class="kicker">NEXUS // GEMINI INTELLIGENCE</span><h2>Operational Analysis</h2></div>
-    <button type="button" class="x" data-close="aiDialog">Ã—</button>
+    <button type="button" class="x" data-close="aiDialog">×</button>
   </div>
   <div class="ai-command-row">
     <label>Scope<select id="aiScopeFull"><option>DAILY</option><option>WEEKLY</option><option>OPS</option><option>TASKS</option><option>FINANCE</option><option>FITNESS</option><option>FULL</option></select></label>
     <label>Thinking<select id="aiThinkingLevel"><option value="low">LOW</option><option value="medium" selected>MEDIUM</option><option value="high">HIGH</option></select></label>
     <button id="aiGenerateFull" data-ai-generate class="primary">GENERATE ANALYSIS</button>
   </div>
-  <div class="ai-report-meta"><span id="aiReportScope">â€”</span><b id="aiReportSeverity" class="ai-severity" data-severity="stable">â€”</b><span id="aiReportTime">â€”</span><span id="aiReportModel">â€”</span></div>
+  <div class="ai-report-meta"><span id="aiReportScope">—</span><b id="aiReportSeverity" class="ai-severity" data-severity="stable">—</b><span id="aiReportTime">—</span><span id="aiReportModel">—</span></div>
   <section class="ai-report-lead"><h3 id="aiReportHeadline">No report selected.</h3><p id="aiReportSummary">Generate a report or open one from history.</p></section>
   <div class="ai-score-grid">
     <div><span>OPERATIONS</span><b id="aiScoreOps">0</b></div><div><span>WORKLOAD</span><b id="aiScoreWorkload">0</b></div><div><span>DISCIPLINE</span><b id="aiScoreDiscipline">0</b></div><div><span>FINANCE</span><b id="aiScoreFinance">0</b></div><div><span>FITNESS</span><b id="aiScoreFitness">0</b></div>
@@ -1113,7 +1113,7 @@
   </div>
   <details class="ai-privacy">
     <summary>AI DATA ACCESS / PRIVACY</summary>
-    <div class="ai-privacy-status"><span>MODEL</span><b id="aiModelLabel">GEMINI 3.8 FLASH</b><span>API</span><b id="aiApiState">â€”</b></div>
+    <div class="ai-privacy-status"><span>MODEL</span><b id="aiModelLabel">GEMINI 3.8 FLASH</b><span>API</span><b id="aiApiState">—</b></div>
     <div class="ai-privacy-grid">
       <label><input id="aiPrivacyEventTitles" type="checkbox" checked> EVENT TITLES</label><label><input id="aiPrivacyEventNotes" type="checkbox"> EVENT NOTES</label>
       <label><input id="aiPrivacyTaskTitles" type="checkbox" checked> TASK TITLES</label><label><input id="aiPrivacyTaskNotes" type="checkbox"> TASK NOTES</label>
@@ -1127,15 +1127,15 @@
 </dialog>
 
 <dialog id="aiHistoryDialog" class="modal ai-history-modal">
-  <div class="modal-head"><div><span class="kicker">INTELLIGENCE ARCHIVE</span><h2>Report History</h2></div><button type="button" class="x" data-close="aiHistoryDialog">Ã—</button></div>
+  <div class="modal-head"><div><span class="kicker">INTELLIGENCE ARCHIVE</span><h2>Report History</h2></div><button type="button" class="x" data-close="aiHistoryDialog">×</button></div>
   <div id="aiHistoryList" class="ai-history-list"></div>
-  <div class="ai-history-footer"><button id="aiHistoryPrev" class="ghost">â† PREV</button><span id="aiHistoryPager">0 / 0</span><button id="aiHistoryNext" class="ghost">NEXT â†’</button></div>
+  <div class="ai-history-footer"><button id="aiHistoryPrev" class="ghost">← PREV</button><span id="aiHistoryPager">0 / 0</span><button id="aiHistoryNext" class="ghost">NEXT →</button></div>
 </dialog>
 
 <dialog id="ccBriefDialog" class="modal cc-brief-dialog">
-  <div class="modal-head"><div><span class="kicker">OPS // DAILY SNAPSHOT</span><h2 id="ccBriefTitle">BRIEF</h2></div><button type="button" class="x" data-close="ccBriefDialog">Ã—</button></div>
+  <div class="modal-head"><div><span class="kicker">OPS // DAILY SNAPSHOT</span><h2 id="ccBriefTitle">BRIEF</h2></div><button type="button" class="x" data-close="ccBriefDialog">×</button></div>
   <div id="ccBriefBody" class="cc-brief-body"></div>
-  <section class="cc-brief-nexus"><span class="kicker">CACHED GEMINI CONTEXT</span><p id="ccBriefNexus">â€”</p></section>
+  <section class="cc-brief-nexus"><span class="kicker">CACHED GEMINI CONTEXT</span><p id="ccBriefNexus">—</p></section>
   <div class="modal-actions"><span></span><span></span><span></span><button type="button" class="primary" data-close="ccBriefDialog">CLOSE</button></div>
 </dialog>
 
@@ -1143,7 +1143,7 @@
   <div class="nxc-command-box">
     <div class="nxc-command-head"><span>NEXUS COMMAND</span><kbd>CTRL/CMD + SHIFT + K</kbd></div>
     <form id="nexusCommandForm">
-      <input id="nexusCommandInput" maxlength="6000" autocomplete="off" placeholder="Open finance, pause music, ask NEXUSâ€¦" aria-label="NEXUS command">
+      <input id="nexusCommandInput" maxlength="6000" autocomplete="off" placeholder="Open finance, pause music, ask NEXUS…" aria-label="NEXUS command">
       <button class="primary small" type="submit">RUN</button>
     </form>
     <small>TEXT FAST PATH // VOICE REMAINS INSIDE THE NEXUS WORKSPACE</small>
@@ -1153,5 +1153,3 @@
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 </body>
 </html>
-
-
